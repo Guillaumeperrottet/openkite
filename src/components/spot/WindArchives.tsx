@@ -43,8 +43,6 @@ export function WindArchives({ spotId, useKnots = true }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(false);
 
     fetch(`/api/spots/${spotId}/archives`)
       .then((r) => {
