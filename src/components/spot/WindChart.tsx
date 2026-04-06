@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { windCellStyle } from "@/lib/forecast";
 import { windDirectionLabel } from "@/lib/utils";
 import type { HourlyPoint } from "@/lib/forecast";
@@ -189,8 +189,10 @@ function MiniCompass({
 
 /** SVG bar chart — wind speed + gusts, hourly, 7 days, with hover compass. */
 export function WindChart({ hourly, timezone, useKnots }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [nowIdx, setNowIdx] = useState(-1);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
   // Use all hourly points (168 = 7 days × 24h)
   const points = hourly;
@@ -297,7 +299,7 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
     }
   };
 
-  // Touch handler for mobile (same logic)
+  // Touch handler for mobile — floating tooltip
   const handleSvgTouch = (e: React.TouchEvent<SVGSVGElement>) => {
     const touch = e.touches[0];
     if (!touch) return;
@@ -306,14 +308,25 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
     const idx = Math.floor((svgX - Y_AXIS_W) / BAR_SLOT);
     if (idx >= 0 && idx < points.length) {
       setHoveredIdx(idx);
+      const container = containerRef.current;
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
+        setTooltipPos({
+          x: touch.clientX - containerRect.left,
+          y: touch.clientY - containerRect.top,
+        });
+      }
     }
   };
+
+  const TTW = 190;
 
   return (
     <div className="flex gap-4 items-start">
       {/* Left: scrollable bar chart */}
       <div
-        className="flex-1 min-w-0 overflow-x-auto"
+        ref={containerRef}
+        className="relative flex-1 min-w-0 overflow-x-auto"
         onMouseLeave={() => setHoveredIdx(null)}
         onTouchEnd={() => setHoveredIdx(null)}
         onTouchCancel={() => setHoveredIdx(null)}
@@ -488,36 +501,85 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
             })}
           </svg>
 
-          {/* Mobile touch tooltip */}
-          {hoveredIdx !== null && (
-            <div className="sm:hidden flex items-center gap-3 px-3 py-2 mt-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs">
-              <span className="text-[10px] text-gray-400">
-                {dateLabel} {timeLabel}
-              </span>
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0 border border-gray-200"
-                style={{
-                  background: windCellStyle(activePoint.windSpeedKmh)
-                    .background,
-                }}
-              />
-              <span className="font-bold tabular-nums text-gray-900">
-                {useKnots
-                  ? activePoint.windSpeedKnots
-                  : Math.round(activePoint.windSpeedKmh)}{" "}
-                {useKnots ? "kts" : "km/h"}
-              </span>
-              <span className="text-gray-500 tabular-nums">
-                ↑
-                {useKnots
-                  ? activePoint.gustsKnots
-                  : Math.round(activePoint.gustsKmh)}
-              </span>
-              <span className="text-gray-400">
-                {windDirectionLabel(activePoint.windDirection)}
-              </span>
-            </div>
-          )}
+          {/* Mobile floating tooltip */}
+          {hoveredIdx !== null &&
+            (() => {
+              const pt = activePoint;
+              const style = windCellStyle(pt.windSpeedKmh);
+              const container = containerRef.current;
+              const containerW = container?.clientWidth ?? 0;
+              const tipX = Math.max(
+                4,
+                Math.min(
+                  tooltipPos.x + 14 + TTW > containerW
+                    ? tooltipPos.x - TTW - 6
+                    : tooltipPos.x + 14,
+                  containerW - TTW - 4,
+                ),
+              );
+              const tipY = Math.max(tooltipPos.y - 110, 4);
+              const rotation = (pt.windDirection + 180) % 360;
+              return (
+                <div
+                  className="sm:hidden absolute z-20 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2.5 pointer-events-none"
+                  style={{ left: tipX, top: tipY, width: TTW }}
+                >
+                  <div className="text-[10px] text-gray-400 font-medium mb-2">
+                    {dateLabel} — {timeLabel}
+                  </div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-500">Vent moyen</span>
+                    <span
+                      className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded"
+                      style={{
+                        background: style.background,
+                        color: style.color,
+                      }}
+                    >
+                      {useKnots
+                        ? pt.windSpeedKnots
+                        : Math.round(pt.windSpeedKmh)}{" "}
+                      {useKnots ? "kts" : "km/h"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-500">Rafales</span>
+                    <span className="text-xs font-semibold tabular-nums text-gray-600">
+                      {useKnots ? pt.gustsKnots : Math.round(pt.gustsKmh)}{" "}
+                      {useKnots ? "kts" : "km/h"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500">Direction</span>
+                    <span className="text-xs text-gray-600 flex items-center gap-1">
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 16 16"
+                        aria-hidden="true"
+                      >
+                        <g transform={`rotate(${rotation}, 8, 8)`}>
+                          <line
+                            x1="8"
+                            y1="13"
+                            x2="8"
+                            y2="4.5"
+                            stroke="#374151"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                          <polygon
+                            points="8,1.5 4.5,6.5 11.5,6.5"
+                            fill="#374151"
+                          />
+                        </g>
+                      </svg>
+                      {windDirectionLabel(pt.windDirection)} {pt.windDirection}°
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
           {/* Legend */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 ml-10 text-[9px] text-gray-400">

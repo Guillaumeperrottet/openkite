@@ -400,13 +400,39 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm text-gray-600 mb-2">Direction</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-gray-900 leading-none">
-                        {dirLabel}
-                      </span>
-                      <span className="text-base text-gray-500">
-                        {wind.windDirection}°
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 16 16"
+                        aria-hidden="true"
+                      >
+                        <g
+                          transform={`rotate(${(wind.windDirection + 180) % 360}, 8, 8)`}
+                        >
+                          <line
+                            x1="8"
+                            y1="13"
+                            x2="8"
+                            y2="4.5"
+                            stroke="#374151"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                          <polygon
+                            points="8,1.5 4.5,6.5 11.5,6.5"
+                            fill="#374151"
+                          />
+                        </g>
+                      </svg>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold text-gray-900 leading-none">
+                          {dirLabel}
+                        </span>
+                        <span className="text-base text-gray-500">
+                          {wind.windDirection}°
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="text-sm font-bold px-3 py-1 rounded-full bg-gray-100 text-gray-700">
