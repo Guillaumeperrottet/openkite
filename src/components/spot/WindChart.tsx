@@ -508,13 +508,18 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
               const style = windCellStyle(pt.windSpeedKmh);
               const container = containerRef.current;
               const containerW = container?.clientWidth ?? 0;
+              const scrollLeft = container?.scrollLeft ?? 0;
+              // tooltipPos.x is relative to the visible viewport of the container,
+              // but "left" in absolute positioning is relative to scrollable content.
+              // Add scrollLeft to convert viewport-relative → content-relative.
+              const posX = tooltipPos.x + scrollLeft;
               const tipX = Math.max(
-                4,
+                scrollLeft + 4,
                 Math.min(
-                  tooltipPos.x + 14 + TTW > containerW
-                    ? tooltipPos.x - TTW - 6
-                    : tooltipPos.x + 14,
-                  containerW - TTW - 4,
+                  posX + 14 + TTW > scrollLeft + containerW
+                    ? posX - TTW - 6
+                    : posX + 14,
+                  scrollLeft + containerW - TTW - 4,
                 ),
               );
               const tipY = Math.max(tooltipPos.y - 110, 4);
