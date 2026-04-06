@@ -168,7 +168,7 @@ export function StationPageClient({
         {/* ── Vent en direct + 48h Historique ────────────────────────────── */}
         <div className="flex flex-col md:flex-row items-start gap-3 mb-10">
           {/* Compass */}
-          <div className="flex flex-col items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-4 shrink-0">
+          <div className="hidden sm:flex flex-col items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-4 shrink-0">
             <WindCompass
               wind={wind}
               size={170}
