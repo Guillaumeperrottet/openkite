@@ -237,10 +237,10 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
           <div className="shrink-0 flex flex-row sm:flex-col items-center sm:items-end gap-3 w-full sm:w-auto">
             <Link
               href={`/spots/${spot.id}/edit`}
-              className="inline-flex items-center gap-1.5 text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:text-gray-900 hover:border-gray-400 transition-colors"
+              className="inline-flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors"
+              title="Modifier"
             >
-              <Pencil className="h-3.5 w-3.5" />
-              Modifier
+              <Pencil className="h-4 w-4" />
             </Link>
 
             {spot.images.length > 0 && (
