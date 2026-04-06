@@ -47,7 +47,7 @@ export function Navbar() {
 
         <Link
           href="/spots/new"
-          className="ml-1 sm:ml-2 flex items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-2.5 py-2 sm:px-3 sm:py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
+          className="ml-1 sm:ml-2 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-2 sm:px-3 sm:py-1.5 text-sm text-gray-500 hover:text-gray-900 hover:border-gray-400 transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
         >
           <Plus className="h-4 w-4 shrink-0" />
           <span className="hidden sm:inline">Ajouter un spot</span>

@@ -133,13 +133,22 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
     <div className="min-h-screen bg-white pb-20">
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-5"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour à la carte
-        </Link>
+        <div className="flex items-center justify-between mb-5">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour à la carte
+          </Link>
+          <Link
+            href={`/spots/${spot.id}/edit`}
+            className="inline-flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors"
+            title="Modifier"
+          >
+            <Pencil className="h-4 w-4" />
+          </Link>
+        </div>
 
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -233,16 +242,8 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
             )}
           </div>
 
-          {/* ── Right side: photos + edit button ─────────────────── */}
+          {/* ── Right side: photos ──────────────────────────── */}
           <div className="shrink-0 flex flex-row sm:flex-col items-center sm:items-end gap-3 w-full sm:w-auto">
-            <Link
-              href={`/spots/${spot.id}/edit`}
-              className="inline-flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors"
-              title="Modifier"
-            >
-              <Pencil className="h-4 w-4" />
-            </Link>
-
             {spot.images.length > 0 && (
               <div className="flex gap-1.5">
                 {spot.images.slice(0, 3).map((img, idx) => (

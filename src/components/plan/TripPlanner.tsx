@@ -21,6 +21,7 @@ import {
   Info,
   Share2,
   Check,
+  ChevronUp,
 } from "lucide-react";
 
 // Score 0–100 → display color
@@ -75,6 +76,12 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
   const [geoLoading, setGeoLoading] = useState(false);
   const [hoveredSpotId, setHoveredSpotId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Mobile bottom sheet + filters state
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sheetPos, setSheetPos] = useState<"peek" | "half" | "full">("peek");
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
 
   // Geocoding search
   const [geoQuery, setGeoQuery] = useState("");
@@ -219,6 +226,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
           if (!res.ok) throw new Error(`Erreur ${res.status}`);
           const data: SpotWithForecast[] = await res.json();
           setResults(data);
+          if (data.length > 0) setSheetPos("half");
         } catch {
           setError("Impossible de récupérer les prévisions. Réessayez.");
           setResults([]);
@@ -253,6 +261,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
       const data: SpotWithForecast[] = await res.json();
       setResults(data);
+      if (data.length > 0) setSheetPos("half");
     } catch {
       setError("Impossible de récupérer les prévisions. Réessayez.");
       setResults([]);
@@ -304,10 +313,52 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
   const ctrlInput =
     "rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-sky-500";
 
+  // ── Mobile helpers ──────────────────────────────────────────
+  const formatDateShort = (d: string) => {
+    const date = new Date(d + "T12:00:00");
+    return date.toLocaleDateString("fr", { day: "numeric", month: "short" });
+  };
+
+  const filterSummary = [
+    locationName ||
+      (hasLocation ? `${lat!.toFixed(1)}°, ${lng!.toFixed(1)}°` : null),
+    `${formatDateShort(startDate)} – ${formatDateShort(endDate)}`,
+    hasLocation ? `${radius} km` : null,
+    sport !== "ALL" ? (sport === "KITE" ? "Kite" : "Para") : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const sheetTranslateClass = {
+    peek: "translate-y-[calc(100%-3.5rem)]",
+    half: "translate-y-[50%]",
+    full: "translate-y-0",
+  }[sheetPos];
+
+  const handleSheetToggle = () => {
+    setSheetPos((p) =>
+      p === "peek" ? "half" : p === "half" ? "full" : "peek",
+    );
+  };
+
+  const handleSheetTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleSheetTouchEnd = (e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(delta) < 30) return;
+    if (delta < 0) {
+      setSheetPos((p) => (p === "peek" ? "half" : "full"));
+    } else {
+      setSheetPos((p) => (p === "full" ? "half" : "peek"));
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
-      {/* ── Controls bar ─────────────────────────────────────────── */}
-      <div className="shrink-0 px-4 py-3 bg-white border-b border-gray-200">
+      {/* ── Controls bar (desktop only) ────────────────────────── */}
+      <div className="hidden lg:block shrink-0 px-4 py-3 bg-white border-b border-gray-200">
         <div className="flex flex-wrap items-end gap-2.5">
           {/* Destination — with geocoding search */}
           <div className="flex items-end gap-1.5 min-w-0 flex-1 relative">
@@ -501,7 +552,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
       {/* ── Data source info banner ───────────────────────────────── */}
       {searched && !loading && results.length > 0 && (
         <div
-          className={`shrink-0 flex items-center gap-2 px-4 py-2 text-xs border-b border-gray-200 ${
+          className={`shrink-0 hidden lg:flex items-center gap-2 px-4 py-2 text-xs border-b border-gray-200 ${
             dataSource === "archive"
               ? "bg-amber-50 text-amber-700"
               : "bg-sky-50 text-sky-700"
@@ -529,9 +580,21 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
       )}
 
       {/* ── Map + Results ─────────────────────────────────────────── */}
-      <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
-        {/* Map — taller on mobile */}
-        <div className="lg:flex-1 h-56 sm:h-64 min-h-[14rem] lg:h-full border-b lg:border-b-0 lg:border-r border-gray-200">
+      <div className="flex flex-1 min-h-0 flex-col lg:flex-row relative">
+        {/* Map — full height on mobile, flex-1 on desktop */}
+        <div className="flex-1 min-h-0 lg:h-full lg:border-r border-gray-200 relative">
+          {/* Mobile compact controls overlay */}
+          <div className="lg:hidden absolute top-3 left-3 right-3 z-10">
+            <button
+              onClick={() => setFiltersOpen(true)}
+              className="w-full bg-white/95 backdrop-blur-sm rounded-xl shadow-md px-3 py-2.5 flex items-center gap-2 text-sm border border-gray-200/50"
+            >
+              <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+              <span className="text-gray-600 truncate flex-1 text-left text-xs">
+                {filterSummary || "Rechercher…"}
+              </span>
+            </button>
+          </div>
           <KiteMap
             spots={results}
             pickMode={true}
@@ -540,8 +603,73 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
           />
         </div>
 
-        {/* Results panel */}
-        <div className="w-full lg:w-105 flex flex-col min-h-0">
+        {/* Results panel — bottom sheet on mobile, side panel on desktop */}
+        <div
+          ref={sheetRef}
+          className={`
+            absolute bottom-0 left-0 right-0 z-20
+            lg:static lg:z-auto
+            ${sheetTranslateClass} lg:translate-y-0
+            w-full lg:w-105
+            flex flex-col min-h-0
+            bg-white rounded-t-2xl lg:rounded-none
+            shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:shadow-none
+            max-h-[85vh] lg:max-h-none
+            transition-transform duration-300 ease-out lg:transition-none
+            border-t border-gray-200 lg:border-t-0
+          `}
+        >
+          {/* Mobile drag handle */}
+          <div
+            className="lg:hidden flex flex-col items-center pt-2 pb-1 cursor-grab active:cursor-grabbing"
+            onTouchStart={handleSheetTouchStart}
+            onTouchEnd={handleSheetTouchEnd}
+            onClick={handleSheetToggle}
+          >
+            <div className="w-10 h-1 rounded-full bg-gray-300 mb-1.5" />
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+              <span>
+                {loading
+                  ? "Recherche…"
+                  : results.length > 0
+                    ? `${results.length} spot${results.length > 1 ? "s" : ""} trouvé${results.length > 1 ? "s" : ""}`
+                    : searched
+                      ? "Aucun résultat"
+                      : "Résultats"}
+              </span>
+              <ChevronUp
+                className={`h-3.5 w-3.5 transition-transform ${sheetPos === "full" ? "rotate-180" : ""}`}
+              />
+            </div>
+          </div>
+
+          {/* Mobile data source banner */}
+          {searched && !loading && results.length > 0 && (
+            <div
+              className={`lg:hidden flex items-center gap-2 px-4 py-2 text-xs border-b border-gray-200 ${
+                dataSource === "archive"
+                  ? "bg-amber-50 text-amber-700"
+                  : "bg-sky-50 text-sky-700"
+              }`}
+            >
+              {dataSource === "archive" ? (
+                <>
+                  <Archive className="h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    <strong>Données historiques</strong> — archives météo
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Info className="h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    <strong>Prévisions temps réel</strong>
+                  </span>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Sort bar */}
           {results.length > 1 && (
             <div className="shrink-0 flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-100 text-xs">
@@ -951,6 +1079,227 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
           </div>
         </div>
       </div>
+
+      {/* ── Mobile expanded filters overlay ───────────────────── */}
+      {filtersOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-900">Filtres</h3>
+              <button
+                onClick={() => setFiltersOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Destination */}
+            <div className="mb-3">
+              <label className="text-xs text-gray-500 mb-1 block">
+                Destination <span className="text-gray-400">(optionnel)</span>
+              </label>
+              <div className="flex gap-1.5">
+                <div className="flex-1 min-w-0 relative">
+                  {hasLocation && !geoQuery ? (
+                    <div
+                      className={`${ctrlInput} flex items-center gap-2 h-10 w-full`}
+                    >
+                      <MapPin className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+                      <span className="truncate text-gray-700 text-sm flex-1">
+                        {locationName ||
+                          `${lat!.toFixed(3)}°, ${lng!.toFixed(3)}°`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={clearLocation}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div
+                        className={`${ctrlInput} flex items-center gap-2 h-10 w-full`}
+                      >
+                        <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                        <input
+                          type="text"
+                          value={geoQuery}
+                          onChange={(e) => {
+                            setGeoQuery(e.target.value);
+                            searchGeo(e.target.value);
+                          }}
+                          onFocus={() => geoResults.length && setGeoOpen(true)}
+                          placeholder="Ville, lieu…"
+                          className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400"
+                        />
+                      </div>
+                      {geoOpen && geoResults.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                          {geoResults.map((r, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => selectGeoResult(r)}
+                              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-sky-50 hover:text-sky-700 border-b border-gray-100 last:border-0 flex items-center gap-2"
+                            >
+                              <MapPin className="h-3 w-3 text-gray-400 shrink-0" />
+                              <span className="truncate">{r.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={handleGeolocate}
+                  disabled={geoLoading}
+                  title="Ma position"
+                  className="h-10 w-10 shrink-0 flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600 disabled:opacity-40"
+                >
+                  <Locate className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Date range */}
+            <div className="flex gap-2 mb-3">
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 mb-1 block">Du</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  min={toISO(0)}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    if (e.target.value > endDate) setEndDate(e.target.value);
+                  }}
+                  className={`${ctrlInput} w-full h-10`}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 mb-1 block">Au</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className={`${ctrlInput} w-full h-10`}
+                />
+              </div>
+            </div>
+
+            {/* Radius + Sport */}
+            <div className="flex gap-3 mb-5">
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Rayon
+                  {!hasLocation && (
+                    <span className="text-gray-400"> (ignoré)</span>
+                  )}
+                </label>
+                <select
+                  value={radius}
+                  onChange={(e) => setRadius(Number(e.target.value))}
+                  className={`${ctrlInput} w-full h-10`}
+                  disabled={!hasLocation}
+                >
+                  <option value={50}>50 km</option>
+                  <option value={100}>100 km</option>
+                  <option value={150}>150 km</option>
+                  <option value={300}>300 km</option>
+                  <option value={500}>500 km</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Sport
+                </label>
+                <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm h-10">
+                  {(
+                    [
+                      ["ALL", "Tous"],
+                      ["KITE", "Kite"],
+                      ["PARAGLIDE", "Para"],
+                    ] as const
+                  ).map(([key, label], i) => (
+                    <button
+                      key={key}
+                      onClick={() => setSport(key)}
+                      className={`px-3 py-2 font-medium transition-colors ${
+                        sport === key
+                          ? "bg-gray-900 text-white"
+                          : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                      } ${i > 0 ? "border-l border-gray-200" : ""}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Search buttons */}
+            <div className="space-y-2">
+              {hasLocation ? (
+                <Button
+                  onClick={() => {
+                    handleSearch();
+                    setFiltersOpen(false);
+                  }}
+                  disabled={loading}
+                  className="h-11 w-full"
+                >
+                  {loading ? "Recherche…" : "Trouver"}
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => {
+                      handleSearchNearMe();
+                      setFiltersOpen(false);
+                    }}
+                    disabled={loading || geoLoading}
+                    className="h-11 w-full"
+                    variant="secondary"
+                  >
+                    {geoLoading ? (
+                      "Localisation…"
+                    ) : loading ? (
+                      "Recherche…"
+                    ) : (
+                      <>
+                        <Locate className="h-3.5 w-3.5 mr-1" />
+                        Autour de moi
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      handleSearch();
+                      setFiltersOpen(false);
+                    }}
+                    disabled={loading}
+                    className="h-11 w-full"
+                  >
+                    {loading ? (
+                      "Recherche…"
+                    ) : (
+                      <>
+                        <Globe className="h-3.5 w-3.5 mr-1" />
+                        Meilleurs spots
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
