@@ -28,29 +28,29 @@ export function Navbar() {
         />
       </Link>
 
-      <nav className="flex items-center gap-1">
+      <nav className="flex items-center gap-0.5 sm:gap-1">
         {links.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
+              "flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 sm:px-3 sm:py-1.5 text-sm transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0",
               pathname === href
                 ? "bg-sky-50 text-sky-600"
                 : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
             )}
           >
-            <Icon className="h-4 w-4" />
-            {label}
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">{label}</span>
           </Link>
         ))}
 
         <Link
           href="/spots/new"
-          className="ml-2 flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
+          className="ml-1 sm:ml-2 flex items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-2.5 py-2 sm:px-3 sm:py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
         >
-          <Plus className="h-4 w-4" />
-          Ajouter un spot
+          <Plus className="h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline">Ajouter un spot</span>
         </Link>
       </nav>
     </header>

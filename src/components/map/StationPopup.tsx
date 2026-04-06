@@ -16,6 +16,8 @@ interface StationInfo {
   colorHex: string;
   dirLabel: string;
   source: string;
+  lat: number;
+  lng: number;
 }
 
 interface StationPopupProps {
@@ -37,19 +39,20 @@ export function StationPopup({
   const [flipBelow, setFlipBelow] = useState(false);
   const [popupH, setPopupH] = useState(0);
 
-  // Fetch 48h history
+  // Fetch 48h history (API now returns combined past + 15-min forecast)
   useEffect(() => {
     let cancelled = false;
     const encodedId = encodeURIComponent(station.id);
+
     fetch(`/api/stations/${encodedId}/history`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!cancelled && Array.isArray(data)) setHistory(data);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+      .catch(() => null)
+      .then((histData) => {
+        if (cancelled) return;
+        if (Array.isArray(histData)) setHistory(histData);
+        setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
@@ -107,6 +110,9 @@ export function StationPopup({
   const vw = typeof window !== "undefined" ? window.innerWidth : 800;
   const vh = typeof window !== "undefined" ? window.innerHeight : 600;
   const margin = 10;
+  // Popup width clamped to 90vw — compute half for centering
+  const popupW = Math.min(420, vw * 0.9);
+  const halfW = popupW / 2;
 
   let top: number;
   if (!flipBelow) {
@@ -120,7 +126,7 @@ export function StationPopup({
 
   const style: React.CSSProperties = {
     position: "fixed",
-    left: Math.min(Math.max(position.x, 220), vw - 220),
+    left: Math.min(Math.max(position.x, halfW + margin), vw - halfW - margin),
     top,
     transform: "translate(-50%, 0)",
     zIndex: 100,
@@ -179,7 +185,7 @@ export function StationPopup({
         </svg>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold tabular-nums" style={{ color }}>
+            <span className="text-2xl font-bold tabular-nums text-gray-900">
               {primary}
             </span>
             <span className="text-xs text-gray-400">{secondary}</span>
@@ -188,10 +194,7 @@ export function StationPopup({
             {dirLabel} · {dir}°
           </div>
         </div>
-        <span
-          className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white shrink-0"
-          style={{ background: color }}
-        >
+        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 shrink-0">
           {condLabel}
         </span>
       </div>

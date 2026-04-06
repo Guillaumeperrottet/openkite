@@ -69,19 +69,6 @@ function WindArrow({ direction }: { direction: number }) {
   );
 }
 
-/** Kite quality dot. Green = idéal, sky = correct, gray = limite. */
-function KiteDot({ score }: { score: 0 | 1 | 2 | 3 }) {
-  if (score === 3)
-    return (
-      <span className="block mx-auto w-2 h-2 rounded-full bg-emerald-400" />
-    );
-  if (score === 2)
-    return <span className="block mx-auto w-2 h-2 rounded-full bg-sky-400" />;
-  if (score === 1)
-    return <span className="block mx-auto w-2 h-2 rounded-full bg-zinc-500" />;
-  return null;
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -292,56 +279,45 @@ export function ForecastTable({ forecast, light = true }: Props) {
                 </tr>
               </>
             )}
-
-            {/* Kite score indicator */}
-            <tr>
-              <td
-                className={`${LABEL_CELL} border-t ${light ? "border-gray-100" : "border-white/10"}`}
-              >
-                <span className="flex items-center justify-end gap-1">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  Kite
-                </span>
-              </td>
-              {allPoints.map((pt, i) => (
-                <td
-                  key={i}
-                  className={`${DATA_CELL} border-t ${light ? "border-gray-100" : "border-white/10"} ${isDayStart(pt, i) ? DAY_BORDER : ""}`}
-                  title={
-                    pt.kitableScore >= 2
-                      ? `${roundKnots(pt.windSpeedKmh)} kn — ${pt.kitableScore === 3 ? "Idéal" : "Correct"}`
-                      : pt.kitableScore === 1
-                        ? `${roundKnots(pt.windSpeedKmh)} kn — Limite`
-                        : ""
-                  }
-                >
-                  <KiteDot score={pt.kitableScore} />
-                </td>
-              ))}
-            </tr>
           </tbody>
         </table>
       </div>
 
-      {/* Footer */}
+      {/* Footer — wind color legend */}
       <div
-        className={`flex items-center justify-between px-4 py-2 border-t ${light ? "border-gray-100 text-gray-400" : "border-white/10 text-zinc-600"}`}
+        className={`px-4 py-2.5 border-t ${light ? "border-gray-100" : "border-white/10"}`}
       >
-        <span>Open-Meteo · CC BY 4.0 · Fuseau : {forecast.timezone}</span>
-        <span className="flex items-center gap-3">
-          <span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1" />
-            Idéal
-          </span>
-          <span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-sky-400 mr-1" />
-            Correct
-          </span>
-          <span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-zinc-500 mr-1" />
-            Limite
-          </span>
-        </span>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px]">
+          {[
+            { bg: "#d5f0d5", label: "Calme", range: "< 5 kn" },
+            { bg: "#8edb8e", label: "Léger", range: "5–8" },
+            { bg: "#3dbc3d", label: "Modéré", range: "8–12" },
+            { bg: "#e8e540", label: "Kitable", range: "12–16" },
+            { bg: "#e8b830", label: "Bon", range: "16–20" },
+            { bg: "#e07020", label: "Fort", range: "20–25" },
+            { bg: "#d42020", label: "Très fort", range: "25–30", white: true },
+            { bg: "#b00058", label: "Extrême", range: "30–35", white: true },
+            { bg: "#800080", label: "Danger", range: "> 35", white: true },
+          ].map((item) => (
+            <span key={item.label} className="inline-flex items-center gap-1">
+              <span
+                className="inline-block w-3 h-3 rounded-sm"
+                style={{ background: item.bg }}
+              />
+              <span className={light ? "text-gray-500" : "text-zinc-400"}>
+                {item.label}{" "}
+                <span className={light ? "text-gray-400" : "text-zinc-500"}>
+                  {item.range}
+                </span>
+              </span>
+            </span>
+          ))}
+        </div>
+        <div
+          className={`mt-1.5 text-[9px] ${light ? "text-gray-400" : "text-zinc-600"}`}
+        >
+          Open-Meteo · CC BY 4.0 · Fuseau : {forecast.timezone}
+        </div>
       </div>
     </div>
   );

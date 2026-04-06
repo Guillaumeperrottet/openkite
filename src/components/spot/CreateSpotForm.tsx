@@ -5,7 +5,15 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { MapPin, Upload, X, Wind, Sailboat, Mountain } from "lucide-react";
+import {
+  MapPin,
+  Upload,
+  X,
+  Wind,
+  Sailboat,
+  Mountain,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { KiteMap } from "@/components/map/KiteMap";
 import { WindDirectionPicker } from "@/components/spot/WindDirectionRose";
@@ -47,6 +55,12 @@ const toKmh = (kts: number) => Math.round(kts * 1.852);
 
 type StationWithDist = WindStation & { dist: number };
 
+export interface ExistingImage {
+  id: string;
+  url: string;
+  caption: string | null;
+}
+
 export interface SpotInitialData {
   id: string;
   name: string;
@@ -65,6 +79,7 @@ export interface SpotInitialData {
   hazards: string | null;
   access: string | null;
   nearestStationId: string | null;
+  existingImages?: ExistingImage[];
 }
 
 interface Props {
@@ -78,7 +93,13 @@ export function CreateSpotForm({ initialData }: Props = {}) {
   const router = useRouter();
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>(
+    initialData?.existingImages ?? [],
+  );
+  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useKnots, setUseKnots] = useState(true);
   const [nearbyStations, setNearbyStations] = useState<StationWithDist[]>([]);
@@ -236,28 +257,24 @@ export function CreateSpotForm({ initialData }: Props = {}) {
 
       const spot = await res.json();
 
-      // Upload new images (create mode only for now)
-      if (!isEditMode && images.length > 0) {
-        const { createClient } = await import("@/lib/supabase/client");
-        const supabase = createClient();
-        const bucket = process.env.NEXT_PUBLIC_STORAGE_BUCKET || "spot-images";
+      // Delete removed images
+      if (deletedImageIds.length > 0) {
+        await fetch(`/api/spots/${spot.id}/images`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageIds: deletedImageIds }),
+        });
+      }
 
+      // Upload new images via server-side API route
+      if (images.length > 0) {
         for (const file of images) {
-          const ext = file.name.split(".").pop();
-          const path = `${spot.id}/${Date.now()}.${ext}`;
-          const { data: upload, error: uploadErr } = await supabase.storage
-            .from(bucket)
-            .upload(path, file);
-          if (upload && !uploadErr) {
-            const {
-              data: { publicUrl },
-            } = supabase.storage.from(bucket).getPublicUrl(path);
-            await fetch(`/api/spots/${spot.id}/images`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ url: publicUrl }),
-            });
-          }
+          const formData = new FormData();
+          formData.append("file", file);
+          await fetch(`/api/spots/${spot.id}/images`, {
+            method: "POST",
+            body: formData,
+          });
         }
       }
 
@@ -272,6 +289,33 @@ export function CreateSpotForm({ initialData }: Props = {}) {
   // ── Helpers ──────────────────────────────────────────────────────────────
   const windDisplay = (kmh: number) => (useKnots ? toKts(kmh) : kmh);
   const windUnit = useKnots ? "kts" : "km/h";
+
+  // ── Delete spot ──────────────────────────────────────────────────────────
+  const handleDelete = async () => {
+    if (!initialData?.id) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/spots/${initialData.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setError(
+          typeof err.error === "string"
+            ? err.error
+            : "Erreur lors de la suppression",
+        );
+        return;
+      }
+      router.push("/");
+    } catch {
+      setError("Erreur réseau, veuillez réessayer");
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const inputClass =
     "w-full rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sky-500 transition-colors";
@@ -684,10 +728,32 @@ export function CreateSpotForm({ initialData }: Props = {}) {
                 onChange={handleImageChange}
               />
             </label>
-            {imagePreviews.length > 0 && (
+            {(existingImages.length > 0 || imagePreviews.length > 0) && (
               <div className="flex gap-2 mt-3 flex-wrap">
+                {existingImages.map((img) => (
+                  <div key={img.id} className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={img.caption || ""}
+                      className="h-20 w-20 rounded-lg object-cover border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeletedImageIds((prev) => [...prev, img.id]);
+                        setExistingImages((prev) =>
+                          prev.filter((i) => i.id !== img.id),
+                        );
+                      }}
+                      className="absolute -top-1.5 -right-1.5 rounded-full bg-white border border-gray-200 p-0.5 text-gray-400 hover:text-gray-900"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
                 {imagePreviews.map((src, i) => (
-                  <div key={i} className="relative">
+                  <div key={`new-${i}`} className="relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={src}
@@ -710,7 +776,7 @@ export function CreateSpotForm({ initialData }: Props = {}) {
           {/* Submit */}
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || deleting}
             size="lg"
             className="w-full"
           >
@@ -722,6 +788,51 @@ export function CreateSpotForm({ initialData }: Props = {}) {
                 ? "Sauvegarder les modifications"
                 : "Créer le spot"}
           </Button>
+
+          {/* Delete spot (edit mode only) */}
+          {isEditMode && (
+            <div className="pt-4 border-t border-gray-200">
+              {!showDeleteConfirm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={submitting || deleting}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Supprimer ce spot
+                </button>
+              ) : (
+                <div className="rounded-lg bg-red-50 border border-red-200 p-4 space-y-3">
+                  <p className="text-sm text-red-700 font-medium">
+                    Supprimer « {initialData!.name} » ?
+                  </p>
+                  <p className="text-xs text-red-600">
+                    Cette action est irréversible. Le spot et toutes ses images
+                    seront supprimés.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(false)}
+                      disabled={deleting}
+                      className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                    >
+                      {deleting ? "Suppression..." : "Confirmer"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <p className="text-[10px] text-gray-400 text-center">
             Toutes les informations sont publiques et modifiables par tous.

@@ -126,22 +126,25 @@ prisma/
 
 ## UI / Design
 
-- **Thème** : dark uniquement — palette `zinc` (fond), `sky` (accent), `slate` (texte secondaire)
+- **Thème** : light uniquement
 - **Langue interface** : français
 - Composants Tailwind — pas de librairie UI externe (pas shadcn, pas Chakra)
 - `tw-merge` + `clsx` pour les classes conditionnelles
 
-### Palette couleurs vent (par windSpeedKmh)
+### Palette couleurs vent — Windguru style atténué (par kn)
 
-| Plage km/h | Couleur               | Kts équivalent |
-| ---------- | --------------------- | -------------- |
-| < 8        | `#f0f0f0` (calme)     | < 4            |
-| 8–15       | `#d0d0d0` (faible)    | 4–8            |
-| 15–22      | `#a8bdd4` (léger)     | 8–12           |
-| 22–30      | `#6a9cbd` (bon)       | 12–16          |
-| 30–38      | `#3a7fa8` (fort)      | 16–21          |
-| 38–50      | `#e07720` (très fort) | 21–27          |
-| > 50       | `#cc3333` (danger)    | > 27           |
+| Plage kn | Couleur               | Label      |
+| -------- | --------------------- | ---------- |
+| < 2      | `#d0d0d0` (gris)      | Calme      |
+| 2–5      | `#d5f0d5` (vert pâle) | Très léger |
+| 5–8      | `#8edb8e` (vert)      | Léger      |
+| 8–12     | `#3dbc3d` (vert vif)  | Modéré     |
+| 12–16    | `#e8e540` (jaune)     | Kitable    |
+| 16–20    | `#e8b830` (ambre)     | Bon        |
+| 20–25    | `#e07020` (orange)    | Fort       |
+| 25–30    | `#d42020` (rouge)     | Très fort  |
+| 30–35    | `#b00058` (magenta)   | Extrême    |
+| > 35     | `#800080` (violet)    | Danger     |
 
 ---
 

@@ -14,6 +14,8 @@ interface KiteMapProps {
   /** If true, clicking the map sets a location (for trip planner) */
   pickMode?: boolean;
   onPickLocation?: (lat: number, lng: number) => void;
+  /** Spot ID to highlight (e.g. on hover from results panel) */
+  highlightSpotId?: string | null;
 }
 
 const MAP_STYLE =
@@ -24,6 +26,7 @@ export function KiteMap({
   spots,
   pickMode = false,
   onPickLocation,
+  highlightSpotId,
 }: KiteMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -43,7 +46,7 @@ export function KiteMap({
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(
     null,
   );
-  const [showStations, setShowStations] = useState(true);
+  const [showStations, setShowStations] = useState(!pickMode);
   const [stationsUpdatedAt, setStationsUpdatedAt] = useState<string | null>(
     null,
   );
@@ -65,6 +68,8 @@ export function KiteMap({
     colorHex: string;
     dirLabel: string;
     source: string;
+    lat: number;
+    lng: number;
   } | null>(null);
   const [stationPopupPos, setStationPopupPos] = useState<{
     x: number;
@@ -282,65 +287,7 @@ export function KiteMap({
         });
       }
 
-      // ── Kite icon (SDF) — from kitesurfing.png ────────────────────────────
-      {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const s = 64;
-          const c2 = document.createElement("canvas");
-          c2.width = s;
-          c2.height = s;
-          const cx = c2.getContext("2d")!;
-          cx.drawImage(img, 0, 0, s, s);
-          // Convert all opaque pixels to white for SDF recoloring
-          const imageData = cx.getImageData(0, 0, s, s);
-          const d = imageData.data;
-          for (let i = 0; i < d.length; i += 4) {
-            if (d[i + 3] > 0) {
-              d[i] = 255;
-              d[i + 1] = 255;
-              d[i + 2] = 255;
-            }
-          }
-          if (!map.hasImage("spot-kite")) {
-            map.addImage("spot-kite", imageData, { sdf: true });
-          }
-        };
-        img.src = "/kitesurfing.png";
-      }
-
-      // ── Paraglide icon (SDF) — parachute+pilot shape ─────────────────────
-      {
-        const s = 48;
-        const c3 = document.createElement("canvas");
-        c3.width = s;
-        c3.height = s;
-        const cx = c3.getContext("2d")!;
-        cx.fillStyle = "white";
-        // Canopy arc
-        cx.beginPath();
-        cx.ellipse(24, 16, 18, 12, 0, Math.PI, 0);
-        cx.fill();
-        // Lines from canopy to pilot
-        cx.strokeStyle = "white";
-        cx.lineWidth = 1.5;
-        cx.beginPath();
-        cx.moveTo(8, 16);
-        cx.lineTo(20, 36);
-        cx.moveTo(40, 16);
-        cx.lineTo(28, 36);
-        cx.stroke();
-        // Pilot body
-        cx.beginPath();
-        cx.arc(24, 38, 5, 0, Math.PI * 2);
-        cx.fill();
-        if (!map.hasImage("spot-paraglide")) {
-          map.addImage("spot-paraglide", cx.getImageData(0, 0, s, s), {
-            sdf: true,
-          });
-        }
-      }
+      // ── Spot icons removed — spots use plain colored circles ──────────────
 
       // ── Wind overlay (OpenWeatherMap raster tiles) ────────────────────────
       // Source+layer are added/removed dynamically by the toggle effect below.
@@ -476,6 +423,7 @@ export function KiteMap({
       map.on("click", "stations-circle", (e) => {
         if (!e.features?.length) return;
         const p = e.features[0].properties as Record<string, unknown>;
+        const coords = (e.features[0].geometry as GeoJSON.Point).coordinates;
         setSelectedStation({
           id: String(p.id ?? ""),
           name: String(p.name ?? ""),
@@ -486,6 +434,8 @@ export function KiteMap({
           colorHex: String(p.colorHex ?? "#6a9cbd"),
           dirLabel: String(p.dirLabel ?? ""),
           source: String(p.source ?? "meteoswiss"),
+          lat: coords[1],
+          lng: coords[0],
         });
         setStationPopupPos({
           x: e.originalEvent.clientX,
@@ -503,85 +453,138 @@ export function KiteMap({
         map.getCanvas().style.cursor = "";
       });
 
-      // ── Spot GeoJSON layers ──────────────────────────────────────────────
+      // ── Spot GeoJSON layers (with clustering) ────────────────────────────
       map.addSource("spots-source", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
+        // Disable clustering in pick/plan mode (few results, need individual spots)
+        cluster: !pickMode,
+        clusterMaxZoom: 12,
+        clusterRadius: 50,
       });
 
-      // Circle background — gray by default, colored when wind data available
+      // ── Cluster layers ──────────────────────────────────────────────────
+      map.addLayer({
+        id: "spots-clusters",
+        type: "circle",
+        source: "spots-source",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": [
+            "step",
+            ["get", "point_count"],
+            "#3b82f6", // blue < 10
+            10,
+            "#2563eb", // darker blue 10-50
+            50,
+            "#1d4ed8", // deep blue 50-200
+            200,
+            "#1e40af", // navy 200+
+          ],
+          "circle-radius": [
+            "step",
+            ["get", "point_count"],
+            18, // < 10
+            10,
+            22, // 10-50
+            50,
+            28, // 50-200
+            200,
+            34, // 200+
+          ],
+          "circle-stroke-color": "rgba(255,255,255,0.7)",
+          "circle-stroke-width": 2,
+        },
+      });
+
+      map.addLayer({
+        id: "spots-cluster-count",
+        type: "symbol",
+        source: "spots-source",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": "{point_count_abbreviated}",
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-size": 13,
+          "text-allow-overlap": true,
+        },
+        paint: {
+          "text-color": "#ffffff",
+        },
+      });
+
+      // Click on cluster → zoom in
+      map.on("click", "spots-clusters", (e) => {
+        const features = map.queryRenderedFeatures(e.point, {
+          layers: ["spots-clusters"],
+        });
+        if (!features.length) return;
+        const clusterId = features[0].properties?.cluster_id;
+        const source = map.getSource(
+          "spots-source",
+        ) as maplibregl.GeoJSONSource;
+        source.getClusterExpansionZoom(clusterId).then((zoom) => {
+          map.easeTo({
+            center: (features[0].geometry as GeoJSON.Point).coordinates as [
+              number,
+              number,
+            ],
+            zoom: zoom + 0.5,
+          });
+        });
+      });
+
+      map.on("mouseenter", "spots-clusters", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "spots-clusters", () => {
+        map.getCanvas().style.cursor = "";
+      });
+
+      // ── Unclustered spot circles — green (KITE) / orange (PARAGLIDE) ────
       map.addLayer({
         id: "spots-circle",
         type: "circle",
         source: "spots-source",
+        filter: ["!", ["has", "point_count"]],
         paint: {
-          "circle-radius": 14,
+          "circle-radius": 8,
           "circle-color": [
-            "step",
-            ["get", "windSpeedKmh"],
-            "#c8d4dc", // 0 – gray (no wind / calm)
-            8,
-            "#d0d0d0",
-            15,
-            "#a8bdd4",
-            22,
-            "#6a9cbd",
-            30,
-            "#3a7fa8",
-            38,
-            "#e07720",
-            50,
-            "#cc3333",
+            "match",
+            ["get", "sportType"],
+            "KITE",
+            "#22c55e",
+            "PARAGLIDE",
+            "#f97316",
+            "#22c55e",
           ],
           "circle-stroke-color": "rgba(255,255,255,0.7)",
-          "circle-stroke-width": 2,
+          "circle-stroke-width": 1.5,
           "circle-opacity": 0.95,
         },
       });
 
-      // Sport icon (kite or paraglide) — SDF colored to match circle
-      map.addLayer({
-        id: "spots-icon",
-        type: "symbol",
-        source: "spots-source",
-        layout: {
-          "icon-image": [
-            "match",
-            ["get", "sportType"],
-            "KITE",
-            "spot-kite",
-            "spot-paraglide",
-          ],
-          "icon-allow-overlap": true,
-          "icon-ignore-placement": true,
-          "icon-size": 0.55,
-        },
-        paint: {
-          "icon-color": "#ffffff",
-        },
-      });
-
-      // Pulse ring for spots with decent wind (>= 22 km/h ≈ 12 kts)
+      // Pulse ring for spots (active only when wind >= 12 kts ≈ 22 km/h)
       map.addLayer(
         {
           id: "spots-pulse",
           type: "circle",
           source: "spots-source",
-          filter: [">=", ["get", "windSpeedKmh"], 22],
+          filter: [
+            "all",
+            ["!", ["has", "point_count"]],
+            [">=", ["get", "windSpeedKmh"], 22],
+          ],
           paint: {
-            "circle-radius": 14,
+            "circle-radius": 8,
             "circle-color": [
-              "step",
-              ["get", "windSpeedKmh"],
-              "#a8bdd4",
-              22,
-              "#6a9cbd",
-              30,
-              "#3a7fa8",
-              38,
-              "#e07720",
-              50,
-              "#cc3333",
+              "match",
+              ["get", "sportType"],
+              "KITE",
+              "#22c55e",
+              "PARAGLIDE",
+              "#f97316",
+              "#22c55e",
             ],
             "circle-opacity": 0.4,
             "circle-stroke-width": 0,
@@ -589,6 +592,21 @@ export function KiteMap({
         },
         "spots-circle",
       );
+
+      // Highlight ring for hovered spot from results panel
+      map.addLayer({
+        id: "spots-highlight",
+        type: "circle",
+        source: "spots-source",
+        filter: ["==", ["get", "id"], ""],
+        paint: {
+          "circle-radius": 16,
+          "circle-color": "transparent",
+          "circle-stroke-color": "#0ea5e9",
+          "circle-stroke-width": 3,
+          "circle-opacity": 1,
+        },
+      });
 
       // Animate both station and spot pulse rings in a single rAF loop
       if (pulseFrameRef.current !== null) {
@@ -612,7 +630,7 @@ export function KiteMap({
           );
         }
         if (map.getLayer("spots-pulse")) {
-          map.setPaintProperty("spots-pulse", "circle-radius", 14 + wave * 10);
+          map.setPaintProperty("spots-pulse", "circle-radius", 8 + wave * 8);
           map.setPaintProperty(
             "spots-pulse",
             "circle-opacity",
@@ -685,6 +703,72 @@ export function KiteMap({
       mapRef.current = null;
     };
   }, []);
+
+  // Track spot popup position on map move — close if off-screen
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !selectedSpot) return;
+
+    const updatePos = () => {
+      const px = map.project([selectedSpot.longitude, selectedSpot.latitude]);
+      const { clientWidth: w, clientHeight: h } = map.getCanvas();
+      const margin = 60;
+      if (
+        px.x < -margin ||
+        px.x > w + margin ||
+        px.y < -margin ||
+        px.y > h + margin
+      ) {
+        setSelectedSpot(null);
+        setPopupPos(null);
+        return;
+      }
+      setPopupPos({ x: px.x, y: px.y });
+    };
+
+    map.on("move", updatePos);
+    return () => {
+      map.off("move", updatePos);
+    };
+  }, [selectedSpot]);
+
+  // Close popups when clicking on empty map area
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+
+    const handleMapClick = (e: maplibregl.MapMouseEvent) => {
+      // Check if click landed on a spot or station feature — if so, let layer handlers deal with it
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: [
+          ...(map.getLayer("spots-circle") ? ["spots-circle"] : []),
+          ...(map.getLayer("spots-clusters") ? ["spots-clusters"] : []),
+          ...(map.getLayer("stations-circle") ? ["stations-circle"] : []),
+        ],
+      });
+      if (features.length > 0) return;
+      setSelectedSpot(null);
+      setPopupPos(null);
+      setSelectedStation(null);
+      setStationPopupPos(null);
+    };
+
+    map.on("click", handleMapClick);
+
+    // Close popups when map is dragged / panned
+    const handleMoveStart = () => {
+      setSelectedSpot(null);
+      setPopupPos(null);
+      setSelectedStation(null);
+      setStationPopupPos(null);
+    };
+    map.on("movestart", handleMoveStart);
+
+    return () => {
+      map.off("click", handleMapClick);
+      map.off("movestart", handleMoveStart);
+    };
+  }, [mapLoaded]);
 
   // Handle pick mode (trip planner)
   useEffect(() => {
@@ -1204,35 +1288,66 @@ export function KiteMap({
     // Initial render (gray — no wind data yet)
     renderSpots(spots);
 
-    // Fetch current wind for each spot in a single Open-Meteo call
-    const lats = spots.map((s) => s.latitude).join(",");
-    const lons = spots.map((s) => s.longitude).join(",");
+    // Fetch current wind in batches of 50 (Open-Meteo URL length limit)
+    const BATCH = 50;
     const controller = new AbortController();
+    const windMap = new Map<string, number>();
 
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=wind_speed_10m&wind_speed_unit=kmh`,
-      { signal: controller.signal },
-    )
-      .then((r) => (r.ok ? r.json() : null))
-      .then((raw: unknown) => {
-        if (!raw) return;
-        const data = Array.isArray(raw)
-          ? (raw as Array<{ current: { wind_speed_10m: number } }>)
-          : [raw as { current: { wind_speed_10m: number } }];
-        const windMap = new Map<string, number>();
-        data.forEach((d, i) => {
-          if (spots[i] && d?.current) {
-            windMap.set(spots[i].id, d.current.wind_speed_10m);
-          }
-        });
-        renderSpots(spots, windMap);
-      })
-      .catch(() => {
-        /* keep gray markers on failure */
-      });
+    const fetchBatches = async () => {
+      for (let i = 0; i < spots.length; i += BATCH) {
+        if (controller.signal.aborted) return;
+        const batch = spots.slice(i, i + BATCH);
+        const lats = batch.map((s) => s.latitude).join(",");
+        const lons = batch.map((s) => s.longitude).join(",");
+        try {
+          const r = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=wind_speed_10m&wind_speed_unit=kmh`,
+            { signal: controller.signal },
+          );
+          if (!r.ok) continue;
+          const raw: unknown = await r.json();
+          const data = Array.isArray(raw)
+            ? (raw as Array<{ current: { wind_speed_10m: number } }>)
+            : [raw as { current: { wind_speed_10m: number } }];
+          data.forEach((d, j) => {
+            if (batch[j] && d?.current) {
+              windMap.set(batch[j].id, d.current.wind_speed_10m);
+            }
+          });
+          // Progressive update — re-render after each batch
+          renderSpots(spots, windMap);
+        } catch {
+          /* keep gray markers on failure */
+        }
+      }
+    };
+    fetchBatches();
 
     return () => controller.abort();
   }, [spots, mapLoaded, renderSpots]);
+
+  // Highlight a spot on hover from external panel (e.g. TripPlanner results)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    if (!map.getLayer("spots-highlight")) return;
+
+    if (!highlightSpotId) {
+      map.setFilter("spots-highlight", ["==", ["get", "id"], ""]);
+      return;
+    }
+    map.setFilter("spots-highlight", ["==", ["get", "id"], highlightSpotId]);
+
+    // Fly to the highlighted spot
+    const spot = spots.find((s) => s.id === highlightSpotId);
+    if (spot) {
+      map.easeTo({
+        center: [spot.longitude, spot.latitude],
+        zoom: Math.max(map.getZoom(), 8),
+        duration: 600,
+      });
+    }
+  }, [highlightSpotId, mapLoaded, spots]);
 
   return (
     <div className="relative w-full h-full">

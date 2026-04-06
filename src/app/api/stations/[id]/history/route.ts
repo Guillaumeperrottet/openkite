@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { fetchWindHistoryStation, fetchWindHistory } from "@/lib/wind";
+import {
+  fetchWindHistoryStation,
+  fetchWindHistory,
+  fetchWindForecast15min,
+} from "@/lib/wind";
 import { fetchMeteoSwissStations } from "@/lib/stations";
 import { fetchPioupiouHistory } from "@/lib/pioupiou";
 
@@ -44,26 +48,30 @@ export async function GET(
 
   // ── MeteoSwiss station ──────────────────────────────────────────────
   try {
-    const history = await fetchWindHistoryStation(stationId);
-    return NextResponse.json(history, { headers: cacheHeaders });
-  } catch {
-    // Fallback: find station coords and use Open-Meteo
-    try {
-      const stations = await fetchMeteoSwissStations();
-      const station = stations.find((s) => s.id === stationId);
-      if (!station) {
-        return NextResponse.json(
-          { error: "Station not found" },
-          { status: 404 },
-        );
-      }
-      const history = await fetchWindHistory(station.lat, station.lng);
-      return NextResponse.json(history, { headers: cacheHeaders });
-    } catch {
-      return NextResponse.json(
-        { error: "History data temporarily unavailable" },
-        { status: 503 },
-      );
+    const stations = await fetchMeteoSwissStations();
+    const station = stations.find((s) => s.id === stationId);
+    if (!station) {
+      return NextResponse.json({ error: "Station not found" }, { status: 404 });
     }
+
+    // Fetch MeteoSwiss history + Open-Meteo 15-min forecast in parallel
+    const [history, forecast] = await Promise.all([
+      fetchWindHistoryStation(stationId).catch(() =>
+        fetchWindHistory(station.lat, station.lng),
+      ),
+      fetchWindForecast15min(station.lat, station.lng).catch(() => []),
+    ]);
+
+    // Append forecast points that come after the last history point
+    const lastTime = history.length > 0 ? history[history.length - 1].time : "";
+    const futurePoints = forecast.filter((p) => p.time > lastTime);
+    const combined = [...history, ...futurePoints];
+
+    return NextResponse.json(combined, { headers: cacheHeaders });
+  } catch {
+    return NextResponse.json(
+      { error: "History data temporarily unavailable" },
+      { status: 503 },
+    );
   }
 }

@@ -24,15 +24,12 @@ import {
 } from "lucide-react";
 import { WindCompass } from "@/components/spot/WindCompass";
 import { WindDirectionRose } from "@/components/spot/WindDirectionRose";
+import { WindFrequencyRose } from "@/components/spot/WindFrequencyRose";
 import { WindChart } from "@/components/spot/WindChart";
 import { WindHistoryChart } from "@/components/spot/WindHistoryChart";
 import { ForecastTable } from "@/components/spot/ForecastTable";
-import {
-  windColor,
-  windConditionLabel,
-  windDirectionLabel,
-  MONTHS,
-} from "@/lib/utils";
+import { WindArchives } from "@/components/spot/WindArchives";
+import { windConditionLabel, windDirectionLabel, MONTHS } from "@/lib/utils";
 import { roundKnots } from "@/lib/forecast";
 import {
   Badge,
@@ -121,7 +118,6 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
 
   const speedKmh = wind?.windSpeedKmh ?? 0;
   const gustsKmh = wind?.gustsKmh ?? null;
-  const color = wind ? windColor(speedKmh) : "#9ca3af";
   const condLabel = wind ? windConditionLabel(speedKmh) : "—";
   const dirLabel = wind ? windDirectionLabel(wind.windDirection) : "—";
   const speedKts = roundKnots(speedKmh);
@@ -145,18 +141,19 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
           Retour à la carte
         </Link>
 
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">{spot.name}</h1>
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
+                {spot.name}
+              </h1>
               {spot.bestWindDirections.length > 0 && (
                 <div
                   title={`Meilleures directions : ${spot.bestWindDirections.join(", ")}`}
                 >
-                  <WindDirectionRose
+                  <WindFrequencyRose
                     bestDirections={spot.bestWindDirections}
-                    currentDirection={wind?.windDirection}
-                    size={52}
+                    size={80}
                     showLabels={false}
                   />
                 </div>
@@ -236,51 +233,44 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
             )}
           </div>
 
-          {wind && (
-            <div
-              className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full text-white"
-              style={{ background: color }}
+          {/* ── Right side: photos + edit button ─────────────────── */}
+          <div className="shrink-0 flex flex-row sm:flex-col items-center sm:items-end gap-3 w-full sm:w-auto">
+            <Link
+              href={`/spots/${spot.id}/edit`}
+              className="inline-flex items-center gap-1.5 text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:text-gray-900 hover:border-gray-400 transition-colors"
             >
-              {condLabel}
-            </div>
-          )}
-          <Link
-            href={`/spots/${spot.id}/edit`}
-            className="shrink-0 inline-flex items-center gap-1.5 text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:text-gray-900 hover:border-gray-400 transition-colors"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Modifier
-          </Link>
-        </div>
+              <Pencil className="h-3.5 w-3.5" />
+              Modifier
+            </Link>
 
-        {/* ── Header photo strip ───────────────────────────────────── */}
-        {spot.images.length > 0 && (
-          <div className="mt-5 grid grid-cols-3 gap-2 h-48 sm:h-56">
-            {spot.images.slice(0, 3).map((img, idx) => (
-              <button
-                key={img.id}
-                onClick={() => setLightboxIndex(idx)}
-                className="relative overflow-hidden rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={img.url}
-                  alt={img.caption || spot.name}
-                  className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
-                />
-                {/* "+N photos" overlay on the 3rd tile when there are more */}
-                {idx === 2 && spot.images.length > 3 && (
-                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1">
-                    <Images className="h-5 w-5 text-white" />
-                    <span className="text-white font-semibold text-sm">
-                      +{spot.images.length - 3} photos
-                    </span>
-                  </div>
-                )}
-              </button>
-            ))}
+            {spot.images.length > 0 && (
+              <div className="flex gap-1.5">
+                {spot.images.slice(0, 3).map((img, idx) => (
+                  <button
+                    key={img.id}
+                    onClick={() => setLightboxIndex(idx)}
+                    className="relative overflow-hidden rounded-lg border border-gray-200 w-20 h-20 sm:w-24 sm:h-24 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={img.caption || spot.name}
+                      className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                    />
+                    {idx === 2 && spot.images.length > 3 && (
+                      <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-0.5">
+                        <Images className="h-4 w-4 text-white" />
+                        <span className="text-white font-semibold text-xs">
+                          +{spot.images.length - 3}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* ── Main content ─────────────────────────────────────────── */}
@@ -341,10 +331,10 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
           </div>
 
           {/* Cards */}
-          <div className="flex flex-col gap-2 shrink-0">
+          <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
             <div className="flex gap-2">
               {/* Vent moyen */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 w-40">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 flex-1 sm:flex-none sm:w-40">
                 <div className="flex items-center gap-1.5 text-sm text-gray-600 font-medium mb-3">
                   <Wind className="h-4 w-4" />
                   Vent moyen
@@ -352,10 +342,7 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                 {wind ? (
                   <>
                     <div className="flex items-baseline gap-1">
-                      <span
-                        className="text-5xl font-bold tabular-nums leading-none"
-                        style={{ color }}
-                      >
+                      <span className="text-4xl sm:text-5xl font-bold tabular-nums leading-none text-gray-900">
                         {useKnots ? speedKts : Math.round(speedKmh)}
                       </span>
                       <span className="text-base text-gray-500 font-medium">
@@ -370,12 +357,14 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                     </div>
                   </>
                 ) : (
-                  <div className="text-5xl font-bold text-gray-400">—</div>
+                  <div className="text-4xl sm:text-5xl font-bold text-gray-400">
+                    —
+                  </div>
                 )}
               </div>
 
               {/* Rafales */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 w-40">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 flex-1 sm:flex-none sm:w-40">
                 <div className="flex items-center gap-1.5 text-sm text-gray-600 font-medium mb-3">
                   <Zap className="h-4 w-4" />
                   Rafales
@@ -383,10 +372,7 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                 {gustsKts !== null && gustsKmh !== null ? (
                   <>
                     <div className="flex items-baseline gap-1">
-                      <span
-                        className="text-5xl font-bold tabular-nums leading-none"
-                        style={{ color: windColor(gustsKmh) }}
-                      >
+                      <span className="text-4xl sm:text-5xl font-bold tabular-nums leading-none text-gray-900">
                         {useKnots ? gustsKts : Math.round(gustsKmh)}
                       </span>
                       <span className="text-base text-gray-500 font-medium">
@@ -401,7 +387,9 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                     </div>
                   </>
                 ) : (
-                  <div className="text-5xl font-bold text-gray-400">—</div>
+                  <div className="text-4xl sm:text-5xl font-bold text-gray-400">
+                    —
+                  </div>
                 )}
               </div>
             </div>
@@ -421,10 +409,7 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                       </span>
                     </div>
                   </div>
-                  <div
-                    className="text-sm font-bold px-3 py-1 rounded-full text-white"
-                    style={{ background: color }}
-                  >
+                  <div className="text-sm font-bold px-3 py-1 rounded-full bg-gray-100 text-gray-700">
                     {condLabel}
                   </div>
                 </div>
@@ -604,6 +589,14 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
             Prévisions temporairement indisponibles
           </div>
         )}
+
+        {/* ── Archives vent historiques ────────────────────────── */}
+        <div className="mb-10">
+          <h2 className="text-base font-semibold text-gray-900 mb-3">
+            Archives vent
+          </h2>
+          <WindArchives spotId={spot.id} useKnots={useKnots} />
+        </div>
 
         {/* ── Coordonnées + liens ──────────────────────────────────── */}
         <div className="mt-14 pt-6 border-t border-gray-200">

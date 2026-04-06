@@ -1,0 +1,5420 @@
+[
+  {
+    "name": "AR - Claromecó",
+    "latitude": -38.85,
+    "longitude": -60.07,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "Argentina - Buenos Aires - Vte. Lopez",
+    "latitude": -34.52,
+    "longitude": -58.47,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "Argentina - Punta Rasa",
+    "latitude": -36.28,
+    "longitude": -56.77,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "Buenos Aires",
+    "latitude": -34.58,
+    "longitude": -58.4,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "Comodoro Rivadavia",
+    "latitude": -45.87,
+    "longitude": -67.48,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "Mar del Plata",
+    "latitude": -38.0,
+    "longitude": -57.55,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "Tresa",
+    "latitude": -38.38,
+    "longitude": -60.28,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "bahia blanca",
+    "latitude": -38.72,
+    "longitude": -62.28,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "monte hermoso",
+    "latitude": -38.98,
+    "longitude": -61.25,
+    "country": "Argentina",
+    "source": "windguru"
+  },
+  {
+    "name": "Aruba",
+    "latitude": 12.5,
+    "longitude": -70.0,
+    "country": "Aruba",
+    "source": "windguru"
+  },
+  {
+    "name": "Australia - Melbourne - Middle Park",
+    "latitude": -37.85,
+    "longitude": 144.95,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Brisbane",
+    "latitude": -27.5,
+    "longitude": 153.0,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Cairns",
+    "latitude": -16.88,
+    "longitude": 145.8,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Esperance",
+    "latitude": -33.85,
+    "longitude": 121.88,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Geraldton",
+    "latitude": -28.76,
+    "longitude": 114.6,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Gnaraloo",
+    "latitude": -23.816,
+    "longitude": 113.516,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Lancelin",
+    "latitude": -31.02,
+    "longitude": 115.31,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Margaret River",
+    "latitude": -33.971978,
+    "longitude": 114.984797,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Newcastle",
+    "latitude": -32.92,
+    "longitude": 151.79,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Perth",
+    "latitude": -31.993,
+    "longitude": 115.746,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Surfers Paradise",
+    "latitude": -28.03,
+    "longitude": 153.45,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Sydney",
+    "latitude": -33.88,
+    "longitude": 151.22,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Sydney - Botany Bay",
+    "latitude": -33.97,
+    "longitude": 151.18,
+    "country": "Australia",
+    "source": "windguru"
+  },
+  {
+    "name": "Attersee",
+    "latitude": 47.9,
+    "longitude": 13.55,
+    "country": "Austria",
+    "source": "windguru"
+  },
+  {
+    "name": "Neusiedler See",
+    "latitude": 47.87,
+    "longitude": 16.83,
+    "country": "Austria",
+    "source": "windguru"
+  },
+  {
+    "name": "Salza (paragliding)",
+    "latitude": 47.83,
+    "longitude": 15.33,
+    "country": "Austria",
+    "source": "windguru"
+  },
+  {
+    "name": "Barbados",
+    "latitude": 13.05,
+    "longitude": -59.52,
+    "country": "Barbados",
+    "source": "windguru"
+  },
+  {
+    "name": "Duinbergen",
+    "latitude": 51.344625,
+    "longitude": 3.246947,
+    "country": "Belgium",
+    "source": "windguru"
+  },
+  {
+    "name": "Hasselt",
+    "latitude": 50.92,
+    "longitude": 5.33,
+    "country": "Belgium",
+    "source": "windguru"
+  },
+  {
+    "name": "Oostduinkerke",
+    "latitude": 51.12,
+    "longitude": 2.68,
+    "country": "Belgium",
+    "source": "windguru"
+  },
+  {
+    "name": "Oostende",
+    "latitude": 51.22,
+    "longitude": 2.9,
+    "country": "Belgium",
+    "source": "windguru"
+  },
+  {
+    "name": "Plateau de l'Ardenne (paragliding)",
+    "latitude": 49.95,
+    "longitude": 5.07,
+    "country": "Belgium",
+    "source": "windguru"
+  },
+  {
+    "name": "Bonaire",
+    "latitude": 12.2,
+    "longitude": -68.3,
+    "country": "Bonaire, Sint Eustatius and Saba",
+    "source": "windguru"
+  },
+  {
+    "name": "Aguas Belas",
+    "latitude": -4.03,
+    "longitude": -38.18,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Atami - PR",
+    "latitude": -25.6,
+    "longitude": -48.38,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Buzios",
+    "latitude": -22.73,
+    "longitude": -41.88,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Cabo Frio",
+    "latitude": -22.9,
+    "longitude": -42.03,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Cupe",
+    "latitude": -8.495667,
+    "longitude": -35.001711,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Curitiba",
+    "latitude": -25.52,
+    "longitude": -49.37,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Florianópolis - SC",
+    "latitude": -27.6,
+    "longitude": -48.45,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Guaruja (Sao Paulo)",
+    "latitude": -24.0,
+    "longitude": -46.26,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Ibiraquera - SC",
+    "latitude": -28.154167,
+    "longitude": -48.651389,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Ilha Comprida",
+    "latitude": -24.67,
+    "longitude": -47.42,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Ilhabela",
+    "latitude": -23.77,
+    "longitude": -45.35,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "João Pessoa",
+    "latitude": -7.080411,
+    "longitude": -34.828247,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Lagoa de Araruama",
+    "latitude": -22.88,
+    "longitude": -42.2,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Natal",
+    "latitude": -5.77,
+    "longitude": -35.22,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Peruibe",
+    "latitude": -24.32,
+    "longitude": -46.98,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Ponta da Pombeba",
+    "latitude": -23.05,
+    "longitude": -43.93,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Porto Belo - SC",
+    "latitude": -27.15,
+    "longitude": -48.57,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Rio de Janeiro",
+    "latitude": -23.016525,
+    "longitude": -43.307956,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Sao Paulo Guarapiranga",
+    "latitude": -23.72,
+    "longitude": -46.73,
+    "country": "Brazil",
+    "source": "windguru"
+  },
+  {
+    "name": "Tungku Beach",
+    "latitude": 4.9,
+    "longitude": 114.8,
+    "country": "Brunei Darussalam",
+    "source": "windguru"
+  },
+  {
+    "name": "Battures de Beauport (St. Laurent river)",
+    "latitude": 46.82,
+    "longitude": -71.2,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Canada, BC - Nitinat",
+    "latitude": 48.82,
+    "longitude": -124.68,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Canada, BC - Porteau Cove",
+    "latitude": 49.55,
+    "longitude": -123.23,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Canada, BC - Squamish",
+    "latitude": 49.68,
+    "longitude": -123.18,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Canada, BC - Vancouver (Jericho Beach)",
+    "latitude": 49.28,
+    "longitude": -123.2,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Chapman Bay, Clarenceville (Lake Champlain)",
+    "latitude": 45.02,
+    "longitude": -73.21,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Iles de la Madeleine",
+    "latitude": 47.42,
+    "longitude": -61.87,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac Brome",
+    "latitude": 45.2,
+    "longitude": -72.52,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac Sabourin",
+    "latitude": 47.98,
+    "longitude": -77.67,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac Saint-Jean",
+    "latitude": 48.58,
+    "longitude": -72.05,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac Temiscouata",
+    "latitude": 47.55,
+    "longitude": -68.65,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Erie",
+    "latitude": 42.0,
+    "longitude": -81.8,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Huron",
+    "latitude": 45.0,
+    "longitude": -82.0,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Ontario (near Toronto)",
+    "latitude": 43.5,
+    "longitude": -79.0,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Ontario - Richardson Beach (Kingston)",
+    "latitude": 44.22,
+    "longitude": -76.49,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Ontario - Sandbanks",
+    "latitude": 43.98,
+    "longitude": -77.23,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Simcoe",
+    "latitude": 44.45,
+    "longitude": -79.33,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Superior",
+    "latitude": 48.0,
+    "longitude": -87.0,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake of two mountains",
+    "latitude": 45.45,
+    "longitude": -73.95,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Memphremagog",
+    "latitude": 45.27,
+    "longitude": -72.15,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Montreal, Dorval (St. Laurent river)",
+    "latitude": 45.47,
+    "longitude": -73.73,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Peel Head Bay, Venise (Lake Champlain)",
+    "latitude": 45.08,
+    "longitude": -73.18,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Riviere-du-Loup (St. Laurent river)",
+    "latitude": 47.87,
+    "longitude": -69.68,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Jean-d'Orleans (Ile d'Orleans)",
+    "latitude": 46.92,
+    "longitude": -70.9,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Shippagan",
+    "latitude": 47.75,
+    "longitude": -64.67,
+    "country": "Canada",
+    "source": "windguru"
+  },
+  {
+    "name": "Boa Vista",
+    "latitude": 16.1,
+    "longitude": -22.8,
+    "country": "Cape Verde",
+    "source": "windguru"
+  },
+  {
+    "name": "Sal (Ponta Preta)",
+    "latitude": 16.64,
+    "longitude": -22.96,
+    "country": "Cape Verde",
+    "source": "windguru"
+  },
+  {
+    "name": "Pichilemu",
+    "latitude": -34.38,
+    "longitude": -72.01,
+    "country": "Chile",
+    "source": "windguru"
+  },
+  {
+    "name": "Santiago",
+    "latitude": -33.45,
+    "longitude": -70.67,
+    "country": "Chile",
+    "source": "windguru"
+  },
+  {
+    "name": "Tamarindo",
+    "latitude": 10.3,
+    "longitude": -85.83,
+    "country": "Costa Rica",
+    "source": "windguru"
+  },
+  {
+    "name": "(inland)",
+    "latitude": 43.0,
+    "longitude": 19.0,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Brac (Bol)",
+    "latitude": 43.25,
+    "longitude": 16.63,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Chorvatsko Baška",
+    "latitude": 44.97,
+    "longitude": 14.75,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Istria - Premantura",
+    "latitude": 44.79,
+    "longitude": 13.92,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Peljesac (Viganj)",
+    "latitude": 42.977,
+    "longitude": 17.103,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Rab",
+    "latitude": 44.77,
+    "longitude": 14.77,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Rogoznica",
+    "latitude": 43.531553,
+    "longitude": 15.957458,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Sibenik",
+    "latitude": 43.73,
+    "longitude": 15.9,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Split",
+    "latitude": 43.52,
+    "longitude": 16.45,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Vodice",
+    "latitude": 43.75,
+    "longitude": 15.78,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Zadar",
+    "latitude": 44.12,
+    "longitude": 15.23,
+    "country": "Croatia",
+    "source": "windguru"
+  },
+  {
+    "name": "Playa Pesquero",
+    "latitude": 21.1,
+    "longitude": -75.883333,
+    "country": "Cuba",
+    "source": "windguru"
+  },
+  {
+    "name": "Akrotiri",
+    "latitude": 34.63,
+    "longitude": 33.08,
+    "country": "Cyprus",
+    "source": "windguru"
+  },
+  {
+    "name": "Episkopi",
+    "latitude": 34.63,
+    "longitude": 32.83,
+    "country": "Cyprus",
+    "source": "windguru"
+  },
+  {
+    "name": "Kalkis",
+    "latitude": 35.3,
+    "longitude": 33.23,
+    "country": "Cyprus",
+    "source": "windguru"
+  },
+  {
+    "name": "Kyrenia",
+    "latitude": 35.33,
+    "longitude": 33.32,
+    "country": "Cyprus",
+    "source": "windguru"
+  },
+  {
+    "name": "Larnaca",
+    "latitude": 34.92,
+    "longitude": 33.75,
+    "country": "Cyprus",
+    "source": "windguru"
+  },
+  {
+    "name": "Albrechtice v Jiz. Horách",
+    "latitude": 50.77,
+    "longitude": 15.28,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Bezdrev",
+    "latitude": 49.03,
+    "longitude": 14.38,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Brněnská přehrada",
+    "latitude": 49.25,
+    "longitude": 16.48,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Dehtář",
+    "latitude": 49.0,
+    "longitude": 14.28,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Dvořiště (Třeboňské rybníky)",
+    "latitude": 49.07,
+    "longitude": 14.66,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Hlučín",
+    "latitude": 49.88,
+    "longitude": 18.15,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Hnacovak",
+    "latitude": 49.35,
+    "longitude": 13.48,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Hořešovice",
+    "latitude": 50.270658,
+    "longitude": 13.964786,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Hulín",
+    "latitude": 49.318889,
+    "longitude": 17.478611,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Jablonec n. Nisou",
+    "latitude": 50.72,
+    "longitude": 15.17,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Javorník - Beskydy (paragliding)",
+    "latitude": 49.5,
+    "longitude": 18.2,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Jesenice",
+    "latitude": 50.05,
+    "longitude": 12.43,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Jihlava",
+    "latitude": 49.38,
+    "longitude": 15.58,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Jičín",
+    "latitude": 50.43,
+    "longitude": 15.33,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "KM-Hráz",
+    "latitude": 49.289311,
+    "longitude": 17.410833,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Kozakov (paragliding)",
+    "latitude": 50.58,
+    "longitude": 15.26,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Křetínka",
+    "latitude": 49.55,
+    "longitude": 16.53,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Libice nad Cidlinou",
+    "latitude": 50.13,
+    "longitude": 15.18,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Lipno",
+    "latitude": 48.71,
+    "longitude": 14.07,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Mladkov",
+    "latitude": 49.489426,
+    "longitude": 16.617016,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Most",
+    "latitude": 50.52,
+    "longitude": 13.63,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Máchovo jezero",
+    "latitude": 50.58,
+    "longitude": 14.65,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Nechranice",
+    "latitude": 50.35,
+    "longitude": 13.38,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Nové Mlýny",
+    "latitude": 48.88,
+    "longitude": 16.68,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Náklo",
+    "latitude": 49.67,
+    "longitude": 17.13,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Olešná",
+    "latitude": 49.65,
+    "longitude": 18.3,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Ondřejník (paragliding)",
+    "latitude": 49.55,
+    "longitude": 18.3,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Orlik",
+    "latitude": 49.53,
+    "longitude": 14.17,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Ostrožská Nová Ves",
+    "latitude": 49.003049,
+    "longitude": 17.418746,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Plzeň",
+    "latitude": 49.73,
+    "longitude": 13.36,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Poděbrady",
+    "latitude": 50.15,
+    "longitude": 15.12,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Prague",
+    "latitude": 50.08,
+    "longitude": 14.45,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Rajnochovice",
+    "latitude": 49.415833,
+    "longitude": 17.827222,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Raná (paragliding)",
+    "latitude": 50.41,
+    "longitude": 13.77,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Roudnice nad Labem",
+    "latitude": 50.431267,
+    "longitude": 14.287033,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Rozkoš",
+    "latitude": 50.36,
+    "longitude": 16.06,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Ruzyně",
+    "latitude": 50.086111,
+    "longitude": 14.3,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Seč",
+    "latitude": 49.82,
+    "longitude": 15.63,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Slapy",
+    "latitude": 49.75,
+    "longitude": 14.42,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Slezská Harta",
+    "latitude": 49.88,
+    "longitude": 17.6,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Suchý vrch (paragliding)",
+    "latitude": 50.03,
+    "longitude": 16.7,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Těrlicko, Žermanice",
+    "latitude": 49.77,
+    "longitude": 18.51,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Velké Dářko",
+    "latitude": 49.63,
+    "longitude": 15.88,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Zaječice",
+    "latitude": 49.922775,
+    "longitude": 15.874314,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "_Prostějov",
+    "latitude": 49.487226,
+    "longitude": 17.052574,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "a Luštěnice",
+    "latitude": 50.32,
+    "longitude": 14.93,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "ČR - MB test",
+    "latitude": 50.42,
+    "longitude": 14.92,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Černá hora (paragliding)",
+    "latitude": 50.65,
+    "longitude": 15.76,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Štěpánský rybník",
+    "latitude": 49.792247,
+    "longitude": 13.764333,
+    "country": "Czech Republic",
+    "source": "windguru"
+  },
+  {
+    "name": "Blavand",
+    "latitude": 55.543728,
+    "longitude": 8.135144,
+    "country": "Denmark",
+    "source": "windguru"
+  },
+  {
+    "name": "Fano",
+    "latitude": 55.42,
+    "longitude": 8.42,
+    "country": "Denmark",
+    "source": "windguru"
+  },
+  {
+    "name": "Gilleleje",
+    "latitude": 56.128725,
+    "longitude": 12.30725,
+    "country": "Denmark",
+    "source": "windguru"
+  },
+  {
+    "name": "Klitmøller",
+    "latitude": 57.044714,
+    "longitude": 8.498425,
+    "country": "Denmark",
+    "source": "windguru"
+  },
+  {
+    "name": "Lökken - egen",
+    "latitude": 57.4,
+    "longitude": 9.7,
+    "country": "Denmark",
+    "source": "windguru"
+  },
+  {
+    "name": "R&#248;m&#248;",
+    "latitude": 55.13,
+    "longitude": 8.48,
+    "country": "Denmark",
+    "source": "windguru"
+  },
+  {
+    "name": "Ringkobing Fjord",
+    "latitude": 56.0885,
+    "longitude": 8.238408,
+    "country": "Denmark",
+    "source": "windguru"
+  },
+  {
+    "name": "Djibouti (east Africa)",
+    "latitude": 11.55,
+    "longitude": 43.15,
+    "country": "Djibouti",
+    "source": "windguru"
+  },
+  {
+    "name": "Dahab",
+    "latitude": 28.471,
+    "longitude": 34.507,
+    "country": "Egypt",
+    "source": "windguru"
+  },
+  {
+    "name": "Hurghada",
+    "latitude": 27.267469,
+    "longitude": 33.830175,
+    "country": "Egypt",
+    "source": "windguru"
+  },
+  {
+    "name": "Ras Sudr",
+    "latitude": 29.6,
+    "longitude": 32.67,
+    "country": "Egypt",
+    "source": "windguru"
+  },
+  {
+    "name": "Estonia - Kärdla laht",
+    "latitude": 59.03,
+    "longitude": 22.75,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "Estonia - Nova",
+    "latitude": 59.25,
+    "longitude": 23.5,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "KIIPSAARE traavers W poole",
+    "latitude": 58.5,
+    "longitude": 21.0,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "KURESSAARE",
+    "latitude": 58.25,
+    "longitude": 22.5,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "LIIVI LAHT N osa",
+    "latitude": 58.0,
+    "longitude": 23.0,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "MUHU VÄIN",
+    "latitude": 58.75,
+    "longitude": 23.25,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "OSMUSSAARE",
+    "latitude": 59.3,
+    "longitude": 23.37,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "PAKRI",
+    "latitude": 59.5,
+    "longitude": 24.0,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "PÄRNU",
+    "latitude": 58.37,
+    "longitude": 24.47,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "RISTNA",
+    "latitude": 59.0,
+    "longitude": 22.0,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "SÖRVE traavers W poole",
+    "latitude": 58.0,
+    "longitude": 21.5,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "Tallinn",
+    "latitude": 59.5,
+    "longitude": 24.5,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "VILSANDI traavers W poole",
+    "latitude": 58.33,
+    "longitude": 21.5,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "Vääna",
+    "latitude": 59.43,
+    "longitude": 24.333333,
+    "country": "Estonia",
+    "source": "windguru"
+  },
+  {
+    "name": "Coral coast (Viti Levu)",
+    "latitude": -18.13,
+    "longitude": 177.5,
+    "country": "Fiji",
+    "source": "windguru"
+  },
+  {
+    "name": "Adelminns Udde",
+    "latitude": 59.9,
+    "longitude": 22.4,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Finland, Mikkeli",
+    "latitude": 61.680119,
+    "longitude": 27.299731,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Hanko",
+    "latitude": 59.8,
+    "longitude": 22.9,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Helsinki",
+    "latitude": 60.13,
+    "longitude": 25.0,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Kuopio",
+    "latitude": 62.88,
+    "longitude": 27.48,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Oulu",
+    "latitude": 65.0,
+    "longitude": 25.43,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Pori",
+    "latitude": 61.5,
+    "longitude": 21.47,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Slemmern / Mariehamn",
+    "latitude": 60.1,
+    "longitude": 19.965,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Tampere",
+    "latitude": 61.53,
+    "longitude": 23.75,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Vaasa",
+    "latitude": 63.1,
+    "longitude": 21.6,
+    "country": "Finland",
+    "source": "windguru"
+  },
+  {
+    "name": "Ajaccio - Corse Azur",
+    "latitude": 41.927822,
+    "longitude": 8.770172,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Almanarre",
+    "latitude": 43.053842,
+    "longitude": 6.123956,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Angers",
+    "latitude": 47.47,
+    "longitude": -0.55,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Arzon (Vannes)",
+    "latitude": 47.5,
+    "longitude": -2.82,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Audierne",
+    "latitude": 48.011964,
+    "longitude": -4.546669,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Avranches",
+    "latitude": 48.689444,
+    "longitude": -1.36,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Barbatre",
+    "latitude": 46.926094,
+    "longitude": -2.170756,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Beauduc Plage Nord",
+    "latitude": 43.36,
+    "longitude": 4.6,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Beauvais",
+    "latitude": 49.43,
+    "longitude": 2.08,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Berck sur Mer",
+    "latitude": 50.42,
+    "longitude": 1.58,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Biarritz",
+    "latitude": 43.48,
+    "longitude": -1.57,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Bigouden",
+    "latitude": 47.8,
+    "longitude": -3.72,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Biscarrosse - Plage",
+    "latitude": 44.455547,
+    "longitude": -1.252361,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Bray Dunes",
+    "latitude": 51.078136,
+    "longitude": 2.510175,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Caen",
+    "latitude": 49.19,
+    "longitude": -0.343333,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Camaret (W42)",
+    "latitude": 48.3,
+    "longitude": -4.6,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Camping Saint Martin de Seignanx",
+    "latitude": 43.550833,
+    "longitude": -1.406944,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Cannes",
+    "latitude": 43.548836,
+    "longitude": 6.992983,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Cap Ferret",
+    "latitude": 44.827664,
+    "longitude": -1.225694,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Carro",
+    "latitude": 43.331322,
+    "longitude": 5.036414,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Cavalaire Sur Mer",
+    "latitude": 43.18,
+    "longitude": 6.57,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Charentay",
+    "latitude": 46.08,
+    "longitude": 4.67,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Chasse sur Rhone",
+    "latitude": 45.57,
+    "longitude": 4.82,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Cholet - Verdon",
+    "latitude": 47.0,
+    "longitude": -0.83,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Col Télégraphe",
+    "latitude": 45.2,
+    "longitude": 6.47,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Corse - Porticcio",
+    "latitude": 41.899075,
+    "longitude": 8.802403,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Corse - Porto Polo",
+    "latitude": 41.713122,
+    "longitude": 8.817072,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Corsica (Calvi)",
+    "latitude": 42.57,
+    "longitude": 8.75,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Corsica - Piantarella (Bonifacio)",
+    "latitude": 41.36,
+    "longitude": 9.23,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Creteil beach",
+    "latitude": 48.78,
+    "longitude": 2.47,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Diamond Head (Ile de Ré)",
+    "latitude": 46.244372,
+    "longitude": -1.556278,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Douarnenez (Brittany)",
+    "latitude": 48.16,
+    "longitude": -4.42,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Etang du Mirgenbach (Cattenom)",
+    "latitude": 49.4,
+    "longitude": 6.24,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "For&ecirc;t d'Orient - Troyes",
+    "latitude": 48.3,
+    "longitude": 4.08,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "France - Lac de vassivi&#232;re",
+    "latitude": 45.8,
+    "longitude": 1.9,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "France - Lac du salagou (clermont l'hérault)",
+    "latitude": 43.65,
+    "longitude": 3.37,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "France - St Jean De Luz",
+    "latitude": 43.38,
+    "longitude": -1.65,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "France - col du lautaret (snowkite)",
+    "latitude": 45.03,
+    "longitude": 6.4,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "France Pampelonne",
+    "latitude": 43.23,
+    "longitude": 6.67,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Golfe du Lion",
+    "latitude": 43.0,
+    "longitude": 4.0,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Grandcamp - Cricqueville",
+    "latitude": 49.386075,
+    "longitude": -1.082061,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Hardelot",
+    "latitude": 50.63,
+    "longitude": 1.57,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Hoeville",
+    "latitude": 48.7,
+    "longitude": 6.43,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Hourtin Plage",
+    "latitude": 45.247778,
+    "longitude": -1.16805,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Ile d'Oleron",
+    "latitude": 45.93,
+    "longitude": -1.3,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Keremma (Plouescat)",
+    "latitude": 48.64985,
+    "longitude": -4.238236,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "LAC ST POINT",
+    "latitude": 46.828611,
+    "longitude": 6.327222,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "La Baule",
+    "latitude": 47.281622,
+    "longitude": -2.385675,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "La Courtine/Barbetane",
+    "latitude": 43.922,
+    "longitude": 4.75,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "La Ganguise",
+    "latitude": 43.32,
+    "longitude": 1.8,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "La Heve (Le Havre)",
+    "latitude": 49.52,
+    "longitude": 0.07,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "La Rochelle",
+    "latitude": 46.141003,
+    "longitude": -1.170225,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "La Torche",
+    "latitude": 47.84235,
+    "longitude": -4.342828,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "La Tranche",
+    "latitude": 46.33,
+    "longitude": -1.43,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "La palue",
+    "latitude": 48.23,
+    "longitude": -4.48,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac Annecy",
+    "latitude": 45.9,
+    "longitude": 6.13,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac Lacanau",
+    "latitude": 44.979261,
+    "longitude": -1.095161,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac de Clairvaux (39)",
+    "latitude": 46.57,
+    "longitude": 5.75,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac de Madine",
+    "latitude": 48.93,
+    "longitude": 5.85,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac de Monteynard",
+    "latitude": 44.91,
+    "longitude": 5.68,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac de Serre-Poncon",
+    "latitude": 44.5,
+    "longitude": 6.36,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lac du Der",
+    "latitude": 48.58,
+    "longitude": 4.75,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lancieux",
+    "latitude": 48.605589,
+    "longitude": -2.186717,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lannion (Bretagne)",
+    "latitude": 48.75,
+    "longitude": -3.47,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Le Crotoy - Baie de Somme",
+    "latitude": 50.214778,
+    "longitude": 1.624831,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Le Jai",
+    "latitude": 43.411147,
+    "longitude": 5.160417,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Le moulin blanc",
+    "latitude": 48.397222,
+    "longitude": -4.43,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lery Poses",
+    "latitude": 49.3,
+    "longitude": 1.23,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Les Rosaires",
+    "latitude": 48.584217,
+    "longitude": -2.781192,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Leucate",
+    "latitude": 42.8571,
+    "longitude": 3.046697,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Libenter (W32)",
+    "latitude": 48.63,
+    "longitude": -4.72,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lorient - Guidel",
+    "latitude": 47.75,
+    "longitude": -3.37,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Lyon",
+    "latitude": 45.75,
+    "longitude": 4.82,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Moisson Lavacourt",
+    "latitude": 49.07,
+    "longitude": 1.68,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Montelimar",
+    "latitude": 44.6,
+    "longitude": 4.73,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Ouistreham",
+    "latitude": 49.290456,
+    "longitude": -0.254828,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Paris",
+    "latitude": 48.87,
+    "longitude": 2.35,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Plougastel",
+    "latitude": 48.38,
+    "longitude": -4.38,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Plouguerneau",
+    "latitude": 48.623611,
+    "longitude": -4.506111,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Pont Mahé",
+    "latitude": 47.441961,
+    "longitude": -2.446353,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Port Bourgenay / Le Veillon",
+    "latitude": 46.428917,
+    "longitude": -1.6466,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Port Camargue",
+    "latitude": 43.52,
+    "longitude": 4.13,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Portes les Valence",
+    "latitude": 44.87,
+    "longitude": 4.88,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Quiberon",
+    "latitude": 47.5,
+    "longitude": -3.2,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Rennes",
+    "latitude": 48.08,
+    "longitude": -1.68,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint Mamet",
+    "latitude": 44.865483,
+    "longitude": 2.301631,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-André-les-Alpes (paragliding)",
+    "latitude": 43.95,
+    "longitude": 6.5,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Aubin-sur-Mer",
+    "latitude": 49.876753,
+    "longitude": 0.802453,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Brevin-les-Pins",
+    "latitude": 47.23,
+    "longitude": -2.17,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Gilles-Croix-de-Vie",
+    "latitude": 46.684042,
+    "longitude": -1.930081,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Jean-de-Monts",
+    "latitude": 46.786947,
+    "longitude": -2.076203,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Malo, Le Sillon, La Hoguette",
+    "latitude": 48.655556,
+    "longitude": -2.006789,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Quay-Portrieux",
+    "latitude": 48.65,
+    "longitude": -2.83,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Quentin-en-Yvelines",
+    "latitude": 48.789489,
+    "longitude": 2.016281,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Sainte Marguerite",
+    "latitude": 48.597222,
+    "longitude": -4.608333,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Seignosse",
+    "latitude": 43.724328,
+    "longitude": -1.431428,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Siouville",
+    "latitude": 49.576178,
+    "longitude": -1.839858,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Six Fours / Brutal beach",
+    "latitude": 43.1,
+    "longitude": 5.77,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "St Junien",
+    "latitude": 45.88,
+    "longitude": 1.73,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Sète",
+    "latitude": 43.39,
+    "longitude": 3.67,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Tharon-la Source",
+    "latitude": 47.17,
+    "longitude": -2.17,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Tignes",
+    "latitude": 45.4579,
+    "longitude": 6.9001,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Trez Hir (Plougonvelin)",
+    "latitude": 48.348044,
+    "longitude": -4.704944,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Tréompan",
+    "latitude": 48.572222,
+    "longitude": -4.663889,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Vesoul (lac de Vaivre)",
+    "latitude": 47.63,
+    "longitude": 6.17,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Wissant",
+    "latitude": 50.881922,
+    "longitude": 1.649469,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Zoufftgen",
+    "latitude": 49.4544,
+    "longitude": 6.1321,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "dijon",
+    "latitude": 47.318333,
+    "longitude": 5.035833,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "la trinité sur mer",
+    "latitude": 47.567725,
+    "longitude": -3.019192,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "lafitenia",
+    "latitude": 43.42,
+    "longitude": -1.63,
+    "country": "France",
+    "source": "windguru"
+  },
+  {
+    "name": "Bora-Bora",
+    "latitude": -16.5,
+    "longitude": -151.75,
+    "country": "French Polynesia",
+    "source": "windguru"
+  },
+  {
+    "name": "Tahiti",
+    "latitude": -17.52,
+    "longitude": -149.6,
+    "country": "French Polynesia",
+    "source": "windguru"
+  },
+  {
+    "name": "Libreville",
+    "latitude": 0.4,
+    "longitude": 9.4,
+    "country": "Gabon",
+    "source": "windguru"
+  },
+  {
+    "name": "Altmühlsee",
+    "latitude": 49.131,
+    "longitude": 10.725,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Ammersee",
+    "latitude": 48.0,
+    "longitude": 11.11,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Baldeneysee",
+    "latitude": 51.4,
+    "longitude": 7.05,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Blausteinsee",
+    "latitude": 50.8,
+    "longitude": 6.2,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Bodensee",
+    "latitude": 47.58,
+    "longitude": 9.46,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Cospudener See (Leipzig)",
+    "latitude": 51.27,
+    "longitude": 12.34,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Cuxhaven",
+    "latitude": 53.88,
+    "longitude": 8.7,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Dranske",
+    "latitude": 54.63,
+    "longitude": 13.23,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Dümmersee (Dümmer, Wittenburg)",
+    "latitude": 53.58,
+    "longitude": 11.2,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Fehmarn",
+    "latitude": 54.5,
+    "longitude": 11.2,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Hooksiel (Wilhelmhaven)",
+    "latitude": 53.646678,
+    "longitude": 8.075769,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Hörnum Ost",
+    "latitude": 54.75,
+    "longitude": 8.33,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Kiel",
+    "latitude": 54.4,
+    "longitude": 10.2,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Neuhaus (Saaler Bodden)",
+    "latitude": 54.3,
+    "longitude": 12.4,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Niesky",
+    "latitude": 51.3,
+    "longitude": 14.8,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Norderney",
+    "latitude": 53.8,
+    "longitude": 7.2,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Oestrich-Winkel",
+    "latitude": 49.98,
+    "longitude": 7.98,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Poel (Wismarer Bucht)",
+    "latitude": 54.0,
+    "longitude": 11.43,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Rugen",
+    "latitude": 54.5,
+    "longitude": 13.5,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Sankt Peter-Ording",
+    "latitude": 54.322794,
+    "longitude": 8.599892,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Senftenberg",
+    "latitude": 51.51,
+    "longitude": 14.01,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Steinhuder",
+    "latitude": 52.47,
+    "longitude": 9.33,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Sylt",
+    "latitude": 54.9,
+    "longitude": 8.2,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Theodor-Heuss-Brücke Mainz",
+    "latitude": 50.02,
+    "longitude": 8.27,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Trechtlingshausen",
+    "latitude": 50.0,
+    "longitude": 7.83,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Walluf",
+    "latitude": 50.02,
+    "longitude": 8.15,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Warnem&uuml;nde / Rostock",
+    "latitude": 54.16,
+    "longitude": 12.08,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Xanten",
+    "latitude": 51.68,
+    "longitude": 6.42,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Zuhause",
+    "latitude": 51.437778,
+    "longitude": 7.055,
+    "country": "Germany",
+    "source": "windguru"
+  },
+  {
+    "name": "Anavyssos",
+    "latitude": 37.722,
+    "longitude": 23.94,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Crete (Iraklion)",
+    "latitude": 35.33,
+    "longitude": 25.15,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Crete (Paleohora)",
+    "latitude": 35.179335,
+    "longitude": 23.69672,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Crete (Sitia)",
+    "latitude": 35.2,
+    "longitude": 26.13,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Elaphonissos",
+    "latitude": 36.48,
+    "longitude": 22.97,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Faros / Drepano (Patras)",
+    "latitude": 38.33,
+    "longitude": 21.85,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Halkoutsi Attikis",
+    "latitude": 38.32,
+    "longitude": 23.78,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Karpathos",
+    "latitude": 35.5937,
+    "longitude": 27.188669,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Kea, Ag. Nikolaos",
+    "latitude": 37.67,
+    "longitude": 24.32,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Korfu (south)",
+    "latitude": 39.5,
+    "longitude": 19.75,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Kos",
+    "latitude": 36.78,
+    "longitude": 27.07,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Volvi",
+    "latitude": 40.68,
+    "longitude": 23.45,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Larissa, Stomio beach",
+    "latitude": 39.87,
+    "longitude": 22.73,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Larissa, Velika beach",
+    "latitude": 39.75,
+    "longitude": 22.87,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Lefkada",
+    "latitude": 38.7,
+    "longitude": 20.6,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Levkada - Vasiliki",
+    "latitude": 38.62,
+    "longitude": 20.6,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Marmari",
+    "latitude": 38.03,
+    "longitude": 24.3,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Mykonos",
+    "latitude": 37.45,
+    "longitude": 25.37,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Nissakia, Loutsa",
+    "latitude": 37.989264,
+    "longitude": 24.033108,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Paleoxora",
+    "latitude": 35.23,
+    "longitude": 23.68,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Paros and Naxos",
+    "latitude": 37.09,
+    "longitude": 25.3,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Rahes Stylidos",
+    "latitude": 38.8675,
+    "longitude": 22.758056,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Rhodes, Prassonissi (south)",
+    "latitude": 35.89,
+    "longitude": 27.75,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint Elias, Dounaiika",
+    "latitude": 37.73,
+    "longitude": 21.3,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Thesaloniki",
+    "latitude": 40.62,
+    "longitude": 22.95,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "greece skhiathos island (Marathra)",
+    "latitude": 39.15,
+    "longitude": 23.55,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "salamina",
+    "latitude": 37.968539,
+    "longitude": 23.305492,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "souda-chania",
+    "latitude": 35.498689,
+    "longitude": 24.002344,
+    "country": "Greece",
+    "source": "windguru"
+  },
+  {
+    "name": "Sainte-Anne",
+    "latitude": 16.22,
+    "longitude": -61.37,
+    "country": "Guadeloupe",
+    "source": "windguru"
+  },
+  {
+    "name": "Hong Kong",
+    "latitude": 22.28,
+    "longitude": 114.15,
+    "country": "Hong Kong",
+    "source": "windguru"
+  },
+  {
+    "name": "Balaton - east (Sóstó)",
+    "latitude": 46.95,
+    "longitude": 18.12,
+    "country": "Hungary",
+    "source": "windguru"
+  },
+  {
+    "name": "Balaton - west (Keszthely)",
+    "latitude": 46.74,
+    "longitude": 17.25,
+    "country": "Hungary",
+    "source": "windguru"
+  },
+  {
+    "name": "Fertőrákos (Neusiedler)",
+    "latitude": 47.8,
+    "longitude": 16.7,
+    "country": "Hungary",
+    "source": "windguru"
+  },
+  {
+    "name": "Hungary - Szentes, Termalto",
+    "latitude": 46.68,
+    "longitude": 20.3,
+    "country": "Hungary",
+    "source": "windguru"
+  },
+  {
+    "name": "Lupasziget",
+    "latitude": 47.616111,
+    "longitude": 19.086111,
+    "country": "Hungary",
+    "source": "windguru"
+  },
+  {
+    "name": "Soltvadkerti tó",
+    "latitude": 46.62,
+    "longitude": 19.4,
+    "country": "Hungary",
+    "source": "windguru"
+  },
+  {
+    "name": "Tisza-tó",
+    "latitude": 47.6,
+    "longitude": 20.7,
+    "country": "Hungary",
+    "source": "windguru"
+  },
+  {
+    "name": "Velencei-tó",
+    "latitude": 47.22,
+    "longitude": 18.62,
+    "country": "Hungary",
+    "source": "windguru"
+  },
+  {
+    "name": "Bali (Sanur)",
+    "latitude": -8.709883,
+    "longitude": 115.259756,
+    "country": "Indonesia",
+    "source": "windguru"
+  },
+  {
+    "name": "Bintan",
+    "latitude": 1.0,
+    "longitude": 104.2,
+    "country": "Indonesia",
+    "source": "windguru"
+  },
+  {
+    "name": "Brandon Bay (west coast)",
+    "latitude": 52.27,
+    "longitude": -10.1,
+    "country": "Ireland",
+    "source": "windguru"
+  },
+  {
+    "name": "Dublin",
+    "latitude": 53.33,
+    "longitude": -6.2,
+    "country": "Ireland",
+    "source": "windguru"
+  },
+  {
+    "name": "Greystones (south-east coast)",
+    "latitude": 53.13,
+    "longitude": -6.05,
+    "country": "Ireland",
+    "source": "windguru"
+  },
+  {
+    "name": "Marble strand",
+    "latitude": 55.18,
+    "longitude": -7.97,
+    "country": "Ireland",
+    "source": "windguru"
+  },
+  {
+    "name": "Rosslare",
+    "latitude": 52.2757,
+    "longitude": -6.386222,
+    "country": "Ireland",
+    "source": "windguru"
+  },
+  {
+    "name": "Sligo Bay",
+    "latitude": 54.3,
+    "longitude": -8.92,
+    "country": "Ireland",
+    "source": "windguru"
+  },
+  {
+    "name": "Ashkelon",
+    "latitude": 31.67,
+    "longitude": 34.58,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Atlit (Li Yam)",
+    "latitude": 32.68,
+    "longitude": 34.93,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Bat Yam",
+    "latitude": 32.02,
+    "longitude": 34.75,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Beit Yannai",
+    "latitude": 32.38,
+    "longitude": 34.87,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Caesarea",
+    "latitude": 32.5,
+    "longitude": 34.92,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Eilat",
+    "latitude": 29.55,
+    "longitude": 34.95,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Haifa",
+    "latitude": 32.83,
+    "longitude": 35.0,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Herzliyya",
+    "latitude": 32.17,
+    "longitude": 34.85,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Naharia",
+    "latitude": 33.01,
+    "longitude": 35.09,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Sea of Galilee",
+    "latitude": 32.8,
+    "longitude": 35.58,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Tel-Aviv",
+    "latitude": 32.1,
+    "longitude": 34.76,
+    "country": "Israel",
+    "source": "windguru"
+  },
+  {
+    "name": "Baia Chia",
+    "latitude": 38.9,
+    "longitude": 8.88,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Cavazzo (Alesso - Boranucleare.it)",
+    "latitude": 46.32,
+    "longitude": 13.07,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Chioggia",
+    "latitude": 45.23,
+    "longitude": 12.13,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Dolomitti - Sella (paragliding)",
+    "latitude": 46.35,
+    "longitude": 11.45,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Frassanito (Lecce)",
+    "latitude": 40.12,
+    "longitude": 18.53,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Gargano (Vieste)",
+    "latitude": 41.9,
+    "longitude": 16.2,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Genova",
+    "latitude": 44.391981,
+    "longitude": 8.961261,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Gizzeria (Catanzaro)",
+    "latitude": 38.93,
+    "longitude": 16.22,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Grado",
+    "latitude": 45.68,
+    "longitude": 13.4,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Imperia",
+    "latitude": 43.88,
+    "longitude": 8.05,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Isola delle Correnti",
+    "latitude": 36.63,
+    "longitude": 15.08,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Italy - Baratti",
+    "latitude": 42.990592,
+    "longitude": 10.501964,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Italy - Chernobyl",
+    "latitude": 42.95465,
+    "longitude": 10.598453,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Italy como lake (valmadrera)",
+    "latitude": 45.85,
+    "longitude": 9.35,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Lago Santa Croce",
+    "latitude": 46.12,
+    "longitude": 12.35,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Como (Colico)",
+    "latitude": 46.13,
+    "longitude": 9.35,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Garda",
+    "latitude": 45.8,
+    "longitude": 10.81,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Lignano",
+    "latitude": 45.7,
+    "longitude": 13.15,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Livorno",
+    "latitude": 43.53,
+    "longitude": 10.3,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Loggia di Pilato (paragliding)",
+    "latitude": 40.87,
+    "longitude": 17.28,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Marina Julia Bay",
+    "latitude": 45.78,
+    "longitude": 13.55,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Marina di Grosseto",
+    "latitude": 42.720486,
+    "longitude": 10.978356,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Marina di Vasto (Chieti)",
+    "latitude": 42.1,
+    "longitude": 14.72,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Ostia",
+    "latitude": 41.73,
+    "longitude": 12.23,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Porto Cesareo (Lecce)",
+    "latitude": 40.25,
+    "longitude": 17.87,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Portonovo",
+    "latitude": 43.55,
+    "longitude": 13.62,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Rimini",
+    "latitude": 44.060161,
+    "longitude": 12.591075,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "S.Antuono (MT) Hanggliding/Paragliding",
+    "latitude": 40.666389,
+    "longitude": 16.349722,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Sardinia - Porto Pollo",
+    "latitude": 41.18,
+    "longitude": 9.38,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Scauri (Latina)",
+    "latitude": 41.25,
+    "longitude": 13.72,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Torbole",
+    "latitude": 45.87,
+    "longitude": 10.88,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "Varcaturo (Naples)",
+    "latitude": 40.9,
+    "longitude": 14.03,
+    "country": "Italy",
+    "source": "windguru"
+  },
+  {
+    "name": "HES, Latvia",
+    "latitude": 56.83,
+    "longitude": 24.28,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Jurmala",
+    "latitude": 56.98,
+    "longitude": 23.58,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Kolka",
+    "latitude": 57.75,
+    "longitude": 22.6,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Kosrags",
+    "latitude": 57.696808,
+    "longitude": 22.336578,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "LIIVI LAHT S osa",
+    "latitude": 57.5,
+    "longitude": 23.5,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Latvia - Ainazi",
+    "latitude": 57.83,
+    "longitude": 24.33,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Latvia - Engure",
+    "latitude": 57.2,
+    "longitude": 23.25,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Latvia - Roja",
+    "latitude": 57.5,
+    "longitude": 22.8,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Latvia - Ungura ezers",
+    "latitude": 57.33,
+    "longitude": 25.08,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Liepaja (Karosta)",
+    "latitude": 56.51,
+    "longitude": 21.01,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Lubans Lake",
+    "latitude": 56.75,
+    "longitude": 26.88,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Pape",
+    "latitude": 56.17,
+    "longitude": 21.02,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Pavilosta",
+    "latitude": 56.88,
+    "longitude": 21.18,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "RIGA",
+    "latitude": 56.95,
+    "longitude": 24.1,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Riga (Kisezers DA)",
+    "latitude": 57.0,
+    "longitude": 24.18,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Saulkrasti",
+    "latitude": 57.31,
+    "longitude": 24.4,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Usma Lake",
+    "latitude": 57.18,
+    "longitude": 22.17,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "VENTSPILS",
+    "latitude": 57.4,
+    "longitude": 21.6,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Ventspils",
+    "latitude": 57.36,
+    "longitude": 21.51,
+    "country": "Latvia",
+    "source": "windguru"
+  },
+  {
+    "name": "Beirut",
+    "latitude": 33.88,
+    "longitude": 35.5,
+    "country": "Lebanon",
+    "source": "windguru"
+  },
+  {
+    "name": "El Batroun - Colonel",
+    "latitude": 34.25,
+    "longitude": 35.65,
+    "country": "Lebanon",
+    "source": "windguru"
+  },
+  {
+    "name": "Tripoli - North Marina",
+    "latitude": 34.45,
+    "longitude": 35.83,
+    "country": "Lebanon",
+    "source": "windguru"
+  },
+  {
+    "name": "Elektrenai",
+    "latitude": 54.77,
+    "longitude": 24.63,
+    "country": "Lithuania",
+    "source": "windguru"
+  },
+  {
+    "name": "Giruliai",
+    "latitude": 55.77,
+    "longitude": 21.08,
+    "country": "Lithuania",
+    "source": "windguru"
+  },
+  {
+    "name": "Klaipeda",
+    "latitude": 55.72,
+    "longitude": 21.25,
+    "country": "Lithuania",
+    "source": "windguru"
+  },
+  {
+    "name": "Lithuania - Kaunas, Biliuno il.",
+    "latitude": 54.864753,
+    "longitude": 24.119797,
+    "country": "Lithuania",
+    "source": "windguru"
+  },
+  {
+    "name": "Lithuania - Nida",
+    "latitude": 55.33,
+    "longitude": 21.0,
+    "country": "Lithuania",
+    "source": "windguru"
+  },
+  {
+    "name": "Luxembourg",
+    "latitude": 49.62,
+    "longitude": 6.22,
+    "country": "Luxembourg",
+    "source": "windguru"
+  },
+  {
+    "name": "Indian Ocean - Maldives - Male",
+    "latitude": 4.17,
+    "longitude": 73.5,
+    "country": "Maldives",
+    "source": "windguru"
+  },
+  {
+    "name": "Maldives - Kuredu",
+    "latitude": 5.5469,
+    "longitude": 73.4641,
+    "country": "Maldives",
+    "source": "windguru"
+  },
+  {
+    "name": "Martinique",
+    "latitude": 14.6,
+    "longitude": -61.08,
+    "country": "Martinique",
+    "source": "windguru"
+  },
+  {
+    "name": "Le Morne",
+    "latitude": -20.4667,
+    "longitude": 57.3099,
+    "country": "Mauritius",
+    "source": "windguru"
+  },
+  {
+    "name": "Rodrigues Island",
+    "latitude": -19.7,
+    "longitude": 63.42,
+    "country": "Mauritius",
+    "source": "windguru"
+  },
+  {
+    "name": "Acapulco, Gro. (zonaMayanPalace)",
+    "latitude": 16.78,
+    "longitude": -99.82,
+    "country": "Mexico",
+    "source": "windguru"
+  },
+  {
+    "name": "Boca del Rio, Veracruz",
+    "latitude": 19.163858,
+    "longitude": -96.104464,
+    "country": "Mexico",
+    "source": "windguru"
+  },
+  {
+    "name": "Cancun, Qro. (playa delfines)",
+    "latitude": 21.063203,
+    "longitude": -86.778319,
+    "country": "Mexico",
+    "source": "windguru"
+  },
+  {
+    "name": "Las Maravillas, Topilejo, Distrito Federal",
+    "latitude": 19.146758,
+    "longitude": -99.168417,
+    "country": "Mexico",
+    "source": "windguru"
+  },
+  {
+    "name": "Los Jales, Pachuca",
+    "latitude": 20.069394,
+    "longitude": -98.760567,
+    "country": "Mexico",
+    "source": "windguru"
+  },
+  {
+    "name": "Telchac, Yucatan",
+    "latitude": 21.35,
+    "longitude": -89.2,
+    "country": "Mexico",
+    "source": "windguru"
+  },
+  {
+    "name": "Morocco - Moulay Bouzerktoun",
+    "latitude": 31.996667,
+    "longitude": 8.016667,
+    "country": "Morocco",
+    "source": "windguru"
+  },
+  {
+    "name": "Walvis Bay",
+    "latitude": -22.9,
+    "longitude": 14.48,
+    "country": "Namibia",
+    "source": "windguru"
+  },
+  {
+    "name": "Amstelmeer",
+    "latitude": 52.885986,
+    "longitude": 4.924481,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Den Helder",
+    "latitude": 52.964928,
+    "longitude": 4.73685,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Dordrecht",
+    "latitude": 51.73,
+    "longitude": 4.67,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Grevelingendam",
+    "latitude": 51.68,
+    "longitude": 4.15,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Holland - Almere Haven",
+    "latitude": 52.33,
+    "longitude": 5.2,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Holland - Noordwijk aan Zee",
+    "latitude": 52.25,
+    "longitude": 4.43,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Holland - Warder",
+    "latitude": 52.559042,
+    "longitude": 5.040664,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "IJsselmeer (north)",
+    "latitude": 53.03,
+    "longitude": 5.33,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "IJsselmeer (south)",
+    "latitude": 52.6,
+    "longitude": 5.53,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Krabbendijke",
+    "latitude": 51.43,
+    "longitude": 4.13,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Lauwersmeer",
+    "latitude": 53.4,
+    "longitude": 6.2,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Maasvlakte",
+    "latitude": 51.95,
+    "longitude": 4.05,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Mirns",
+    "latitude": 52.853861,
+    "longitude": 5.450508,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Oesterdam",
+    "latitude": 51.43,
+    "longitude": 4.22,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Oesterdam",
+    "latitude": 51.47,
+    "longitude": 4.2,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Oostvoorne",
+    "latitude": 51.911814,
+    "longitude": 4.054186,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Strand Horst",
+    "latitude": 52.329347,
+    "longitude": 5.581806,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Terschelling",
+    "latitude": 53.4,
+    "longitude": 5.2,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Thorn",
+    "latitude": 51.15,
+    "longitude": 5.85,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Veerse Meer",
+    "latitude": 51.583467,
+    "longitude": 3.652086,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Wijk aan Zee, Noordpier",
+    "latitude": 52.469329,
+    "longitude": 4.556018,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Zuidlaardermeer",
+    "latitude": 53.12,
+    "longitude": 6.7,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "scheveningen",
+    "latitude": 52.1,
+    "longitude": 4.27,
+    "country": "Netherlands",
+    "source": "windguru"
+  },
+  {
+    "name": "Noumea",
+    "latitude": -22.27,
+    "longitude": 166.45,
+    "country": "New Caledonia",
+    "source": "windguru"
+  },
+  {
+    "name": "Taranaki (north)",
+    "latitude": -38.7,
+    "longitude": 174.25,
+    "country": "New Zealand",
+    "source": "windguru"
+  },
+  {
+    "name": "Bodö",
+    "latitude": 67.3161,
+    "longitude": 14.485131,
+    "country": "Norway",
+    "source": "windguru"
+  },
+  {
+    "name": "Karmoy",
+    "latitude": 59.23,
+    "longitude": 5.25,
+    "country": "Norway",
+    "source": "windguru"
+  },
+  {
+    "name": "Lista",
+    "latitude": 58.1,
+    "longitude": 6.6,
+    "country": "Norway",
+    "source": "windguru"
+  },
+  {
+    "name": "Sola (Stavanger)",
+    "latitude": 58.88,
+    "longitude": 5.6,
+    "country": "Norway",
+    "source": "windguru"
+  },
+  {
+    "name": "Stromtangen fyr (Fredrikstad)",
+    "latitude": 59.15,
+    "longitude": 10.82,
+    "country": "Norway",
+    "source": "windguru"
+  },
+  {
+    "name": "Tyrifjorden (Honefoss)",
+    "latitude": 60.03,
+    "longitude": 10.17,
+    "country": "Norway",
+    "source": "windguru"
+  },
+  {
+    "name": "Port Moresby",
+    "latitude": -9.46,
+    "longitude": 147.13,
+    "country": "Papua New Guinea",
+    "source": "windguru"
+  },
+  {
+    "name": "Chancza",
+    "latitude": 50.63,
+    "longitude": 21.05,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Czaplinek - Kusy Dwór (501058352)",
+    "latitude": 53.580608,
+    "longitude": 16.207839,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Czarna Laka (lake Dabie)",
+    "latitude": 53.47,
+    "longitude": 14.67,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Czarnocin",
+    "latitude": 53.72,
+    "longitude": 14.5,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Czarnocin",
+    "latitude": 53.72,
+    "longitude": 14.55,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Czorsztyn-Niedzica",
+    "latitude": 49.4,
+    "longitude": 20.25,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Dzieckowice / Imielin",
+    "latitude": 50.128889,
+    "longitude": 19.233056,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Dzwirzyno (lake)",
+    "latitude": 54.158356,
+    "longitude": 15.386267,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Gliwice",
+    "latitude": 50.290456,
+    "longitude": 18.648714,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Hel",
+    "latitude": 54.72,
+    "longitude": 18.63,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Jastrzebie Zdroj",
+    "latitude": 49.95,
+    "longitude": 18.58,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Jeziorany",
+    "latitude": 53.97,
+    "longitude": 20.77,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Jeziorsko (Warta)",
+    "latitude": 51.8,
+    "longitude": 18.68,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Kalisz (Szałe)",
+    "latitude": 51.75,
+    "longitude": 18.08,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Karwia",
+    "latitude": 54.832711,
+    "longitude": 18.218006,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Kiekrz",
+    "latitude": 52.48,
+    "longitude": 16.78,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Klimkowka",
+    "latitude": 49.55,
+    "longitude": 21.1,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Krakow / Kryspinow",
+    "latitude": 50.05,
+    "longitude": 19.8,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Leba",
+    "latitude": 54.78,
+    "longitude": 17.55,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Mamry",
+    "latitude": 54.18,
+    "longitude": 21.68,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Miasto Reszel - POLSKA",
+    "latitude": 54.05,
+    "longitude": 21.15,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Miedwie Lake",
+    "latitude": 53.27,
+    "longitude": 14.88,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Miedzywodzie",
+    "latitude": 54.0,
+    "longitude": 14.68,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Miedzyzdroje",
+    "latitude": 53.93,
+    "longitude": 14.43,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Mietkow Lake",
+    "latitude": 50.98,
+    "longitude": 16.65,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Modzerowo (Wloclawka)",
+    "latitude": 52.65,
+    "longitude": 19.18,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Niegocin",
+    "latitude": 54.0,
+    "longitude": 21.78,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Niesulice (Niesłysz Lake) - O.W. KORMORAN",
+    "latitude": 52.225014,
+    "longitude": 15.394419,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Otmuchow lakes",
+    "latitude": 50.47,
+    "longitude": 17.17,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Pobierowo",
+    "latitude": 54.05,
+    "longitude": 14.88,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Poland - KOŁBASKOWO",
+    "latitude": 53.340097,
+    "longitude": 14.451142,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Poland - Olsztyn",
+    "latitude": 53.78,
+    "longitude": 20.48,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Poland - Poraj near Czestochowa",
+    "latitude": 50.67,
+    "longitude": 19.23,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Poland - Rewa",
+    "latitude": 54.65,
+    "longitude": 18.52,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Poland - Wrocław",
+    "latitude": 51.12,
+    "longitude": 17.02,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Poland - Znin",
+    "latitude": 52.87,
+    "longitude": 17.73,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Poland -Trzcianka-jeź. Logo",
+    "latitude": 53.05,
+    "longitude": 16.42,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Powidz Lake",
+    "latitude": 52.4,
+    "longitude": 17.93,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Slawskie Lake",
+    "latitude": 51.9,
+    "longitude": 16.0,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Sniardwy",
+    "latitude": 53.77,
+    "longitude": 21.72,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Solina",
+    "latitude": 49.38,
+    "longitude": 22.47,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Sopot",
+    "latitude": 54.43,
+    "longitude": 18.55,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Szczecinek Wielimie lake",
+    "latitude": 53.75,
+    "longitude": 16.77,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Talty",
+    "latitude": 53.87,
+    "longitude": 21.53,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Turawa",
+    "latitude": 50.72,
+    "longitude": 18.13,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Warszawa",
+    "latitude": 52.25,
+    "longitude": 21.02,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Warszawa",
+    "latitude": 52.211,
+    "longitude": 21.009639,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Warszow (Swinoujscie)",
+    "latitude": 53.92,
+    "longitude": 14.25,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Wigrańce",
+    "latitude": 54.047306,
+    "longitude": 23.465056,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Wilcza Wola",
+    "latitude": 50.25,
+    "longitude": 21.82,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Zbaszynskie lake",
+    "latitude": 52.23,
+    "longitude": 15.92,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Zegrze",
+    "latitude": 52.46,
+    "longitude": 21.01,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Zywiec",
+    "latitude": 49.72,
+    "longitude": 19.2,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "darlowo",
+    "latitude": 54.42,
+    "longitude": 16.4,
+    "country": "Poland",
+    "source": "windguru"
+  },
+  {
+    "name": "Altura",
+    "latitude": 37.18,
+    "longitude": -7.5,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Azores - Sao Jorge",
+    "latitude": 38.63,
+    "longitude": -28.05,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Azores - Sao Miguel",
+    "latitude": 37.78,
+    "longitude": -25.5,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Cabril",
+    "latitude": 39.9175,
+    "longitude": -8.133333,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Cascais",
+    "latitude": 38.7,
+    "longitude": -9.42,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Cova do Vapor",
+    "latitude": 38.66,
+    "longitude": -9.24,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Divor",
+    "latitude": 38.65,
+    "longitude": -7.96,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Fonte da Telha",
+    "latitude": 38.574536,
+    "longitude": -9.196142,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Lagoa de Albufeira",
+    "latitude": 38.508133,
+    "longitude": -9.180883,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Madeira",
+    "latitude": 32.7,
+    "longitude": -17.0,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Meia Praia",
+    "latitude": 37.105756,
+    "longitude": -8.665781,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Obidos",
+    "latitude": 39.42,
+    "longitude": -9.22,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Porto (W95)",
+    "latitude": 41.02,
+    "longitude": -8.82,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Porto Santo",
+    "latitude": 33.05,
+    "longitude": -16.32,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Portugal - Aveiro",
+    "latitude": 40.65,
+    "longitude": -8.75,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Portugal - Castelo de Bode",
+    "latitude": 39.55,
+    "longitude": -8.3,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Portugal - Figueira da Foz",
+    "latitude": 40.15,
+    "longitude": -8.87,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Portugal - Leixoes",
+    "latitude": 41.17,
+    "longitude": -8.7,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Portugal - Paço de Arcos",
+    "latitude": 38.68,
+    "longitude": -9.3,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Portugal - Peniche",
+    "latitude": 39.35,
+    "longitude": -9.37,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Portugal - Setúbal - Marina",
+    "latitude": 38.521111,
+    "longitude": -8.886389,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Portugal - Vilamoura",
+    "latitude": 37.07,
+    "longitude": -8.13,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Praia da Rocha",
+    "latitude": 37.117431,
+    "longitude": -8.537469,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Ria de Faro",
+    "latitude": 37.01,
+    "longitude": -7.93,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Sagres",
+    "latitude": 37.0,
+    "longitude": -9.0,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Sines",
+    "latitude": 37.9979,
+    "longitude": -8.851478,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Tróia",
+    "latitude": 38.484244,
+    "longitude": -8.891881,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Viana do Castelo",
+    "latitude": 41.676539,
+    "longitude": -8.828661,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "fnc",
+    "latitude": 32.63,
+    "longitude": -16.92,
+    "country": "Portugal",
+    "source": "windguru"
+  },
+  {
+    "name": "Indian Ocean - La Reunion",
+    "latitude": -21.08,
+    "longitude": 55.48,
+    "country": "Reunion",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint Lucia, Sandy Beach, Vieux Fort",
+    "latitude": 13.727883,
+    "longitude": -60.944239,
+    "country": "Saint Lucia",
+    "source": "windguru"
+  },
+  {
+    "name": "East Coast",
+    "latitude": 1.35,
+    "longitude": 103.8,
+    "country": "Singapore",
+    "source": "windguru"
+  },
+  {
+    "name": "Chopok (paragliding)",
+    "latitude": 48.93,
+    "longitude": 19.58,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Dolné Orešany (paragliding)",
+    "latitude": 48.42,
+    "longitude": 17.42,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Domaša",
+    "latitude": 49.1,
+    "longitude": 21.7,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Gabčíkovo (Šamorín)",
+    "latitude": 48.0,
+    "longitude": 17.3,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Geča",
+    "latitude": 48.63,
+    "longitude": 21.31,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Králová",
+    "latitude": 48.2,
+    "longitude": 17.8,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Liptovská Mara",
+    "latitude": 49.1,
+    "longitude": 19.5,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Nitrianske Rudno",
+    "latitude": 48.805,
+    "longitude": 18.483333,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Orava",
+    "latitude": 49.4,
+    "longitude": 19.5,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Ružiná (Lučenec)",
+    "latitude": 48.4436,
+    "longitude": 19.5594,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Senec",
+    "latitude": 48.21,
+    "longitude": 17.4,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Slňava",
+    "latitude": 48.5,
+    "longitude": 17.8,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Straník (paragliding)",
+    "latitude": 49.23,
+    "longitude": 18.83,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Zemplínska šírava",
+    "latitude": 48.8,
+    "longitude": 22.0,
+    "country": "Slovakia",
+    "source": "windguru"
+  },
+  {
+    "name": "Julijske Alpe, Vogar (paragliding)",
+    "latitude": 46.2946,
+    "longitude": 13.875453,
+    "country": "Slovenia",
+    "source": "windguru"
+  },
+  {
+    "name": "Piran",
+    "latitude": 45.53,
+    "longitude": 13.57,
+    "country": "Slovenia",
+    "source": "windguru"
+  },
+  {
+    "name": "Cape Town",
+    "latitude": -33.9,
+    "longitude": 18.46,
+    "country": "South Africa",
+    "source": "windguru"
+  },
+  {
+    "name": "Durban",
+    "latitude": -29.935003,
+    "longitude": 31.012517,
+    "country": "South Africa",
+    "source": "windguru"
+  },
+  {
+    "name": "Saldanha Bay",
+    "latitude": -33.0,
+    "longitude": 17.5,
+    "country": "South Africa",
+    "source": "windguru"
+  },
+  {
+    "name": "South Africa - Thabazimbi (Paragliding)",
+    "latitude": -24.605158,
+    "longitude": 27.417542,
+    "country": "South Africa",
+    "source": "windguru"
+  },
+  {
+    "name": "A Coruna",
+    "latitude": 43.42,
+    "longitude": -8.4,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Canary Islands - Fuerteventura",
+    "latitude": 28.33,
+    "longitude": -14.0,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Canary Islands - Gran Canaria",
+    "latitude": 28.0,
+    "longitude": -15.6,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Canary Islands - Tenerife",
+    "latitude": 28.31,
+    "longitude": -16.56,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Cap Finisterre (W112)",
+    "latitude": 42.98,
+    "longitude": -9.38,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Castelldefels",
+    "latitude": 41.265194,
+    "longitude": 1.952275,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Cordoba",
+    "latitude": 37.88,
+    "longitude": -4.78,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Coruna (W113)",
+    "latitude": 43.55,
+    "longitude": -8.37,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Costa Blanca",
+    "latitude": 38.2,
+    "longitude": -0.2,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Costa Brava",
+    "latitude": 41.7,
+    "longitude": 3.3,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Costa Daurada",
+    "latitude": 41.0,
+    "longitude": 2.0,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Costa del Azahar (Oliva)",
+    "latitude": 38.92,
+    "longitude": -0.12,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Costa del Azahar (Valencia)",
+    "latitude": 39.3,
+    "longitude": -0.28,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Costa del Sol",
+    "latitude": 36.5,
+    "longitude": -4.0,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "El Ejido",
+    "latitude": 36.78,
+    "longitude": -2.81,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "El Puerto Santa Maria",
+    "latitude": 36.57,
+    "longitude": -6.25,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Isla Canela",
+    "latitude": 37.172425,
+    "longitude": -7.380425,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "La Sotonera",
+    "latitude": 42.12,
+    "longitude": -0.68,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Malgrat de Mar",
+    "latitude": 41.63,
+    "longitude": 2.73,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Mar menor",
+    "latitude": 37.806667,
+    "longitude": -0.773333,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Mid Biscay",
+    "latitude": 45.83,
+    "longitude": -6.58,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Palamos",
+    "latitude": 41.85,
+    "longitude": 3.13,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Palma de Mallorca",
+    "latitude": 39.53,
+    "longitude": 2.67,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Pals (La Bisbal)",
+    "latitude": 42.0,
+    "longitude": 3.2,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Playa del Trabucador",
+    "latitude": 40.62,
+    "longitude": 0.68,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Premia de Mar",
+    "latitude": 41.48,
+    "longitude": 2.37,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Sant Pere Pescador (Girona)",
+    "latitude": 42.18,
+    "longitude": 3.2,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Santander",
+    "latitude": 43.47,
+    "longitude": -3.8,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Spain - Delta del Ebro",
+    "latitude": 40.73,
+    "longitude": 0.82,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Spain - La Manga (Murcia)",
+    "latitude": 37.73,
+    "longitude": -0.72,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Spain - Masnou",
+    "latitude": 41.48,
+    "longitude": 2.32,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Valmayor (Madrid)",
+    "latitude": 40.55,
+    "longitude": -4.07,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Vigo",
+    "latitude": 42.25,
+    "longitude": -8.72,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "badalona",
+    "latitude": 41.45,
+    "longitude": 2.25,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "mundaka",
+    "latitude": 43.42,
+    "longitude": -2.7,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "wind farm Bonny; Pozo Izquierdo",
+    "latitude": 27.813611,
+    "longitude": -15.426667,
+    "country": "Spain",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint-Martin",
+    "latitude": 18.08,
+    "longitude": -63.02,
+    "country": "St. Martin",
+    "source": "windguru"
+  },
+  {
+    "name": "Ahus",
+    "latitude": 55.92,
+    "longitude": 14.28,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Are",
+    "latitude": 63.43,
+    "longitude": 13.1,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Bjuruklubb",
+    "latitude": 64.435686,
+    "longitude": 21.614589,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Branäs",
+    "latitude": 60.65,
+    "longitude": 12.95,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Dundret",
+    "latitude": 67.114069,
+    "longitude": 20.587931,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Galtis",
+    "latitude": 66.117414,
+    "longitude": 17.939464,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Gesunda",
+    "latitude": 60.9,
+    "longitude": 14.53,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Göteborg",
+    "latitude": 57.75,
+    "longitude": 11.9,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Hallands Väderö",
+    "latitude": 56.44,
+    "longitude": 12.56,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Jäckvik",
+    "latitude": 66.345489,
+    "longitude": 16.946611,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Jönköping (Wättern)",
+    "latitude": 57.78,
+    "longitude": 14.18,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Kalmar",
+    "latitude": 56.75,
+    "longitude": 16.4,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Kanis",
+    "latitude": 65.65,
+    "longitude": 20.95,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Kapellskär",
+    "latitude": 59.715592,
+    "longitude": 19.05595,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Larm Digernäs",
+    "latitude": 63.1545,
+    "longitude": 14.469914,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Linköping / Roxen",
+    "latitude": 58.42,
+    "longitude": 15.62,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Lulea",
+    "latitude": 65.58,
+    "longitude": 22.13,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Malmö / Skanor",
+    "latitude": 55.45,
+    "longitude": 12.8,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Morga Hage",
+    "latitude": 59.78,
+    "longitude": 17.65,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Salnö",
+    "latitude": 59.921302,
+    "longitude": 18.992615,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Skellefte&#229;",
+    "latitude": 64.7581,
+    "longitude": 20.9892,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Stockholm",
+    "latitude": 59.3,
+    "longitude": 18.0,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Sundsvall/Härnösand",
+    "latitude": 62.53,
+    "longitude": 17.45,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Sweden &#197;lleberg, V Götaland",
+    "latitude": 58.13,
+    "longitude": 13.6,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Sweden - Vimmerby",
+    "latitude": 57.67,
+    "longitude": 15.83,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Sälen",
+    "latitude": 61.15,
+    "longitude": 12.98,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Timmele",
+    "latitude": 57.87,
+    "longitude": 13.42,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Torö",
+    "latitude": 58.83,
+    "longitude": 17.83,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Torö",
+    "latitude": 58.793317,
+    "longitude": 17.788175,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Tosseberg",
+    "latitude": 59.98,
+    "longitude": 13.08,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Uddevalla (paragliding)",
+    "latitude": 58.35,
+    "longitude": 11.92,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Ulebergshamn",
+    "latitude": 58.45,
+    "longitude": 11.3,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Varamoviken",
+    "latitude": 58.55,
+    "longitude": 14.95,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Varberg",
+    "latitude": 57.13,
+    "longitude": 12.3,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Väddö",
+    "latitude": 59.95,
+    "longitude": 18.81,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Väderöarna",
+    "latitude": 58.53,
+    "longitude": 11.03,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Ystad",
+    "latitude": 55.43,
+    "longitude": 13.82,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Ängelholm",
+    "latitude": 56.27,
+    "longitude": 12.83,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Östra Lagnö",
+    "latitude": 59.53,
+    "longitude": 18.82,
+    "country": "Sweden",
+    "source": "windguru"
+  },
+  {
+    "name": "Penghu",
+    "latitude": 23.57,
+    "longitude": 119.55,
+    "country": "Taiwan",
+    "source": "windguru"
+  },
+  {
+    "name": "Hua Hin",
+    "latitude": 12.55,
+    "longitude": 99.96,
+    "country": "Thailand",
+    "source": "windguru"
+  },
+  {
+    "name": "Pattaya",
+    "latitude": 12.75,
+    "longitude": 100.87,
+    "country": "Thailand",
+    "source": "windguru"
+  },
+  {
+    "name": "Phuket",
+    "latitude": 7.862021,
+    "longitude": 98.34549,
+    "country": "Thailand",
+    "source": "windguru"
+  },
+  {
+    "name": "Djerba",
+    "latitude": 33.86,
+    "longitude": 10.76,
+    "country": "Tunisia",
+    "source": "windguru"
+  },
+  {
+    "name": "Monastir",
+    "latitude": 35.66,
+    "longitude": 10.83,
+    "country": "Tunisia",
+    "source": "windguru"
+  },
+  {
+    "name": "Bodrum",
+    "latitude": 37.02,
+    "longitude": 27.42,
+    "country": "Turkey",
+    "source": "windguru"
+  },
+  {
+    "name": "Cesme",
+    "latitude": 38.33,
+    "longitude": 26.3,
+    "country": "Turkey",
+    "source": "windguru"
+  },
+  {
+    "name": "Borzhava",
+    "latitude": 48.643117,
+    "longitude": 23.229047,
+    "country": "Ukraine",
+    "source": "windguru"
+  },
+  {
+    "name": "My spot",
+    "latitude": 48.82,
+    "longitude": 22.82,
+    "country": "Ukraine",
+    "source": "windguru"
+  },
+  {
+    "name": "Uzhgorod",
+    "latitude": 48.624428,
+    "longitude": 22.301475,
+    "country": "Ukraine",
+    "source": "windguru"
+  },
+  {
+    "name": "Abu Dhabi, Yas island",
+    "latitude": 24.509564,
+    "longitude": 54.564742,
+    "country": "United Arab Emirates",
+    "source": "windguru"
+  },
+  {
+    "name": "Dubai",
+    "latitude": 25.08,
+    "longitude": 55.13,
+    "country": "United Arab Emirates",
+    "source": "windguru"
+  },
+  {
+    "name": "Ainsdale",
+    "latitude": 53.62,
+    "longitude": -3.07,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Allonby",
+    "latitude": 54.759514,
+    "longitude": -3.433717,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Anglesey (North Wales)",
+    "latitude": 53.3,
+    "longitude": -4.5,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Bartley SC - Birmingham",
+    "latitude": 52.42,
+    "longitude": -1.98,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Beadnell Bay",
+    "latitude": 55.53,
+    "longitude": -1.63,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Bewl Water Outdoor Centre",
+    "latitude": 51.07,
+    "longitude": 0.4,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Bigbury beach (Plymouth)",
+    "latitude": 50.31,
+    "longitude": -4.15,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Blackpool",
+    "latitude": 53.81,
+    "longitude": -3.05,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Blithfield Reservoir",
+    "latitude": 52.8,
+    "longitude": -1.9,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Bolt head beach (Salcombe)",
+    "latitude": 50.22,
+    "longitude": -3.78,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Bridlington",
+    "latitude": 53.975669,
+    "longitude": -0.197297,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Broad Haven",
+    "latitude": 51.778778,
+    "longitude": -5.103925,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Carsington",
+    "latitude": 53.05,
+    "longitude": -1.63,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Chasewater",
+    "latitude": 52.67,
+    "longitude": -1.93,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Draycote Water",
+    "latitude": 52.32,
+    "longitude": -1.32,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Exmouth",
+    "latitude": 50.6,
+    "longitude": -3.4,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Ferring (Worthing)",
+    "latitude": 50.8,
+    "longitude": -0.4,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Gower Penninsula",
+    "latitude": 51.53,
+    "longitude": -4.26,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Gullane",
+    "latitude": 56.040853,
+    "longitude": -2.838933,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Gwithian",
+    "latitude": 50.211425,
+    "longitude": -5.405906,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Hunstanton",
+    "latitude": 52.954308,
+    "longitude": 0.50065,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Isle of Wight (Sandown)",
+    "latitude": 50.63,
+    "longitude": -1.13,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Kimmeridge / KBay",
+    "latitude": 50.610786,
+    "longitude": -2.130008,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Largs",
+    "latitude": 55.790458,
+    "longitude": -4.869525,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Luce Bay",
+    "latitude": 54.75,
+    "longitude": -4.83,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Machrihanish",
+    "latitude": 55.42,
+    "longitude": -5.73,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Mercury",
+    "latitude": 50.972778,
+    "longitude": -1.038333,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Morecambe Bay",
+    "latitude": 54.12,
+    "longitude": -2.85,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "My spot",
+    "latitude": 50.7,
+    "longitude": -1.55,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Newtownards (Northern Ireland)",
+    "latitude": 54.58,
+    "longitude": -5.66,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Pagham",
+    "latitude": 50.77,
+    "longitude": -0.75,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Pevensey Bay (Eastbourne)",
+    "latitude": 50.807972,
+    "longitude": 0.347436,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Polzeath (North Cornwall)",
+    "latitude": 50.55,
+    "longitude": -4.93,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Poole Harbour",
+    "latitude": 50.711114,
+    "longitude": -1.974006,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Portland (W23)",
+    "latitude": 50.42,
+    "longitude": -2.45,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Queen Mary Reservoir",
+    "latitude": 51.41,
+    "longitude": -0.45,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Redcar",
+    "latitude": 54.62,
+    "longitude": -1.05,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Rhossil Beach (Swansea)",
+    "latitude": 51.63,
+    "longitude": -3.95,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint Mary's Bay",
+    "latitude": 51.0,
+    "longitude": 0.96,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Saunton Sands",
+    "latitude": 51.108681,
+    "longitude": -4.220967,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Shoreham (Brighton)",
+    "latitude": 50.8,
+    "longitude": -0.15,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Southend",
+    "latitude": 51.5,
+    "longitude": 0.71,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "The Broch",
+    "latitude": 57.68,
+    "longitude": -1.98,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Thurso",
+    "latitude": 58.6066,
+    "longitude": -3.552022,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Tiree (Inner Hebrides)",
+    "latitude": 56.5,
+    "longitude": -6.9,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "UK - Rutland Water",
+    "latitude": 52.65,
+    "longitude": -0.62,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "West Kirby",
+    "latitude": 53.37,
+    "longitude": -3.2,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "West Wittering",
+    "latitude": 50.774792,
+    "longitude": -0.906497,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Weston-Super-Mare",
+    "latitude": 51.332517,
+    "longitude": -2.983764,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Weymouth",
+    "latitude": 50.6,
+    "longitude": -2.47,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Whitstable",
+    "latitude": 51.366278,
+    "longitude": 1.051003,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "whitesheet",
+    "latitude": 51.019847,
+    "longitude": -2.079789,
+    "country": "United Kingdom",
+    "source": "windguru"
+  },
+  {
+    "name": "Abilene",
+    "latitude": 32.42,
+    "longitude": -99.75,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Boulder",
+    "latitude": 40.02,
+    "longitude": -105.28,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Cape Cod",
+    "latitude": 42.01,
+    "longitude": -70.15,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Cape Hatteras",
+    "latitude": 35.22,
+    "longitude": -75.53,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Corpus Christi",
+    "latitude": 27.8,
+    "longitude": -97.4,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Estes Park",
+    "latitude": 40.37,
+    "longitude": -105.52,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Fort Worth",
+    "latitude": 32.73,
+    "longitude": -97.32,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Holland (Lake Michigan)",
+    "latitude": 42.78,
+    "longitude": -86.1,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Islamorada",
+    "latitude": 24.92,
+    "longitude": -80.63,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Erie - Luna Pier",
+    "latitude": 41.8,
+    "longitude": -83.44,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Erie - Maumee Bay",
+    "latitude": 41.72,
+    "longitude": -83.4,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Erie - Port Clinton",
+    "latitude": 41.57,
+    "longitude": -82.87,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Lake Michigan (near Chicago)",
+    "latitude": 42.3,
+    "longitude": -87.0,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Longs Peak",
+    "latitude": 40.254946,
+    "longitude": -105.616227,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Los Angeles - Cabrillo Beach",
+    "latitude": 33.7,
+    "longitude": -118.28,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Maui (north shore)",
+    "latitude": 20.935,
+    "longitude": -156.36,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Miami Beach",
+    "latitude": 25.78,
+    "longitude": -80.12,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Minneapolis",
+    "latitude": 44.98,
+    "longitude": -93.96,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Ninigret Pond",
+    "latitude": 41.3,
+    "longitude": -71.7,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Quaboag Pond",
+    "latitude": 42.19,
+    "longitude": -72.06,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint Augustine",
+    "latitude": 29.91,
+    "longitude": -81.28,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "San Francisco, Marina Green",
+    "latitude": 37.808258,
+    "longitude": -122.431489,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Sandy Hook",
+    "latitude": 40.48,
+    "longitude": -73.99,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Sherman Island",
+    "latitude": 38.06,
+    "longitude": -121.73,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Swanton (Lake Champlain)",
+    "latitude": 44.92,
+    "longitude": -73.12,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "USA, DE, Dewey Beach",
+    "latitude": 38.659044,
+    "longitude": -75.097653,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Virginia Beach",
+    "latitude": 36.85,
+    "longitude": -75.95,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "West Dennis",
+    "latitude": 41.66,
+    "longitude": -70.17,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "White's Beach (Lake Champlain)",
+    "latitude": 44.62,
+    "longitude": -73.32,
+    "country": "United States",
+    "source": "windguru"
+  },
+  {
+    "name": "Uruguay, laguna garzon",
+    "latitude": -34.77,
+    "longitude": -54.57,
+    "country": "Uruguay",
+    "source": "windguru"
+  },
+  {
+    "name": "Uruguay, playa malvin",
+    "latitude": -34.9,
+    "longitude": -56.12,
+    "country": "Uruguay",
+    "source": "windguru"
+  },
+  {
+    "name": "El Yaque (Margarita)",
+    "latitude": 10.886581,
+    "longitude": -63.930131,
+    "country": "Venezuela",
+    "source": "windguru"
+  },
+  {
+    "name": "Margarita",
+    "latitude": 11.0,
+    "longitude": -64.0,
+    "country": "Venezuela",
+    "source": "windguru"
+  },
+  {
+    "name": "Nha Trang",
+    "latitude": 12.25,
+    "longitude": 109.8,
+    "country": "Viet Nam",
+    "source": "windguru"
+  },
+  {
+    "name": "Phan Thiet",
+    "latitude": 10.7,
+    "longitude": 108.8,
+    "country": "Viet Nam",
+    "source": "windguru"
+  },
+  {
+    "name": "British Virgin Islands",
+    "latitude": 18.6,
+    "longitude": -64.5,
+    "country": "Virgin Islands, British",
+    "source": "windguru"
+  },
+  {
+    "name": "Socotra, Yemen",
+    "latitude": 12.72,
+    "longitude": 53.57,
+    "country": "Yemen",
+    "source": "windguru"
+  },
+  {
+    "name": "Saint Petersburg",
+    "latitude": 59.92,
+    "longitude": 30.25,
+    "country": "russia",
+    "source": "windguru"
+  }
+]

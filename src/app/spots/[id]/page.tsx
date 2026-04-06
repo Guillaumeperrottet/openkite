@@ -13,10 +13,32 @@ interface Props {
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
   try {
-    const spot = await prisma.spot.findUnique({ where: { id } });
-    return { title: spot ? `Openkite - ${spot.name}` : "Openkite - Spot" };
+    const spot = await prisma.spot.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        country: true,
+        region: true,
+        difficulty: true,
+        sportType: true,
+        images: { select: { url: true }, take: 1 },
+      },
+    });
+    if (!spot) return { title: "Spot introuvable" };
+    const location = [spot.region, spot.country].filter(Boolean).join(", ");
+    const sport = spot.sportType === "KITE" ? "kitesurf" : "parapente";
+    const description = `Spot de ${sport} ${spot.name}${location ? ` à ${location}` : ""}. Vent en direct, prévisions 7 jours et archives historiques.`;
+    return {
+      title: spot.name,
+      description,
+      openGraph: {
+        title: `${spot.name} — OpenKite`,
+        description,
+        ...(spot.images[0] && { images: [{ url: spot.images[0].url }] }),
+      },
+    };
   } catch {
-    return { title: "Openkite - Spot" };
+    return { title: "Spot" };
   }
 }
 

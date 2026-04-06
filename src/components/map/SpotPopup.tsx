@@ -38,14 +38,23 @@ export function SpotPopup({
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
     window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    window.addEventListener("pointerdown", handleClickOutside);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("pointerdown", handleClickOutside);
+    };
   }, [onClose]);
 
   const style: React.CSSProperties = {
-    position: "fixed",
-    left: Math.min(position.x, window.innerWidth - 280),
-    top: Math.max(position.y - 8, 70),
+    position: "absolute",
+    left: position.x,
+    top: position.y - 8,
     transform: "translate(-50%, -100%)",
     zIndex: 100,
   };
@@ -54,7 +63,7 @@ export function SpotPopup({
     <div
       ref={ref}
       style={style}
-      className="w-72 rounded-xl bg-white border border-gray-200 shadow-2xl text-sm text-gray-900 overflow-hidden"
+      className="w-72 max-w-[calc(100vw-24px)] rounded-xl bg-white border border-gray-200 shadow-2xl text-sm text-gray-900 overflow-hidden"
     >
       {/* Image */}
       {spot.images[0] && (
@@ -127,10 +136,7 @@ export function SpotPopup({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-1.5">
-                  <span
-                    className="font-bold text-xl"
-                    style={{ color: wind.color }}
-                  >
+                  <span className="font-bold text-xl text-gray-900">
                     {fmt(wind.windSpeedKmh)}
                   </span>
                   <span className="text-gray-400 text-[10px]">

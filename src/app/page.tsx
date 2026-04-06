@@ -22,7 +22,7 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="bg-white" style={{ height: "calc(100vh - 56px)" }}>
+    <div className="bg-white" style={{ height: "calc(100dvh - 56px)" }}>
       <KiteMap spots={spots} />
     </div>
   );

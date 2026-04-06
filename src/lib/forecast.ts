@@ -85,22 +85,24 @@ function calcKitableScore(kmh: number, gustsKmh: number): 0 | 1 | 2 | 3 {
 
 /**
  * Background + foreground colors for a wind-speed cell.
- * Input is km/h; thresholds mirror the kite community's knot expectations.
+ * Windguru-inspired color scale, slightly muted for readability.
+ * Input is km/h, thresholds in knots.
  */
 export function windCellStyle(kmh: number): {
   background: string;
   color: string;
 } {
   const kn = kmh / 1.852;
-  if (kn < 3) return { background: "#f5f5f5", color: "#374151" };
-  if (kn < 7) return { background: "#d4efff", color: "#1e40af" };
-  if (kn < 10) return { background: "#7ec8e3", color: "#1e3a5f" };
-  if (kn < 14) return { background: "#a8d8a8", color: "#14532d" };
-  if (kn < 18) return { background: "#5cb85c", color: "#ffffff" };
-  if (kn < 22) return { background: "#2e7d32", color: "#ffffff" };
-  if (kn < 27) return { background: "#ffa726", color: "#431407" };
-  if (kn < 33) return { background: "#e65100", color: "#ffffff" };
-  return { background: "#b71c1c", color: "#ffffff" };
+  if (kn < 2) return { background: "#f5f5f5", color: "#555" };
+  if (kn < 5) return { background: "#d5f0d5", color: "#333" };
+  if (kn < 8) return { background: "#8edb8e", color: "#1a4a1a" };
+  if (kn < 12) return { background: "#3dbc3d", color: "#0a350a" };
+  if (kn < 16) return { background: "#e8e540", color: "#555" };
+  if (kn < 20) return { background: "#e8b830", color: "#4a2e00" };
+  if (kn < 25) return { background: "#e07020", color: "#ffffff" };
+  if (kn < 30) return { background: "#d42020", color: "#ffffff" };
+  if (kn < 35) return { background: "#b00058", color: "#ffffff" };
+  return { background: "#800080", color: "#ffffff" };
 }
 
 /** Background + foreground colors for a temperature cell (°C). */

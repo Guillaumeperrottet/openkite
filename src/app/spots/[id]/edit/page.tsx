@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: Props) {
   try {
     const spot = await prisma.spot.findUnique({ where: { id } });
     return {
-      title: spot ? `Modifier ${spot.name} — OpenKite` : "Modifier le spot",
+      title: spot ? `Modifier ${spot.name}` : "Modifier le spot",
     };
   } catch {
     return { title: "Modifier le spot" };
@@ -22,7 +22,7 @@ export default async function EditSpotPage({ params }: Props) {
   const { id } = await params;
 
   const spot = await prisma.spot
-    .findUnique({ where: { id } })
+    .findUnique({ where: { id }, include: { images: true } })
     .catch(() => null);
   if (!spot) notFound();
 
@@ -48,6 +48,11 @@ export default async function EditSpotPage({ params }: Props) {
     hazards: spot.hazards,
     access: spot.access,
     nearestStationId: spot.nearestStationId,
+    existingImages: spot.images.map((img) => ({
+      id: img.id,
+      url: img.url,
+      caption: img.caption,
+    })),
   };
 
   return <CreateSpotForm initialData={initialData} />;

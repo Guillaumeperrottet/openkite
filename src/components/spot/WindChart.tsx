@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { windCellStyle } from "@/lib/forecast";
-import { windColor, windDirectionLabel } from "@/lib/utils";
+import { windDirectionLabel } from "@/lib/utils";
 import type { HourlyPoint } from "@/lib/forecast";
 
 interface Props {
@@ -27,7 +27,6 @@ function MiniCompass({
     : Math.round(point.windSpeedKmh);
   const gustVal = useKnots ? point.gustsKnots : Math.round(point.gustsKmh);
   const unit = useKnots ? "kts" : "km/h";
-  const color = windColor(point.windSpeedKmh);
   const dirLabel = windDirectionLabel(point.windDirection);
 
   const toXY = (angleDeg: number, r: number) => {
@@ -114,11 +113,11 @@ function MiniCompass({
             y1="90"
             x2="80"
             y2="36"
-            stroke={color}
+            stroke="#374151"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
-          <polygon points="80,24 73,42 87,42" fill={color} />
+          <polygon points="80,24 73,42 87,42" fill="#374151" />
         </g>
 
         {/* Center cap */}
@@ -135,7 +134,7 @@ function MiniCompass({
           y="78"
           textAnchor="middle"
           dominantBaseline="auto"
-          fill={color}
+          fill="#111827"
           fontSize={Math.round(speedVal) >= 100 ? 12 : 16}
           fontWeight="700"
           fontFamily="system-ui, sans-serif"
@@ -159,7 +158,7 @@ function MiniCompass({
       <div className="w-full text-[11px] space-y-1 px-1">
         <div className="flex justify-between">
           <span className="text-gray-400">Vent</span>
-          <span className="font-bold tabular-nums" style={{ color }}>
+          <span className="font-bold tabular-nums text-gray-900">
             {typeof speedVal === "number" && !Number.isInteger(speedVal)
               ? speedVal.toFixed(1)
               : speedVal}{" "}
@@ -188,13 +187,13 @@ function MiniCompass({
 
 // ── Main chart component ───────────────────────────────────────────────────────
 
-/** SVG bar chart — wind speed + gusts, every 3 h, 7 days, with hover compass. */
+/** SVG bar chart — wind speed + gusts, hourly, 7 days, with hover compass. */
 export function WindChart({ hourly, timezone, useKnots }: Props) {
   const [nowIdx, setNowIdx] = useState(-1);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  // Filter to every 3 hours → 56 bars over 7 days
-  const points = hourly.filter((_, i) => i % 3 === 0);
+  // Use all hourly points (168 = 7 days × 24h)
+  const points = hourly;
 
   // Determine "now" bar index in station local time (avoid hydration mismatch)
   useEffect(() => {
@@ -228,8 +227,8 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
   const activePoint = points[activeIdx];
 
   // ── Layout constants ──────────────────────────────────────────────────────
-  const BAR_W = 18;
-  const BAR_GAP = 3;
+  const BAR_W = 7;
+  const BAR_GAP = 1;
   const BAR_SLOT = BAR_W + BAR_GAP;
   const CHART_H = 150;
   const Y_AXIS_W = 38;
@@ -452,10 +451,10 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
               />
             )}
 
-            {/* Time labels every 6 h */}
+            {/* Time labels every 3 h */}
             {points.map((p, i) => {
               const h = parseInt(p.time.slice(11, 13));
-              if (h % 6 !== 0) return null;
+              if (h % 3 !== 0) return null;
               return (
                 <text
                   key={`t-${p.time}`}

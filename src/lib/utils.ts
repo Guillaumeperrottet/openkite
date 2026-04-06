@@ -33,20 +33,21 @@ export function windDirectionLabel(deg: number): string {
 }
 
 /**
- * Wind speed → color (blanc-gris palette for OpenKite)
- * White = calm, grey = light, blue-grey = good kite wind, orange/red = danger
+ * Wind speed → color (Windguru-inspired palette, slightly muted)
+ * Used for chart bars, map markers, and other graphical elements.
  */
 export function windColor(kmh: number): string {
   const kn = kmh / 1.852;
-  if (kn < 3) return "#d0d0d0"; // calm
-  if (kn < 7) return "#7ec8e3"; // very light — light blue
-  if (kn < 10) return "#7ec8e3"; // light — cyan
-  if (kn < 14) return "#a8d8a8"; // marginal kite — light green
-  if (kn < 18) return "#5cb85c"; // good kite — green
-  if (kn < 22) return "#2e7d32"; // ideal kite — dark green
-  if (kn < 27) return "#ffa726"; // strong — orange
-  if (kn < 33) return "#e65100"; // very strong — deep orange
-  return "#b71c1c"; // dangerous — red
+  if (kn < 2) return "#d0d0d0";
+  if (kn < 5) return "#d5f0d5";
+  if (kn < 8) return "#8edb8e";
+  if (kn < 12) return "#3dbc3d";
+  if (kn < 16) return "#e8e540";
+  if (kn < 20) return "#e8b830";
+  if (kn < 25) return "#e07020";
+  if (kn < 30) return "#d42020";
+  if (kn < 35) return "#b00058";
+  return "#800080";
 }
 
 export function windConditionLabel(kmh: number): string {

@@ -4,6 +4,7 @@ import {
   fetchCurrentWind,
   fetchWindHistory,
   fetchWindHistoryStation,
+  fetchWindForecast15min,
 } from "@/lib/wind";
 import { fetchFullForecast } from "@/lib/forecast";
 import { StationPageClient } from "./StationPageClient";
@@ -16,8 +17,10 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
+  const name = decodeURIComponent(id);
   return {
-    title: `Openkite - Station ${decodeURIComponent(id)}`,
+    title: `Station ${name}`,
+    description: `Station météo ${name} — vent en direct, historique 48h et prévisions 7 jours.`,
   };
 }
 
@@ -30,16 +33,29 @@ export default async function StationPage({ params }: Props) {
 
   if (!station) notFound();
 
-  // Fetch Open-Meteo gusts + full 7-day forecast + 48h history in parallel.
+  // Fetch Open-Meteo gusts + full 7-day forecast + 48h history + 15-min forecast in parallel.
   // History: real MeteoSwiss 10-min measurements, falling back to Open-Meteo NWP.
-  const [openMeteoResult, forecastResult, historyResult] =
+  const [openMeteoResult, forecastResult, historyResult, forecast15Result] =
     await Promise.allSettled([
       fetchCurrentWind(station.lat, station.lng),
       fetchFullForecast(station.lat, station.lng),
       fetchWindHistoryStation(station.id).catch(() =>
         fetchWindHistory(station.lat, station.lng),
       ),
+      fetchWindForecast15min(station.lat, station.lng),
     ]);
+
+  // Append 15-min forecast points after last history point
+  const rawHistory =
+    historyResult.status === "fulfilled" ? historyResult.value : null;
+  const forecast15 =
+    forecast15Result.status === "fulfilled" ? forecast15Result.value : [];
+  let combinedHistory = rawHistory;
+  if (rawHistory && rawHistory.length > 0 && forecast15.length > 0) {
+    const lastTime = rawHistory[rawHistory.length - 1].time;
+    const futurePoints = forecast15.filter((p) => p.time > lastTime);
+    combinedHistory = [...rawHistory, ...futurePoints];
+  }
 
   const gustsKmh =
     openMeteoResult.status === "fulfilled"
@@ -59,9 +75,7 @@ export default async function StationPage({ params }: Props) {
       forecast={
         forecastResult.status === "fulfilled" ? forecastResult.value : null
       }
-      history={
-        historyResult.status === "fulfilled" ? historyResult.value : null
-      }
+      history={combinedHistory}
     />
   );
 }

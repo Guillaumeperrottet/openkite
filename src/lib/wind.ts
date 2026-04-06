@@ -111,15 +111,104 @@ export async function fetchForecastRange(
   }));
 }
 
+/**
+ * Batch-fetch forecasts for multiple spots in a single Open-Meteo request
+ * (comma-separated latitudes/longitudes). Returns one ForecastHour[] per spot.
+ * Batches of up to 50 to stay within URL limits.
+ */
+export async function fetchForecastBatch(
+  coords: { lat: number; lng: number }[],
+  startDate: string,
+  endDate: string,
+): Promise<(ForecastHour[] | null)[]> {
+  if (!coords.length) return [];
+  const BATCH = 50;
+  const allResults: (ForecastHour[] | null)[] = new Array(coords.length).fill(
+    null,
+  );
+
+  for (let i = 0; i < coords.length; i += BATCH) {
+    const batch = coords.slice(i, i + BATCH);
+    const lats = batch.map((c) => c.lat).join(",");
+    const lngs = batch.map((c) => c.lng).join(",");
+
+    const url = new URL(BASE);
+    url.searchParams.set("latitude", lats);
+    url.searchParams.set("longitude", lngs);
+    url.searchParams.set(
+      "hourly",
+      "wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloudcover,precipitation",
+    );
+    url.searchParams.set("wind_speed_unit", "kmh");
+    url.searchParams.set("start_date", startDate);
+    url.searchParams.set("end_date", endDate);
+
+    try {
+      const res = await fetch(url.toString(), { next: { revalidate: 3600 } });
+      if (!res.ok) continue;
+
+      const raw: unknown = await res.json();
+      // Single coord → object, multiple → array
+      const items = Array.isArray(raw)
+        ? (raw as Array<{
+            hourly: {
+              time: string[];
+              wind_speed_10m: number[];
+              wind_direction_10m: number[];
+              wind_gusts_10m: number[];
+              cloudcover?: number[];
+              precipitation?: number[];
+            };
+          }>)
+        : [
+            raw as {
+              hourly: {
+                time: string[];
+                wind_speed_10m: number[];
+                wind_direction_10m: number[];
+                wind_gusts_10m: number[];
+                cloudcover?: number[];
+                precipitation?: number[];
+              };
+            },
+          ];
+
+      items.forEach((item, j) => {
+        if (!item?.hourly) return;
+        const {
+          time,
+          wind_speed_10m,
+          wind_direction_10m,
+          wind_gusts_10m,
+          cloudcover,
+          precipitation,
+        } = item.hourly;
+        allResults[i + j] = (time as string[]).map((t: string, k: number) => ({
+          time: t,
+          windSpeedKmh: wind_speed_10m[k],
+          windDirection: wind_direction_10m[k],
+          gustsKmh: wind_gusts_10m[k],
+          cloudCoverPct: cloudcover?.[k],
+          precipMm: precipitation?.[k],
+        }));
+      });
+    } catch {
+      // Batch failed — spots remain null (handled by caller)
+    }
+  }
+  return allResults;
+}
+
 /** Wind thresholds per sport type */
 const SPORT_THRESHOLDS = {
   KITE: { min: 15, max: 45, idealMin: 20, idealMax: 35, idealCenter: 27 },
-  PARAGLIDE: { min: 10, max: 25, idealMin: 12, idealMax: 22, idealCenter: 16 },
+  /** Paraglide: calm wind is ideal. "rideable" = 0–15 km/h. */
+  PARAGLIDE: { min: 0, max: 15, idealMin: 0, idealMax: 10, idealCenter: 5 },
 } as const;
 
 /**
  * Get the best window of rideable hours from a forecast array.
- * Sport-aware: kite 15–45 km/h, paraglide 10–25 km/h.
+ * Sport-aware: kite 15–45 km/h, paraglide 0–15 km/h (calm).
  */
 export function analyzeForecast(
   forecast: ForecastHour[],
@@ -151,14 +240,64 @@ export function analyzeForecast(
   };
 }
 
+/** Map compass label → degrees */
+const DIR_DEGREES: Record<string, number> = {
+  N: 0,
+  NNE: 22.5,
+  NE: 45,
+  ENE: 67.5,
+  E: 90,
+  ESE: 112.5,
+  SE: 135,
+  SSE: 157.5,
+  S: 180,
+  SSW: 202.5,
+  SW: 225,
+  WSW: 247.5,
+  W: 270,
+  WNW: 292.5,
+  NW: 315,
+  NNW: 337.5,
+};
+
+/**
+ * How well forecast wind direction matches the spot's best directions.
+ * Returns 0–1 (1 = perfect match).
+ */
+function windDirectionMatch(
+  forecastDirs: number[],
+  bestDirs: string[],
+): number {
+  if (!bestDirs.length || !forecastDirs.length) return 0.5; // neutral if unknown
+  const bestDegs = bestDirs
+    .map((d) => DIR_DEGREES[d.toUpperCase()])
+    .filter((d) => d !== undefined);
+  if (!bestDegs.length) return 0.5;
+
+  let totalMatch = 0;
+  for (const fd of forecastDirs) {
+    let minDiff = 180;
+    for (const bd of bestDegs) {
+      const diff = Math.abs(fd - bd);
+      minDiff = Math.min(minDiff, diff > 180 ? 360 - diff : diff);
+    }
+    // 0° diff = 1.0, 90° diff = 0.0, 180° diff = 0.0
+    totalMatch += Math.max(0, 1 - minDiff / 90);
+  }
+  return totalMatch / forecastDirs.length;
+}
+
 /**
  * Compute a 0–100 composite score for a day's forecast.
- * Factors: rideable hours, wind quality, gust factor (regularity).
- * Daytime hours (7–20) weighted higher.
+ *
+ * **KITE**: rideable hours 35% + wind quality 25% + regularity 20% + direction 20%
+ * **PARAGLIDE**: calm hours 30% + sunshine 30% + low-gust 20% + no-rain 20%
+ *   — Paragliders need: low wind (<15 km/h), sun (thermals), no precipitation.
  */
 export function scoreDayForecast(
   forecast: ForecastHour[],
   sport: SportType = "KITE",
+  bestWindDirections: string[] = [],
 ): DayAnalysis {
   const t = SPORT_THRESHOLDS[sport];
   const date = forecast[0]?.time?.split("T")[0] ?? "";
@@ -178,6 +317,13 @@ export function scoreDayForecast(
       gustFactor: 1,
       bestHour: null,
       forecast,
+      breakdown: {
+        hours: 0,
+        quality: 0,
+        regularity: 0,
+        direction: 0,
+        sunshine: 0,
+      },
     };
   }
 
@@ -192,10 +338,74 @@ export function scoreDayForecast(
   const gustFactor = avgWind > 0 ? avgGusts / avgWind : 1;
   const peakWindKmh = Math.max(...daytime.map((f) => f.windSpeedKmh));
 
-  // Score components (each 0–1):
-  // 1. Rideable hours ratio (out of 14 daytime hours) — weight 40%
-  const hoursScore = Math.min(rideableHours / 8, 1); // 8+ hours = perfect
-  // 2. Wind quality — how close avg rideable wind is to ideal center — weight 35%
+  if (sport === "PARAGLIDE") {
+    // ── Paraglide scoring ──────────────────────────────────────────
+    // 1. Calm hours (wind < 15 km/h) — 30%
+    const calmHours = daytime.filter((f) => f.windSpeedKmh < 15).length;
+    const calmScore = Math.min(calmHours / 10, 1); // 10+ calm hours = perfect
+
+    // 2. Sunshine — low cloud cover = good thermals — 30%
+    const hasCloudData = daytime.some((f) => f.cloudCoverPct !== undefined);
+    let sunshineScore = 0.5; // neutral fallback if no data
+    if (hasCloudData) {
+      const avgCloud =
+        daytime.reduce((s, f) => s + (f.cloudCoverPct ?? 50), 0) /
+        daytime.length;
+      // 0% cloud = 1.0, 100% cloud = 0.0
+      sunshineScore = Math.max(0, 1 - avgCloud / 100);
+    }
+
+    // 3. Low gusts — steady calm = safe para — 20%
+    const maxGust = Math.max(...daytime.map((f) => f.gustsKmh));
+    // <15 km/h gusts = 1.0, >40 km/h = 0.0
+    const gustScore = Math.max(0, 1 - maxGust / 40);
+
+    // 4. No rain — 20%
+    const hasRainData = daytime.some((f) => f.precipMm !== undefined);
+    let rainScore = 0.5; // neutral fallback
+    if (hasRainData) {
+      const totalPrecip = daytime.reduce((s, f) => s + (f.precipMm ?? 0), 0);
+      // 0mm = 1.0, ≥5mm = 0.0
+      rainScore = Math.max(0, 1 - totalPrecip / 5);
+    }
+
+    const score = Math.round(
+      calmScore * 30 + sunshineScore * 30 + gustScore * 20 + rainScore * 20,
+    );
+
+    // Best hour for para = calmest hour with sunshine
+    const best = daytime.reduce<ForecastHour | null>((acc, f) => {
+      if (!acc) return f;
+      const score_f =
+        15 - f.windSpeedKmh + (100 - (f.cloudCoverPct ?? 50)) / 10;
+      const score_a =
+        15 - acc.windSpeedKmh + (100 - (acc.cloudCoverPct ?? 50)) / 10;
+      return score_f > score_a ? f : acc;
+    }, null);
+
+    return {
+      date,
+      score: Math.min(100, Math.max(0, score)),
+      kitableHours: calmHours,
+      peakWindKmh,
+      avgWindKmh: Math.round(avgWind * 10) / 10,
+      gustFactor: Math.round(gustFactor * 100) / 100,
+      bestHour: best,
+      forecast,
+      breakdown: {
+        hours: Math.round(calmScore * 100),
+        quality: Math.round(rainScore * 100),
+        regularity: Math.round(gustScore * 100),
+        direction: 0,
+        sunshine: Math.round(sunshineScore * 100),
+      },
+    };
+  }
+
+  // ── Kite scoring (unchanged) ──────────────────────────────────
+  // 1. Rideable hours ratio — weight 35%
+  const hoursScore = Math.min(rideableHours / 8, 1);
+  // 2. Wind quality — how close avg rideable wind is to ideal center — weight 25%
   const avgRideable = rideable.length
     ? rideable.reduce((s, f) => s + f.windSpeedKmh, 0) / rideable.length
     : 0;
@@ -203,11 +413,14 @@ export function scoreDayForecast(
   const windQuality = rideable.length
     ? Math.max(0, 1 - idealDist / (t.idealMax - t.idealMin))
     : 0;
-  // 3. Regularity — low gust factor = steady wind — weight 25%
-  const regularity = Math.max(0, 1 - (gustFactor - 1) / 1.5); // gust factor 1.0=perfect, 2.5+=0
+  // 3. Regularity — low gust factor = steady wind — weight 20%
+  const regularity = Math.max(0, 1 - (gustFactor - 1) / 1.5);
+  // 4. Wind direction match — weight 20%
+  const rideableDirs = rideable.map((f) => f.windDirection);
+  const dirMatch = windDirectionMatch(rideableDirs, bestWindDirections);
 
   const score = Math.round(
-    hoursScore * 40 + windQuality * 35 + regularity * 25,
+    hoursScore * 35 + windQuality * 25 + regularity * 20 + dirMatch * 20,
   );
 
   const best = rideable.reduce<ForecastHour | null>((acc, f) => {
@@ -228,6 +441,12 @@ export function scoreDayForecast(
     gustFactor: Math.round(gustFactor * 100) / 100,
     bestHour: best,
     forecast,
+    breakdown: {
+      hours: Math.round(hoursScore * 100),
+      quality: Math.round(windQuality * 100),
+      regularity: Math.round(regularity * 100),
+      direction: Math.round(dirMatch * 100),
+    },
   };
 }
 
@@ -237,6 +456,7 @@ export function scoreDayForecast(
 export function analyzeMultiDay(
   forecast: ForecastHour[],
   sport: SportType = "KITE",
+  bestWindDirections: string[] = [],
 ): DayAnalysis[] {
   // Group by date
   const byDay = new Map<string, ForecastHour[]>();
@@ -246,7 +466,7 @@ export function analyzeMultiDay(
     byDay.get(day)!.push(f);
   }
   return Array.from(byDay.entries()).map(([, hours]) =>
-    scoreDayForecast(hours, sport),
+    scoreDayForecast(hours, sport, bestWindDirections),
   );
 }
 
@@ -377,7 +597,7 @@ export async function fetchWindHistory(
   );
   url.searchParams.set("wind_speed_unit", "kmh");
   url.searchParams.set("past_days", "2");
-  url.searchParams.set("forecast_days", "1");
+  url.searchParams.set("forecast_days", "2");
   url.searchParams.set("timezone", "UTC");
 
   const res = await fetch(url.toString(), { next: { revalidate: 600 } });
@@ -398,16 +618,60 @@ export async function fetchWindHistory(
     wind_direction_10m: number[];
   };
 
-  // Only keep past data points (up to now) — future points come from the forecast prop
-  const nowUtc = new Date().toISOString().slice(0, 16);
+  // Return all points (past + near-future forecast) — the chart
+  // renders future bars with reduced opacity based on the "now" marker.
+  return time.map((t, i) => ({
+    time: t,
+    windSpeedKmh: wind_speed_10m[i] ?? 0,
+    windDirection: wind_direction_10m[i] ?? 0,
+    gustsKmh: wind_gusts_10m[i] ?? 0,
+    temperatureC: temperature_2m[i] ?? 0,
+  }));
+}
 
-  return time
-    .map((t, i) => ({
-      time: t,
-      windSpeedKmh: wind_speed_10m[i] ?? 0,
-      windDirection: wind_direction_10m[i] ?? 0,
-      gustsKmh: wind_gusts_10m[i] ?? 0,
-      temperatureC: temperature_2m[i] ?? 0,
-    }))
-    .filter((p) => p.time <= nowUtc);
+/**
+ * Fetch near-future 15-minute wind forecast via Open-Meteo.
+ * Returns HistoryPoint[] for the next ~24h at 15-min resolution.
+ */
+export async function fetchWindForecast15min(
+  lat: number,
+  lng: number,
+): Promise<HistoryPoint[]> {
+  const url = new URL(BASE);
+  url.searchParams.set("latitude", lat.toString());
+  url.searchParams.set("longitude", lng.toString());
+  url.searchParams.set(
+    "minutely_15",
+    "wind_speed_10m,wind_gusts_10m,temperature_2m,wind_direction_10m",
+  );
+  url.searchParams.set("wind_speed_unit", "kmh");
+  url.searchParams.set("past_days", "0");
+  url.searchParams.set("forecast_days", "2");
+  url.searchParams.set("timezone", "UTC");
+
+  const res = await fetch(url.toString(), { next: { revalidate: 600 } });
+  if (!res.ok) throw new Error(`Open-Meteo forecast error: ${res.status}`);
+
+  const data = await res.json();
+  const {
+    time,
+    wind_speed_10m,
+    wind_gusts_10m,
+    temperature_2m,
+    wind_direction_10m,
+  } = data.minutely_15 as {
+    time: string[];
+    wind_speed_10m: number[];
+    wind_gusts_10m: number[];
+    temperature_2m: number[];
+    wind_direction_10m: number[];
+  };
+
+  return time.map((t, i) => ({
+    time: t,
+    windSpeedKmh: wind_speed_10m[i] ?? 0,
+    windDirection: wind_direction_10m[i] ?? 0,
+    gustsKmh: wind_gusts_10m[i] ?? 0,
+    temperatureC: temperature_2m[i] ?? 0,
+  }));
 }

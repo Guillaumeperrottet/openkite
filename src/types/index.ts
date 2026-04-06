@@ -62,6 +62,10 @@ export interface ForecastHour {
   windSpeedKmh: number;
   windDirection: number;
   gustsKmh: number;
+  /** Cloud cover 0–100% (optional, used by planner for paraglide scoring) */
+  cloudCoverPct?: number;
+  /** Precipitation mm/h (optional, used by planner for paraglide scoring) */
+  precipMm?: number;
 }
 
 export interface SpotWithForecast extends Spot {
@@ -74,6 +78,10 @@ export interface SpotWithForecast extends Spot {
   bestScore?: number;
   /** Best day index in the days[] array */
   bestDayIndex?: number;
+  /** True if forecast fetch failed for this spot */
+  forecastError?: boolean;
+  /** Data source: "forecast" (real-time ≤16d) or "archive" (historical monthly avg) */
+  dataSource?: "forecast" | "archive";
 }
 
 /** Analysis of one day's forecast for a given spot */
@@ -88,6 +96,15 @@ export interface DayAnalysis {
   gustFactor: number;
   bestHour: ForecastHour | null;
   forecast: ForecastHour[];
+  /** Score breakdown (each 0–100 sub-score) */
+  breakdown?: {
+    hours: number;
+    quality: number;
+    regularity: number;
+    direction: number;
+    /** Sunshine score (paraglide only) */
+    sunshine?: number;
+  };
 }
 
 export interface HistoryPoint {
@@ -106,4 +123,39 @@ export interface TripPlanQuery {
   endDate: string;
   radiusKm: number;
   sport?: SportType;
+}
+
+// ─── Wind Archives (historical monthly stats) ────────────────────────────────
+
+/** Monthly wind statistics from historical data */
+export interface MonthStats {
+  /** 1–12 */
+  month: number;
+  avgWindKmh: number;
+  avgGustsKmh: number;
+  maxWindKmh: number;
+  /** Dominant wind direction (0–360°) */
+  dominantDirection: number;
+  /** % of days with wind ≥ threshold (kitable/flyable) */
+  goodDaysPct: number;
+  /** Number of data days used to compute this month */
+  dataDays: number;
+}
+
+/** One year of monthly stats */
+export interface YearArchive {
+  year: number;
+  months: MonthStats[];
+}
+
+/** Full archive response for a spot */
+export interface WindArchiveData {
+  /** Per-year breakdown */
+  years: YearArchive[];
+  /** Combined average across all years (12 months) */
+  combined: MonthStats[];
+  /** Best month (1–12) based on combined goodDaysPct */
+  bestMonth: number;
+  /** Years covered */
+  yearRange: [number, number];
 }

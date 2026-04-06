@@ -61,7 +61,6 @@ export function StationPageClient({
   const dirLabel = windDirectionLabel(station.windDirection);
   const speedKts = roundKnots(station.windSpeedKmh);
   const gustsKts = gustsKmh !== null ? roundKnots(gustsKmh) : null;
-  const gustsColor = gustsKmh !== null ? windColor(gustsKmh) : null;
 
   const updateTime = new Date(station.updatedAt).toLocaleTimeString("fr", {
     hour: "2-digit",
@@ -100,7 +99,7 @@ export function StationPageClient({
 
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               {station.name}
             </h1>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600">
@@ -132,10 +131,7 @@ export function StationPageClient({
               )}
             </div>
           </div>
-          <div
-            className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full text-white"
-            style={{ background: color }}
-          >
+          <div className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-700">
             {condLabel}
           </div>
         </div>
@@ -194,20 +190,17 @@ export function StationPageClient({
           </div>
 
           {/* Vent + Rafales + Direction en colonne */}
-          <div className="flex flex-col gap-2 shrink-0">
+          <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
             {/* Vent + Rafales côte à côte */}
             <div className="flex gap-2">
               {/* Vent */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 w-40">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 flex-1 sm:flex-none sm:w-40">
                 <div className="flex items-center gap-1.5 text-sm text-gray-600 font-medium mb-3">
                   <Wind className="h-4 w-4" />
                   Vent moyen
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span
-                    className="text-5xl font-bold tabular-nums leading-none"
-                    style={{ color }}
-                  >
+                  <span className="text-4xl sm:text-5xl font-bold tabular-nums leading-none text-gray-900">
                     {useKnots ? speedKts : Math.round(station.windSpeedKmh)}
                   </span>
                   <span className="text-base text-gray-500 font-medium">
@@ -223,7 +216,7 @@ export function StationPageClient({
               </div>
 
               {/* Rafales */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 w-40">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 flex-1 sm:flex-none sm:w-40">
                 <div className="flex items-center gap-1.5 text-sm text-gray-600 font-medium mb-3">
                   <Zap className="h-4 w-4" />
                   Rafales
@@ -231,10 +224,7 @@ export function StationPageClient({
                 {gustsKts !== null && gustsKmh !== null ? (
                   <>
                     <div className="flex items-baseline gap-1">
-                      <span
-                        className="text-5xl font-bold tabular-nums leading-none"
-                        style={{ color: gustsColor ?? color }}
-                      >
+                      <span className="text-4xl sm:text-5xl font-bold tabular-nums leading-none text-gray-900">
                         {useKnots ? gustsKts : Math.round(gustsKmh)}
                       </span>
                       <span className="text-base text-gray-500 font-medium">
@@ -249,7 +239,9 @@ export function StationPageClient({
                     </div>
                   </>
                 ) : (
-                  <div className="text-5xl font-bold text-gray-400">—</div>
+                  <div className="text-4xl sm:text-5xl font-bold text-gray-400">
+                    —
+                  </div>
                 )}
               </div>
             </div>
@@ -268,10 +260,7 @@ export function StationPageClient({
                     </span>
                   </div>
                 </div>
-                <div
-                  className="text-sm font-bold px-3 py-1 rounded-full text-white"
-                  style={{ background: color }}
-                >
+                <div className="text-sm font-bold px-3 py-1 rounded-full bg-gray-100 text-gray-700">
                   {condLabel}
                 </div>
               </div>
@@ -299,7 +288,6 @@ export function StationPageClient({
               {history && history.length > 0 ? (
                 <WindHistoryChart
                   history={history}
-                  forecast={forecast?.hourly}
                   useKnots={useKnots}
                   timezone="Europe/Zurich"
                 />

@@ -193,7 +193,7 @@ export function WindCompass({
           y="97"
           textAnchor="middle"
           dominantBaseline="auto"
-          fill={light ? color : "white"}
+          fill={light ? "#111827" : "white"}
           fontSize={speedKnots >= 100 ? 16 : 20}
           fontWeight="700"
           fontFamily="system-ui, -apple-system, sans-serif"
@@ -217,7 +217,9 @@ export function WindCompass({
       {/* ── Stats below compass ───────────────────────────────── */}
       <div className="text-center leading-snug w-full">
         {/* Speed + direction */}
-        <div className="text-base font-semibold" style={{ color }}>
+        <div
+          className={`text-base font-semibold ${light ? "text-gray-900" : "text-white"}`}
+        >
           {speedKnots}&thinsp;/&thinsp;{gustsKnots} kts
         </div>
         <div

@@ -24,6 +24,10 @@ export function WindHistoryChart({
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [containerWidth, setContainerWidth] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch: Date.now() differs between server and client
+  useEffect(() => setMounted(true), []);
 
   // Measure container width responsively
   useEffect(() => {
@@ -36,6 +40,16 @@ export function WindHistoryChart({
   }, []);
 
   if (history.length === 0) return null;
+
+  if (!mounted) {
+    return (
+      <div
+        ref={containerRef}
+        className="relative overflow-hidden"
+        style={{ height: 259 }}
+      />
+    );
+  }
 
   // ── Layout constants ──────────────────────────────────────────────────────
   const CHART_H = 230;
@@ -89,16 +103,21 @@ export function WindHistoryChart({
   );
 
   // Use filteredHistory everywhere below instead of raw history
+  // Check if history already contains future points (15-min forecast from API)
+  const historyHasFuture = filteredHistory.some((p) => toTZ(p.time) > nowInTZ);
+
   const lastHistoryTZ =
     filteredHistory.length > 0
       ? toTZ(filteredHistory[filteredHistory.length - 1].time)
       : yesterdayMidnightInTZ;
 
-  const futureForecast: HourlyPoint[] = forecast
-    ? forecast.filter(
-        (pt) => pt.time > lastHistoryTZ && pt.time <= tomorrowMidnightInTZ,
-      )
-    : [];
+  // Only use hourly forecast fallback if history doesn't already have future data
+  const futureForecast: HourlyPoint[] =
+    !historyHasFuture && forecast
+      ? forecast.filter(
+          (pt) => pt.time > lastHistoryTZ && pt.time <= tomorrowMidnightInTZ,
+        )
+      : [];
 
   // ── Time-proportional X positioning ───────────────────────────────────────
   // Parse a local TZ string "YYYY-MM-DDTHH:mm" into epoch ms for proportional placement
@@ -149,22 +168,19 @@ export function WindHistoryChart({
   const bH = (kmh: number) => Math.max((toDisp(kmh) / yMax) * CHART_H, 1);
   const bY = (kmh: number) => DAY_H + TIME_H + CHART_H - bH(kmh);
 
-  // ── Day groups (time-based) ────────────────────────────────────────────────
-  // Collect unique days in order, then compute their X spans from midnight-to-midnight
+  // ── Day groups (full 48h window) ───────────────────────────────────────────
+  // Generate all days covering the entire window, regardless of data availability
   const allDays: string[] = [];
-  const seenDays = new Set<string>();
-  for (const p of filteredHistory) {
-    const day = toTZ(p.time).slice(0, 10);
-    if (!seenDays.has(day)) {
-      seenDays.add(day);
-      allDays.push(day);
-    }
-  }
-  for (const p of futureForecast) {
-    const day = p.time.slice(0, 10);
-    if (!seenDays.has(day)) {
-      seenDays.add(day);
-      allDays.push(day);
+  {
+    const startDay = yesterdayMidnightInTZ.slice(0, 10);
+    const endDay = tomorrowMidnightInTZ.slice(0, 10);
+    let d = startDay;
+    while (d < endDay) {
+      allDays.push(d);
+      // Next day
+      const [yy, mm, dd] = d.split("-").map(Number);
+      const next = new Date(Date.UTC(yy, mm - 1, dd + 1));
+      d = next.toISOString().slice(0, 10);
     }
   }
   type DayGroup = { date: string; x: number; w: number };
@@ -191,41 +207,6 @@ export function WindHistoryChart({
   for (let v = 0; v <= yMax; v += 5) yTicks.push(v);
 
   // Auto-scroll removed: chart now fills container width (no scroll needed)
-
-  // ── Polyline helpers (wind speed + gusts) ─────────────────────────────────
-  const ptYmid = (kmh: number) => bY(kmh) + bH(kmh) / 2;
-
-  // History polylines
-  const histWindPoly = filteredHistory
-    .map(
-      (p, i) => `${histX(i).toFixed(1)},${ptYmid(p.windSpeedKmh).toFixed(1)}`,
-    )
-    .join(" ");
-  const histGustPoly = filteredHistory
-    .map((p, i) => `${histX(i).toFixed(1)},${ptYmid(p.gustsKmh).toFixed(1)}`)
-    .join(" ");
-
-  // Forecast polylines (anchored on last history point for continuity)
-  const fcstWindPoly = [
-    ...(filteredHistory.length > 0
-      ? [
-          `${histX(filteredHistory.length - 1).toFixed(1)},${ptYmid(filteredHistory[filteredHistory.length - 1].windSpeedKmh).toFixed(1)}`,
-        ]
-      : []),
-    ...futureForecast.map(
-      (p, i) => `${fcstX(i).toFixed(1)},${ptYmid(p.windSpeedKmh).toFixed(1)}`,
-    ),
-  ].join(" ");
-  const fcstGustPoly = [
-    ...(filteredHistory.length > 0
-      ? [
-          `${histX(filteredHistory.length - 1).toFixed(1)},${ptYmid(filteredHistory[filteredHistory.length - 1].gustsKmh).toFixed(1)}`,
-        ]
-      : []),
-    ...futureForecast.map(
-      (p, i) => `${fcstX(i).toFixed(1)},${ptYmid(p.gustsKmh).toFixed(1)}`,
-    ),
-  ].join(" ");
 
   // "Now" X position: time-proportional
   const nowX = timeToX(nowInTZ);
@@ -263,7 +244,7 @@ export function WindHistoryChart({
         bestIdx = i;
       }
     }
-    if (bestIdx >= 0 && bestDist < 20) {
+    if (bestIdx >= 0) {
       setHoveredIdx(bestIdx);
       const container = containerRef.current!;
       const containerRect = container.getBoundingClientRect();
@@ -448,28 +429,41 @@ export function WindHistoryChart({
           );
         })}
 
-        {/* Hour labels: every 3h (local time) */}
-        {filteredHistory.map((p, i) => {
-          const local = toTZ(p.time);
-          const minStr = local.slice(14, 16);
-          const hourStr = local.slice(11, 13);
-          const hour = parseInt(hourStr, 10);
-          if (minStr !== "00" || hour % 3 !== 0) return null;
-          const x = histX(i);
-          return (
-            <text
-              key={`t-${i}`}
-              x={x}
-              y={DAY_H + TIME_H - 3}
-              textAnchor="middle"
-              fontSize="8"
-              fill="#9ca3af"
-              fontFamily="system-ui, sans-serif"
-            >
-              {hourStr}h
-            </text>
-          );
-        })}
+        {/* Hour labels: every 3h across the full 48h window */}
+        {(() => {
+          const labels: React.ReactNode[] = [];
+          const startMs = tzToMs(yesterdayMidnightInTZ);
+          const endMs = tzToMs(tomorrowMidnightInTZ);
+          for (let ms = startMs; ms < endMs; ms += 3 * 3600_000) {
+            const isoStr = new Date(ms).toISOString().slice(0, 16);
+            const hourStr = isoStr.slice(11, 13);
+            const x = timeToX(isoStr);
+            if (x < AXIS_W || x > AXIS_W + DRAW_W) continue;
+            labels.push(
+              <text
+                key={`t-${isoStr}`}
+                x={x}
+                y={DAY_H + TIME_H - 3}
+                textAnchor="middle"
+                fontSize="8"
+                fill="#9ca3af"
+                fontFamily="system-ui, sans-serif"
+              >
+                {hourStr}h
+              </text>,
+            );
+          }
+          return labels;
+        })()}
+
+        {/* ── Forecast background zone (after NOW) ──────────────────── */}
+        <rect
+          x={nowX}
+          y={DAY_H + TIME_H}
+          width={Math.max(0, AXIS_W + DRAW_W - nowX)}
+          height={CHART_H}
+          fill="rgba(14,165,233,0.04)"
+        />
 
         {/* Hover column highlight */}
         {hovPt && (
@@ -486,7 +480,7 @@ export function WindHistoryChart({
           />
         )}
 
-        {/* Wind + gust bars */}
+        {/* Wind + gust bars — history past */}
         {filteredHistory.map((p, i) => {
           const style = windCellStyle(p.windSpeedKmh);
           const color = style.background;
@@ -495,15 +489,16 @@ export function WindHistoryChart({
           const windH_ = bH(p.windSpeedKmh);
           const gustH_ = bH(p.gustsKmh);
           const baseY = DAY_H + TIME_H + CHART_H;
+          const isFuture = toTZ(p.time) > nowInTZ;
           return (
-            <g key={`b-${i}`}>
+            <g key={`b-${i}`} opacity={isFuture ? 0.5 : 1}>
               {p.gustsKmh > p.windSpeedKmh && (
                 <rect
                   x={x - BAR_W / 2}
                   y={baseY - gustH_}
                   width={BAR_W}
                   height={gustH_ - windH_}
-                  fill={gustColor}
+                  fill={isFuture ? "#93c5fd" : gustColor}
                   opacity={0.35}
                   rx="0.5"
                 />
@@ -513,31 +508,28 @@ export function WindHistoryChart({
                 y={baseY - windH_}
                 width={BAR_W}
                 height={windH_}
-                fill={color}
+                fill={isFuture ? "#60a5fa" : color}
                 rx="0.5"
               />
             </g>
           );
         })}
 
-        {/* Forecast bars (semi-transparent) */}
+        {/* Forecast bars (blue, semi-transparent) */}
         {futureForecast.map((p, i) => {
-          const style = windCellStyle(p.windSpeedKmh);
-          const color = style.background;
-          const gustColor = windCellStyle(p.gustsKmh).background;
           const x = fcstX(i);
           const windH_ = bH(p.windSpeedKmh);
           const gustH_ = bH(p.gustsKmh);
           const baseY = DAY_H + TIME_H + CHART_H;
           return (
-            <g key={`fb-${i}`} opacity={0.45}>
+            <g key={`fb-${i}`} opacity={0.5}>
               {p.gustsKmh > p.windSpeedKmh && (
                 <rect
                   x={x - BAR_W / 2}
                   y={baseY - gustH_}
                   width={BAR_W}
                   height={gustH_ - windH_}
-                  fill={gustColor}
+                  fill="#93c5fd"
                   opacity={0.35}
                   rx="0.5"
                 />
@@ -547,7 +539,7 @@ export function WindHistoryChart({
                 y={baseY - windH_}
                 width={BAR_W}
                 height={windH_}
-                fill={color}
+                fill="#60a5fa"
                 rx="0.5"
               />
             </g>
@@ -564,153 +556,29 @@ export function WindHistoryChart({
           strokeWidth="1"
         />
 
-        {/* ── Gusts polyline (history: solid, forecast: dashed) ────────── */}
-        {histGustPoly && (
-          <polyline
-            points={histGustPoly}
-            fill="none"
-            stroke="#fca5a5"
-            strokeWidth="1.8"
-            strokeLinejoin="round"
-            opacity="0.85"
-          />
-        )}
-        {futureForecast.length > 0 && (
-          <polyline
-            points={fcstGustPoly}
-            fill="none"
-            stroke="#fca5a5"
-            strokeWidth="1.8"
-            strokeDasharray="6 3"
-            strokeLinejoin="round"
-            opacity="0.7"
-          />
-        )}
-        {/* Gusts dots every 3h (history) */}
-        {filteredHistory.map((p, i) => {
-          const local = toTZ(p.time);
-          if (local.slice(14, 16) !== "00") return null;
-          const hour = parseInt(local.slice(11, 13), 10);
-          if (hour % 3 !== 0) return null;
-          return (
-            <circle
-              key={`gd-${i}`}
-              cx={histX(i)}
-              cy={ptYmid(p.gustsKmh)}
-              r={3}
-              fill="#fca5a5"
-              stroke="#fff"
-              strokeWidth="1"
-            />
-          );
-        })}
-        {/* Gusts dots every hour (forecast) */}
-        {futureForecast.map((p, i) => {
-          const hour = parseInt(p.time.slice(11, 13), 10);
-          if (hour % 3 !== 0) return null;
-          return (
-            <circle
-              key={`fgd-${i}`}
-              cx={fcstX(i)}
-              cy={ptYmid(p.gustsKmh)}
-              r={3}
-              fill="#fca5a5"
-              stroke="#fff"
-              strokeWidth="1"
-              opacity={0.7}
-            />
-          );
-        })}
-
-        {/* ── Wind speed polyline (history: solid, forecast: dashed) ───── */}
-        {histWindPoly && (
-          <polyline
-            points={histWindPoly}
-            fill="none"
-            stroke="#67e8f9"
-            strokeWidth="1.8"
-            strokeLinejoin="round"
-            opacity="0.9"
-          />
-        )}
-        {futureForecast.length > 0 && (
-          <polyline
-            points={fcstWindPoly}
-            fill="none"
-            stroke="#67e8f9"
-            strokeWidth="1.8"
-            strokeDasharray="6 3"
-            strokeLinejoin="round"
-            opacity="0.75"
-          />
-        )}
-        {/* Wind dots every 3h (history) */}
-        {filteredHistory.map((p, i) => {
-          const local = toTZ(p.time);
-          if (local.slice(14, 16) !== "00") return null;
-          const hour = parseInt(local.slice(11, 13), 10);
-          if (hour % 3 !== 0) return null;
-          return (
-            <circle
-              key={`wd-${i}`}
-              cx={histX(i)}
-              cy={ptYmid(p.windSpeedKmh)}
-              r={3}
-              fill="#67e8f9"
-              stroke="#fff"
-              strokeWidth="1"
-            />
-          );
-        })}
-        {/* Wind dots every 3h (forecast) */}
-        {futureForecast.map((p, i) => {
-          const hour = parseInt(p.time.slice(11, 13), 10);
-          if (hour % 3 !== 0) return null;
-          return (
-            <circle
-              key={`fwd-${i}`}
-              cx={fcstX(i)}
-              cy={ptYmid(p.windSpeedKmh)}
-              r={3}
-              fill="#67e8f9"
-              stroke="#fff"
-              strokeWidth="1"
-              opacity={0.75}
-            />
-          );
-        })}
-
-        {/* ── NOW vertical line ────────────────────────────────────────── */}
-        {futureForecast.length > 0 && (
-          <line
-            x1={nowX}
-            y1={DAY_H}
-            x2={nowX}
-            y2={DAY_H + TIME_H + CHART_H}
-            stroke="#f97316"
-            strokeWidth="3"
-            strokeDasharray="8 4"
-            opacity="0.85"
-          />
-        )}
+        {/* ── NOW vertical line (always visible) ─────────────────────── */}
+        <line
+          x1={nowX}
+          y1={DAY_H}
+          x2={nowX}
+          y2={DAY_H + TIME_H + CHART_H}
+          stroke="#f97316"
+          strokeWidth="3"
+          strokeDasharray="8 4"
+          opacity="0.85"
+        />
       </svg>
 
       {/* ── Legend ──────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 px-1 text-[10px] text-gray-400">
         <span className="flex items-center gap-1">
-          <span className="inline-block w-4 border-t-2 border-[#67e8f9]" />
-          Vent moyen
+          <span className="inline-block w-3 h-3 border-l-[3px] border-dashed border-orange-400" />
+          Maintenant
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-4 border-t-2 border-[#fca5a5]" />
-          Rafales
+          <span className="inline-block w-3 h-3 rounded-sm bg-blue-400/50" />
+          Prévision
         </span>
-        {futureForecast.length > 0 && (
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 border-l-[3px] border-dashed border-orange-400" />
-            Maintenant
-          </span>
-        )}
       </div>
     </div>
   );
