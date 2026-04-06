@@ -5,7 +5,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Spot, WindData } from "@/types";
 import type { WindStation } from "@/lib/stations";
-import { windColor, windConditionLabel, windDirectionLabel } from "@/lib/utils";
+import { windColor, windDirectionLabel } from "@/lib/utils";
 import { SpotPopup } from "./SpotPopup";
 import { StationPopup } from "./StationPopup";
 
@@ -81,18 +81,11 @@ export function KiteMap({
     setSelectedWind(null);
     try {
       const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${spot.latitude}&longitude=${spot.longitude}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh`,
+        `/api/wind?lat=${spot.latitude}&lng=${spot.longitude}`,
       );
+      if (!res.ok) throw new Error();
       const data = await res.json();
-      const c = data.current;
-      setSelectedWind({
-        windSpeedKmh: c.wind_speed_10m,
-        windDirection: c.wind_direction_10m,
-        gustsKmh: c.wind_gusts_10m,
-        isKitable: c.wind_speed_10m >= 15 && c.wind_speed_10m <= 45,
-        conditionLabel: windConditionLabel(c.wind_speed_10m),
-        color: windColor(c.wind_speed_10m),
-      });
+      setSelectedWind(data);
     } catch {
       setSelectedWind(null);
     } finally {
@@ -755,18 +748,18 @@ export function KiteMap({
 
     map.on("click", handleMapClick);
 
-    // Close popups when map is dragged / panned
-    const handleMoveStart = () => {
+    // Close popups when map is dragged
+    const handleDragStart = () => {
       setSelectedSpot(null);
       setPopupPos(null);
       setSelectedStation(null);
       setStationPopupPos(null);
     };
-    map.on("movestart", handleMoveStart);
+    map.on("dragstart", handleDragStart);
 
     return () => {
       map.off("click", handleMapClick);
-      map.off("movestart", handleMoveStart);
+      map.off("dragstart", handleDragStart);
     };
   }, [mapLoaded]);
 
