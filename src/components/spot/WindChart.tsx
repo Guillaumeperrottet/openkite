@@ -229,10 +229,10 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
   const BAR_SLOT = BAR_W + BAR_GAP;
   const Y_AXIS_W = 38;
 
-  // Touch handler for mobile — floating tooltip
+  // Touch handler for mobile — floating tooltip (blocks scroll on chart area)
   const handleSvgTouch = useCallback(
     (e: TouchEvent) => {
-      e.preventDefault(); // block scroll — scroll only via bottom scrollbar
+      e.preventDefault(); // block scroll on chart bars — scroll via bottom grip
       const touch = e.touches[0];
       if (!touch) return;
       const svg = svgRef.current;
@@ -525,6 +525,18 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
             })}
           </svg>
 
+          {/* Scroll grip — covers time labels + kite strip; allows horizontal swipe on mobile */}
+          <div
+            className="absolute left-0 sm:hidden"
+            style={{
+              top: DAY_H + CHART_H,
+              height: TIME_H + KITE_H + 4,
+              width: totalW,
+              touchAction: "pan-x",
+              zIndex: 5,
+            }}
+          />
+
           {/* Mobile floating tooltip */}
           {hoveredIdx !== null &&
             (() => {
@@ -611,7 +623,10 @@ export function WindChart({ hourly, timezone, useKnots }: Props) {
             })()}
 
           {/* Legend */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 ml-10 text-[9px] text-gray-400">
+          <div
+            className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 ml-10 text-[9px] text-gray-400"
+            style={{ touchAction: "pan-x" }}
+          >
             <span className="flex items-center gap-1">
               <span
                 className="inline-block w-4 h-2 rounded-sm"
