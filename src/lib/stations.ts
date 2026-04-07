@@ -96,6 +96,9 @@ export async function fetchMeteoSwissStations(): Promise<WindStation[]> {
     // Skip stations with missing wind data
     if (p.value == null || p.wind_direction == null || !coordinates) continue;
 
+    // Skip MeteoSwiss sentinel values (99999 = sensor offline / no data)
+    if (p.value >= 9999 || p.wind_direction >= 9999) continue;
+
     const { lat, lng } = lv95ToWgs84(coordinates[0], coordinates[1]);
 
     stations.push({
