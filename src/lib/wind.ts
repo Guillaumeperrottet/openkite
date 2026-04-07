@@ -691,7 +691,10 @@ export async function fetchWindHistory(
   url.searchParams.set("forecast_days", "2");
   url.searchParams.set("timezone", "UTC");
 
-  const res = await fetch(url.toString(), { next: { revalidate: 600 } });
+  const res = await fetch(url.toString(), {
+    next: { revalidate: 600 },
+    signal: AbortSignal.timeout(6000),
+  });
   if (!res.ok) throw new Error(`Open-Meteo history error: ${res.status}`);
 
   const data = await res.json();

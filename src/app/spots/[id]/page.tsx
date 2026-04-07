@@ -1,7 +1,11 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { fetchCurrentWind, fetchWindHistory } from "@/lib/wind";
+import {
+  fetchCurrentWind,
+  fetchWindHistory,
+  fetchWindHistoryStation,
+} from "@/lib/wind";
 import { fetchFullForecast } from "@/lib/forecast";
 import { getWindData } from "@/lib/utils";
 import { fetchMeteoSwissStations } from "@/lib/stations";
@@ -99,10 +103,17 @@ export default async function SpotPage({ params }: Props) {
     }
   }
 
-  // Forecast + history in parallel (both from Open-Meteo, non-blocking)
+  // Forecast + history in parallel.
+  // History: prefer station DB (instant) over Open-Meteo (can timeout).
+  const historyPromise = spot.nearestStationId
+    ? fetchWindHistoryStation(spot.nearestStationId).catch(() =>
+        fetchWindHistory(spot.latitude, spot.longitude),
+      )
+    : fetchWindHistory(spot.latitude, spot.longitude);
+
   const [forecastResult, historyResult] = await Promise.allSettled([
     fetchFullForecast(spot.latitude, spot.longitude),
-    fetchWindHistory(spot.latitude, spot.longitude),
+    historyPromise,
   ]);
 
   return (
