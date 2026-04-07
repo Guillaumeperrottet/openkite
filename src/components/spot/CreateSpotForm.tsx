@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,7 +18,11 @@ import { Button } from "@/components/ui/Button";
 import { KiteMap } from "@/components/map/KiteMap";
 import { WindDirectionPicker } from "@/components/spot/WindDirectionRose";
 import { MONTHS } from "@/lib/utils";
-import type { WindStation } from "@/lib/stations";
+import {
+  useSpotImages,
+  type ExistingImage,
+} from "@/components/spot/useSpotImages";
+import { useNearbyStations } from "@/components/spot/useNearbyStations";
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
 
@@ -53,13 +57,7 @@ type FormData = z.infer<typeof schema>;
 const toKts = (kmh: number) => Math.round(kmh / 1.852);
 const toKmh = (kts: number) => Math.round(kts * 1.852);
 
-type StationWithDist = WindStation & { dist: number };
-
-export interface ExistingImage {
-  id: string;
-  url: string;
-  caption: string | null;
-}
+export type { ExistingImage } from "@/components/spot/useSpotImages";
 
 export interface SpotInitialData {
   id: string;
@@ -91,19 +89,25 @@ interface Props {
 export function CreateSpotForm({ initialData }: Props = {}) {
   const isEditMode = Boolean(initialData);
   const router = useRouter();
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<ExistingImage[]>(
-    initialData?.existingImages ?? [],
-  );
-  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
+  const {
+    images,
+    imagePreviews,
+    existingImages,
+    deletedImageIds,
+    handleImageChange,
+    removeNewImage,
+    removeExistingImage,
+  } = useSpotImages(initialData?.existingImages);
+  const {
+    nearbyStations,
+    loadingStations,
+    refresh: refreshStations,
+  } = useNearbyStations(initialData?.latitude, initialData?.longitude);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useKnots, setUseKnots] = useState(true);
-  const [nearbyStations, setNearbyStations] = useState<StationWithDist[]>([]);
-  const [loadingStations, setLoadingStations] = useState(false);
 
   const {
     register,
@@ -150,42 +154,6 @@ export function CreateSpotForm({ initialData }: Props = {}) {
   const minWind = watch("minWindKmh");
   const maxWind = watch("maxWindKmh");
 
-  // ── Fetch nearby stations when location changes ──────────────────────────
-  // Also runs on mount when editing a spot with existing coordinates.
-  const fetchNearbyStations = useCallback(async (lt: number, ln: number) => {
-    setLoadingStations(true);
-    try {
-      const res = await fetch("/api/stations");
-      if (!res.ok) return;
-      const all: WindStation[] = await res.json();
-      const withDist: StationWithDist[] = all.map((s) => {
-        const dLat = ((s.lat - lt) * Math.PI) / 180;
-        const dLng = ((s.lng - ln) * Math.PI) / 180;
-        const a =
-          Math.sin(dLat / 2) ** 2 +
-          Math.cos((lt * Math.PI) / 180) *
-            Math.cos((s.lat * Math.PI) / 180) *
-            Math.sin(dLng / 2) ** 2;
-        const dist = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return { ...s, dist };
-      });
-      withDist.sort((a, b) => a.dist - b.dist);
-      setNearbyStations(withDist.slice(0, 5));
-    } catch {
-      // silent
-    } finally {
-      setLoadingStations(false);
-    }
-  }, []);
-
-  // Load nearby stations on mount when editing a spot with existing coordinates
-  useEffect(() => {
-    if (lat && lng) {
-      fetchNearbyStations(lat, lng);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally run only on mount
-
   // ── Handle map click ─────────────────────────────────────────────────────
   const handlePickLocation = useCallback(
     async (latitude: number, longitude: number) => {
@@ -213,30 +181,10 @@ export function CreateSpotForm({ initialData }: Props = {}) {
         // silent — user can fill manually
       }
 
-      fetchNearbyStations(latitude, longitude);
+      refreshStations(latitude, longitude);
     },
-    [setValue, fetchNearbyStations],
+    [setValue, refreshStations],
   );
-
-  // ── Image handling ───────────────────────────────────────────────────────
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setImages((prev) => [...prev, ...files].slice(0, 5));
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) =>
-        setImagePreviews((prev) =>
-          [...prev, ev.target?.result as string].slice(0, 5),
-        );
-      reader.readAsDataURL(file);
-    });
-    e.target.value = "";
-  };
-
-  const removeImage = (i: number) => {
-    setImages((prev) => prev.filter((_, idx) => idx !== i));
-    setImagePreviews((prev) => prev.filter((_, idx) => idx !== i));
-  };
 
   // ── Submit ───────────────────────────────────────────────────────────────
   const onSubmit = async (data: FormData) => {
@@ -749,12 +697,7 @@ export function CreateSpotForm({ initialData }: Props = {}) {
                     />
                     <button
                       type="button"
-                      onClick={() => {
-                        setDeletedImageIds((prev) => [...prev, img.id]);
-                        setExistingImages((prev) =>
-                          prev.filter((i) => i.id !== img.id),
-                        );
-                      }}
+                      onClick={() => removeExistingImage(img.id)}
                       className="absolute -top-1.5 -right-1.5 rounded-full bg-white border border-gray-200 p-0.5 text-gray-400 hover:text-gray-900"
                     >
                       <X className="h-3 w-3" />
@@ -771,7 +714,7 @@ export function CreateSpotForm({ initialData }: Props = {}) {
                     />
                     <button
                       type="button"
-                      onClick={() => removeImage(i)}
+                      onClick={() => removeNewImage(i)}
                       className="absolute -top-1.5 -right-1.5 rounded-full bg-white border border-gray-200 p-0.5 text-gray-400 hover:text-gray-900"
                     >
                       <X className="h-3 w-3" />
