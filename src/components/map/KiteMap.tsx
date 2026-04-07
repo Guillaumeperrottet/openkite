@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { io, type Socket } from "socket.io-client";
 import type { Spot, WindData } from "@/types";
 import type { WindStation } from "@/lib/stations";
 import { windColor, windDirectionLabel, getWindData } from "@/lib/utils";
@@ -35,6 +36,7 @@ export function KiteMap({
     null,
   );
   const pulseFrameRef = useRef<number | null>(null);
+  const piouSocketRef = useRef<Socket | null>(null);
   const gridIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const windCanvasRef = useRef<HTMLCanvasElement>(null);
   const windColorCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -884,6 +886,65 @@ export function KiteMap({
       }
     };
   }, [showStations, loadStations, mapLoaded]);
+
+  // ── Pioupiou Push API — live WebSocket updates for Pioupiou stations ──────
+  useEffect(() => {
+    if (!showStations || !mapLoaded) return;
+
+    const socket = io("https://api.pioupiou.fr/v1/push", {
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 5000,
+      reconnectionDelayMax: 30000,
+      timeout: 10000,
+    });
+    piouSocketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("subscribe", "all");
+    });
+
+    socket.on(
+      "measurement",
+      (data: {
+        id?: number;
+        measurements?: {
+          date?: string;
+          wind_heading?: number | null;
+          wind_speed_avg?: number | null;
+        };
+      }) => {
+        if (
+          !data?.id ||
+          !data.measurements?.date ||
+          data.measurements.wind_speed_avg == null ||
+          data.measurements.wind_heading == null
+        )
+          return;
+
+        const piouId = `piou-${data.id}`;
+        const stations = stationsRef.current;
+        const idx = stations.findIndex((s) => s.id === piouId);
+        if (idx === -1) return; // station not in our list (filtered out, no GPS, etc.)
+
+        // Update in-place
+        stations[idx] = {
+          ...stations[idx],
+          windSpeedKmh: data.measurements.wind_speed_avg,
+          windDirection: data.measurements.wind_heading,
+          updatedAt: data.measurements.date,
+        };
+
+        // Re-render GL layers with updated data
+        renderStations(stations);
+      },
+    );
+
+    return () => {
+      socket.disconnect();
+      piouSocketRef.current = null;
+    };
+  }, [showStations, mapLoaded, renderStations]);
 
   // Particle wind animation + color field
   useEffect(() => {
