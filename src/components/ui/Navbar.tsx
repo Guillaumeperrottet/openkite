@@ -19,7 +19,7 @@ export function Navbar() {
       <Link href="/" className="flex items-center shrink-0">
         <Image
           src="/logo_noback.png"
-          alt="OpenKite"
+          alt="Openwind"
           width={90}
           height={26}
           className="h-7 w-auto"

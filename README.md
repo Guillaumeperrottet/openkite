@@ -1,10 +1,10 @@
-# OpenKite 🪁
+# OpenWind 🪁
 
 **La carte open source des spots de kitesurf et snowkite.**
 
 Vent en direct · Spots communautaires · Planificateur de voyages · 100% gratuit — pour toujours.
 
-![OpenKite Map](https://img.shields.io/badge/status-alpha-orange)
+![OpenWind Map](https://img.shields.io/badge/status-alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 
@@ -44,8 +44,8 @@ Vent en direct · Spots communautaires · Planificateur de voyages · 100% gratu
 ### Installation
 
 ```bash
-git clone https://github.com/ton-username/openkite.git
-cd openkite
+git clone https://github.com/Guillaumeperrottet/openwind.git
+cd openwind
 pnpm install
 ```
 

@@ -1,15 +1,15 @@
-# Contribuer à OpenKite 🪁
+# Contribuer à OpenWind 🪁
 
-Merci de ton intérêt pour OpenKite ! Ce projet est 100% open source et communautaire.
+Merci de ton intérêt pour OpenWind ! Ce projet est 100% open source et communautaire.
 
 ## 🌍 Philosophie
 
-OpenKite doit rester **gratuit pour toujours** — pas de paywall, pas d'API payante cachée. Chaque dépendance doit être open source ou avoir un free tier généreux.
+OpenWind doit rester **gratuit pour toujours** — pas de paywall, pas d'API payante cachée. Chaque dépendance doit être open source ou avoir un free tier généreux.
 
 ## 🐛 Signaler un bug
 
 1. Vérifie que l'issue n'existe pas déjà
-2. Ouvre une [nouvelle issue](https://github.com/ton-username/openkite/issues/new)
+2. Ouvre une [nouvelle issue](https://github.com/Guillaumeperrottet/openwind/issues/new)
 3. Inclus : description, étapes pour reproduire, comportement attendu, captures d'écran
 
 ## 💡 Proposer une feature
@@ -19,8 +19,8 @@ Ouvre une issue avec le label `enhancement` avant de coder. Ça évite le travai
 ## 🔧 Setup développement
 
 ```bash
-git clone https://github.com/ton-username/openkite.git
-cd openkite
+git clone https://github.com/Guillaumeperrottet/openwind.git
+cd openwind
 pnpm install
 cp .env.local.example .env.local
 # Configure ton Supabase dans .env.local

@@ -1,5 +1,5 @@
 /**
- * Seed script — openkite spots
+ * Seed script — openwind spots
  * Source: letskite.ch/en (scraped manually, coordinates and descriptions verified)
  *
  * Run: npx tsx prisma/seed.ts

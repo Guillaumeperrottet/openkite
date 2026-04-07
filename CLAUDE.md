@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# OpenKite — Guide IA
+# Openwind — Guide IA
 
 ## Vue d'ensemble
 

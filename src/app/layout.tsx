@@ -7,13 +7,13 @@ import { Navbar } from "@/components/ui/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://openkite.ch"),
+  metadataBase: new URL("https://openwind.ch"),
   verification: {
-    google: "FrgnqrjCcdKM8osAeIP4IbH-c7HKmZWLvk2rgTlhgX0",
+    google: "IPK5LP6dD1gvar2XIppMLxIbce_yOzD3OfiPN1Cj1cU",
   },
   title: {
-    default: "OpenKite — Carte des spots de kitesurf et parapente",
-    template: "%s — OpenKite",
+    default: "OpenWind — Carte des spots de kitesurf et parapente",
+    template: "%s — OpenWind",
   },
   description:
     "Carte interactive open source des spots de kitesurf et parapente. Vent en direct, prévisions 7 jours, archives historiques et planification de voyages.",
@@ -31,20 +31,20 @@ export const metadata: Metadata = {
     "wind",
     "forecast",
   ],
-  authors: [{ name: "OpenKite" }],
-  creator: "OpenKite",
+  authors: [{ name: "OpenWind" }],
+  creator: "OpenWind",
   openGraph: {
-    title: "OpenKite — Carte des spots de kitesurf et parapente",
+    title: "OpenWind — Carte des spots de kitesurf et parapente",
     description:
       "Carte interactive open source du vent et des spots de kitesurf et parapente. Vent en direct, prévisions, planification de voyages.",
-    url: "https://openkite.ch",
-    siteName: "OpenKite",
+    url: "https://openwind.ch",
+    siteName: "OpenWind",
     locale: "fr_CH",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OpenKite — Carte des spots kite & parapente",
+    title: "OpenWind — Carte des spots kite & parapente",
     description:
       "Vent en direct, prévisions 7 jours, archives historiques. Open source.",
   },
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   alternates: {
-    canonical: "https://openkite.ch",
+    canonical: "https://openwind.ch",
   },
 };
 

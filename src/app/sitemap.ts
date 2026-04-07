@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://openkite.ch";
+  const baseUrl = "https://openwind.ch";
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [

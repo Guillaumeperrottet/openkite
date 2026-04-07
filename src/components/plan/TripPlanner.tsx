@@ -302,7 +302,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
     const url = window.location.href;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "OpenKite — Planificateur", url });
+        await navigator.share({ title: "OpenWind — Planificateur", url });
         return;
       } catch {
         // User cancelled
