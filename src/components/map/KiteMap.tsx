@@ -5,7 +5,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Spot, WindData } from "@/types";
 import type { WindStation } from "@/lib/stations";
-import { windColor, windDirectionLabel } from "@/lib/utils";
+import { windColor, windDirectionLabel, getWindData } from "@/lib/utils";
 import { SpotPopup } from "./SpotPopup";
 import { StationPopup } from "./StationPopup";
 
@@ -81,14 +81,25 @@ export function KiteMap({
     setLoadingWind(true);
     setSelectedWind(null);
     try {
-      // Round to 2 decimals (~1 km) — wind doesn't vary over 1 km
-      // and it allows Vercel CDN cache hits across clicks
       const lat = spot.latitude.toFixed(2);
       const lng = spot.longitude.toFixed(2);
-      const res = await fetch(`/api/wind?lat=${lat}&lng=${lng}`);
+      const res = await fetch(`/api/wind/grid?lats=${lat}&lngs=${lng}`, {
+        signal: AbortSignal.timeout(8000),
+      });
       if (!res.ok) throw new Error();
-      const data = await res.json();
-      setSelectedWind(data);
+      const raw: unknown = await res.json();
+      const d = (Array.isArray(raw) ? raw[0] : raw) as {
+        current?: {
+          wind_speed_10m: number;
+          wind_direction_10m: number;
+          wind_gusts_10m: number;
+        };
+      } | null;
+      if (!d?.current) throw new Error();
+      const c = d.current;
+      setSelectedWind(
+        getWindData(c.wind_speed_10m, c.wind_direction_10m, c.wind_gusts_10m),
+      );
     } catch {
       setSelectedWind(null);
     } finally {

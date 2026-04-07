@@ -47,7 +47,10 @@ interface PioupiouStation {
  * Cached 10 minutes server-side.
  */
 export async function fetchPioupiouStations(): Promise<WindStation[]> {
-  const res = await fetch(PIOUPIOU_LIVE_ALL, { next: { revalidate: 600 } });
+  const res = await fetch(PIOUPIOU_LIVE_ALL, {
+    next: { revalidate: 600 },
+    signal: AbortSignal.timeout(8000),
+  } as RequestInit);
   if (!res.ok) {
     throw new Error(`Pioupiou API error: HTTP ${res.status}`);
   }

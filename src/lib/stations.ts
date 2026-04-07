@@ -78,7 +78,10 @@ function lv95ToWgs84(e: number, n: number): { lat: number; lng: number } {
  * Results are cached by Next.js for 10 minutes (revalidate: 600).
  */
 export async function fetchMeteoSwissStations(): Promise<WindStation[]> {
-  const res = await fetch(METEOSWISS_URL, { next: { revalidate: 600 } });
+  const res = await fetch(METEOSWISS_URL, {
+    next: { revalidate: 600 },
+    signal: AbortSignal.timeout(8000),
+  } as RequestInit);
   if (!res.ok) {
     throw new Error(`MeteoSwiss fetch failed: HTTP ${res.status}`);
   }
