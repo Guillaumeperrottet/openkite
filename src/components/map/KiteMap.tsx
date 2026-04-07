@@ -485,10 +485,19 @@ export function KiteMap({
           lat: coords[1],
           lng: coords[0],
         });
+        // Use map.project() for initial position, converted to viewport coords
+        const stPx = map.project([coords[0], coords[1]]);
+        const stRect = map.getCanvas().getBoundingClientRect();
         setStationPopupPos({
-          x: e.originalEvent.clientX,
-          y: e.originalEvent.clientY,
+          x: stRect.left + stPx.x,
+          y: stRect.top + stPx.y,
         });
+        // Pan the map so the station moves to the lower part of the viewport
+        const stCanvasH = map.getCanvas().clientHeight;
+        const stTargetY = stCanvasH * 0.65;
+        if (stPx.y < stTargetY - 40) {
+          map.panBy([0, stPx.y - stTargetY], { duration: 300 });
+        }
         // Close any open spot popup
         setSelectedSpot(null);
         setPopupPos(null);
@@ -722,10 +731,14 @@ export function KiteMap({
           images: p.images ? JSON.parse(String(p.images)) : [],
         };
         setSelectedSpot(spot);
-        setPopupPos({
-          x: e.originalEvent.clientX,
-          y: e.originalEvent.clientY,
-        });
+        const spPx = map.project([coord[0], coord[1]]);
+        setPopupPos({ x: spPx.x, y: spPx.y });
+        // Pan the map so the spot moves to the lower part of the viewport
+        const spCanvasH = map.getCanvas().clientHeight;
+        const spTargetY = spCanvasH * 0.65;
+        if (spPx.y < spTargetY - 40) {
+          map.panBy([0, spPx.y - spTargetY], { duration: 300 });
+        }
         setSelectedStation(null);
         setStationPopupPos(null);
         fetchWind(spot);
@@ -778,6 +791,35 @@ export function KiteMap({
       map.off("move", updatePos);
     };
   }, [selectedSpot]);
+
+  // Track station popup position on map move — close if off-screen
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !selectedStation) return;
+
+    const updateStationPos = () => {
+      const px = map.project([selectedStation.lng, selectedStation.lat]);
+      const { clientWidth: w, clientHeight: h } = map.getCanvas();
+      const margin = 60;
+      if (
+        px.x < -margin ||
+        px.x > w + margin ||
+        px.y < -margin ||
+        px.y > h + margin
+      ) {
+        setSelectedStation(null);
+        setStationPopupPos(null);
+        return;
+      }
+      const rect = map.getCanvas().getBoundingClientRect();
+      setStationPopupPos({ x: rect.left + px.x, y: rect.top + px.y });
+    };
+
+    map.on("move", updateStationPos);
+    return () => {
+      map.off("move", updateStationPos);
+    };
+  }, [selectedStation]);
 
   // Close popups when clicking on empty map area
   useEffect(() => {

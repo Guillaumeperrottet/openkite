@@ -12,8 +12,8 @@ export const metadata: Metadata = {
     google: "IPK5LP6dD1gvar2XIppMLxIbce_yOzD3OfiPN1Cj1cU",
   },
   title: {
-    default: "OpenWind — Carte des spots de kitesurf et parapente",
-    template: "%s — OpenWind",
+    default: "Openwind — Carte des spots de kitesurf et parapente",
+    template: "%s — Openwind",
   },
   description:
     "Carte interactive open source des spots de kitesurf et parapente. Vent en direct, prévisions 7 jours, archives historiques et planification de voyages.",
@@ -31,20 +31,20 @@ export const metadata: Metadata = {
     "wind",
     "forecast",
   ],
-  authors: [{ name: "OpenWind" }],
-  creator: "OpenWind",
+  authors: [{ name: "Openwind" }],
+  creator: "Openwind",
   openGraph: {
-    title: "OpenWind — Carte des spots de kitesurf et parapente",
+    title: "Openwind — Carte des spots de kitesurf et parapente",
     description:
       "Carte interactive open source du vent et des spots de kitesurf et parapente. Vent en direct, prévisions, planification de voyages.",
     url: "https://openwind.ch",
-    siteName: "OpenWind",
+    siteName: "Openwind",
     locale: "fr_CH",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OpenWind — Carte des spots kite & parapente",
+    title: "Openwind — Carte des spots kite & parapente",
     description:
       "Vent en direct, prévisions 7 jours, archives historiques. Open source.",
   },

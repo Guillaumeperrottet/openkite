@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props) {
       title: spot.name,
       description,
       openGraph: {
-        title: `${spot.name} — OpenWind`,
+        title: `${spot.name} — Openwind`,
         description,
         ...(spot.images[0] && { images: [{ url: spot.images[0].url }] }),
       },

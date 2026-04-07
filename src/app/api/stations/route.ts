@@ -11,7 +11,7 @@ export const revalidate = 600;
  *
  * Returns live wind measurements from all available station networks:
  * - MeteoSwiss SwissMetNet (154 stations, 10-min updates)
- * - Pioupiou / OpenWindMap (~600 community stations, ~4-min updates)
+ * - Pioupiou / OpenwindMap (~600 community stations, ~4-min updates)
  *
  * Each station includes a `source` field ("meteoswiss" | "pioupiou")
  * for attribution and history routing.

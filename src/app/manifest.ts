@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "OpenWind — Spots kite & parapente",
-    short_name: "OpenWind",
+    name: "Openwind — Spots kite & parapente",
+    short_name: "Openwind",
     description:
       "Carte interactive des spots de kitesurf et parapente avec vent en direct.",
     start_url: "/",

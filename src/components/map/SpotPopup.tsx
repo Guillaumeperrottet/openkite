@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { X, Wind, Waves, ExternalLink } from "lucide-react";
 import type { Spot, WindData } from "@/types";
@@ -33,6 +33,17 @@ export function SpotPopup({
   const fmt = (kmh: number) =>
     useKnots ? `${Math.round(kmh / 1.852)} kts` : `${Math.round(kmh)} km/h`;
   const ref = useRef<HTMLDivElement>(null);
+  const [flipBelow, setFlipBelow] = useState(false);
+  const [popupH, setPopupH] = useState(0);
+
+  // Measure popup height and flip below if not enough room above
+  useEffect(() => {
+    if (!ref.current) return;
+    const h = ref.current.offsetHeight;
+    setPopupH(h);
+    // Check against parent container height (absolute positioned within map)
+    setFlipBelow(position.y - 8 - h < 10);
+  }, [position.y, wind, loadingWind]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -54,8 +65,8 @@ export function SpotPopup({
   const style: React.CSSProperties = {
     position: "absolute",
     left: position.x,
-    top: position.y - 8,
-    transform: "translate(-50%, -100%)",
+    top: flipBelow ? position.y + 12 : position.y - 8,
+    transform: flipBelow ? "translate(-50%, 0)" : "translate(-50%, -100%)",
     zIndex: 100,
   };
 

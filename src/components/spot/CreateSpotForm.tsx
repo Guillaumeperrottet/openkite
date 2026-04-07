@@ -580,7 +580,7 @@ export function CreateSpotForm({ initialData }: Props = {}) {
                               · {s.altitudeM}m alt. ·{" "}
                               {Math.round(s.windSpeedKmh / 1.852)} kts ·{" "}
                               {s.source === "pioupiou"
-                                ? "OpenWindMap"
+                                ? "OpenwindMap"
                                 : "MeteoSwiss"}
                             </div>
                           </div>
