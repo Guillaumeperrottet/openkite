@@ -18,10 +18,12 @@ uniform float u_opacity;
 in vec2 v_tex_pos;
 out vec4 fragColor;
 void main() {
-  fragColor = texture(u_screen, v_tex_pos) * u_opacity;
+  vec4 c = texture(u_screen, v_tex_pos) * u_opacity;
+  // premultiplied alpha (MapLibre expects gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+  fragColor = vec4(c.rgb * c.a, c.a);
 }`;
 
-/** Vertex shader: reads particle state texture, projects to screen. */
+/** Vertex shader: reads particle state texture, projects to Mercator clip space. */
 export const DRAW_VERT = `#version 300 es
 precision highp float;
 
@@ -30,12 +32,14 @@ uniform float u_particles_res;
 uniform sampler2D u_wind;
 uniform vec2 u_wind_min;
 uniform vec2 u_wind_max;
-uniform vec4 u_screen_bounds; // x_west, y_north, x_east, y_south
-uniform vec2 u_canvas_size;
+uniform vec4 u_wind_bounds; // lng0, lat0, lng1, lat1
+uniform mat4 u_matrix;      // MapLibre modelViewProjection
 uniform float u_point_size;
 
 in float a_index;
 out float v_speed_t;
+
+const float PI = 3.14159265359;
 
 void main() {
   vec4 color = texture(u_particles, vec2(
@@ -53,26 +57,28 @@ void main() {
   vec2 velocity = mix(u_wind_min, u_wind_max, texture(u_wind, pos).rg);
   v_speed_t = clamp(length(velocity) / 80.0, 0.0, 1.0);
 
-  // UV → screen pixels → clip space
-  float sx = mix(u_screen_bounds.x, u_screen_bounds.z, pos.x);
-  float sy = mix(u_screen_bounds.w, u_screen_bounds.y, pos.y);
+  // UV → lng/lat
+  float lng = mix(u_wind_bounds.x, u_wind_bounds.z, pos.x);
+  float lat = mix(u_wind_bounds.y, u_wind_bounds.w, pos.y);
+
+  // lng/lat → Web Mercator [0,1] × [0,1]
+  float mx = (lng + 180.0) / 360.0;
+  float latRad = lat * PI / 180.0;
+  float my = (1.0 - log(tan(PI / 4.0 + latRad / 2.0)) / PI) / 2.0;
 
   gl_PointSize = u_point_size;
-  gl_Position = vec4(
-    sx / u_canvas_size.x * 2.0 - 1.0,
-    1.0 - sy / u_canvas_size.y * 2.0,
-    0.0, 1.0
-  );
+  gl_Position = u_matrix * vec4(mx, my, 0.0, 1.0);
 }`;
 
-/** Fragment shader: colors a particle via colour-ramp lookup. */
+/** Fragment shader: colors a particle via colour-ramp lookup (premultiplied alpha). */
 export const DRAW_FRAG = `#version 300 es
 precision mediump float;
 uniform sampler2D u_color_ramp;
 in float v_speed_t;
 out vec4 fragColor;
 void main() {
-  fragColor = texture(u_color_ramp, vec2(v_speed_t, 0.5));
+  vec4 c = texture(u_color_ramp, vec2(v_speed_t, 0.5));
+  fragColor = vec4(c.rgb * c.a, c.a);
 }`;
 
 /** Fragment shader: updates particle positions using the wind field. */

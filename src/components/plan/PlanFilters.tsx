@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import { MapPin, Search, Locate, X } from "lucide-react";
+import { MapPin, Search, Locate, X, Map } from "lucide-react";
 import type { SportType } from "@/types";
 
 export type SortKey = "score" | "distance" | "wind";
@@ -23,6 +23,7 @@ interface PlanFiltersProps {
   onRadiusChange: (v: number) => void;
   onSportChange: (v: SportType | "ALL") => void;
   onGeolocate: () => void;
+  onPickOnMap?: () => void;
   reverseGeocode: (lat: number, lng: number) => void;
 }
 
@@ -52,6 +53,7 @@ export function PlanFilters({
   onRadiusChange,
   onSportChange,
   onGeolocate,
+  onPickOnMap,
 }: PlanFiltersProps) {
   const hasLocation = lat !== null && lng !== null;
 
@@ -175,6 +177,15 @@ export function PlanFilters({
           >
             <Locate className="h-3.5 w-3.5" />
           </button>
+          {onPickOnMap && (
+            <button
+              onClick={onPickOnMap}
+              title="Choisir sur la carte"
+              className="h-10 w-10 shrink-0 flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600"
+            >
+              <Map className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

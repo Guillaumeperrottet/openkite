@@ -2,108 +2,54 @@
 
 import { useEffect, useRef } from "react";
 import type maplibregl from "maplibre-gl";
-import { WindGL } from "./windgl/WindGL";
+import { WindParticleLayer } from "./windgl/WindParticleLayer";
 import type { WindData } from "./windgl/WindGL";
+
+const LAYER_ID = "wind-particles";
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
- * GPU-accelerated wind particle overlay.
+ * GPU-accelerated wind particle overlay integrated into MapLibre's own GL context.
  *
- * Fetches adaptive wind-grid data for the current viewport, encodes it as a
- * WebGL texture, and renders thousands of animated particles at 60 fps using
- * the GPU (via the WindGL class). A single WebGL canvas is stacked on top of
- * the map; no color-field canvas is needed.
+ * Adds a MapLibre `CustomLayerInterface` that renders particles directly in
+ * the map's WebGL2 context — no separate canvas, no jitter during zoom/rotate.
+ * Fetches adaptive wind-grid data for the current viewport and encodes it as
+ * a WebGL texture consumed by the particle shaders.
  */
 export function useWindOverlay(
   mapRef: React.RefObject<maplibregl.Map | null>,
-  windCanvasRef: React.RefObject<HTMLCanvasElement | null>,
   showWindOverlay: boolean,
   mapLoaded: boolean,
 ) {
-  const animFrameRef = useRef<number | null>(null);
+  const layerRef = useRef<WindParticleLayer | null>(null);
 
   useEffect(() => {
-    const canvas = windCanvasRef.current;
     const map = mapRef.current;
+    if (!mapLoaded || !map) return;
 
-    if (!showWindOverlay || !mapLoaded || !canvas || !map) {
-      // Clear leftover content when overlay is toggled off
-      if (canvas) {
-        const gl = canvas.getContext("webgl2");
-        if (gl) {
-          gl.clearColor(0, 0, 0, 0);
-          gl.clear(gl.COLOR_BUFFER_BIT);
-        }
+    if (!showWindOverlay) {
+      // Remove custom layer when overlay is toggled off
+      if (map.getLayer(LAYER_ID)) {
+        map.removeLayer(LAYER_ID);
       }
+      layerRef.current = null;
       return;
     }
 
-    // ── WebGL context + renderer ────────────────────────────────────
-    const gl = canvas.getContext("webgl2", {
-      antialias: false,
-      premultipliedAlpha: false,
-      alpha: true,
-    });
-    if (!gl) {
-      console.warn(
-        "[WindOverlay] Failed to get WebGL2 context — try a hard refresh (Cmd+Shift+R)",
-      );
-      return;
-    }
-
-    const windgl = new WindGL(gl);
-
-    const dpr = window.devicePixelRatio || 1;
-
-    const setupCanvas = () => {
-      const rect = canvas.parentElement!.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      canvas.style.width = w + "px";
-      canvas.style.height = h + "px";
-      windgl.resize();
-    };
-    setupCanvas();
+    // ── Add the custom layer ────────────────────────────────────────
+    const layer = new WindParticleLayer();
+    layerRef.current = layer;
+    map.addLayer(layer);
 
     // ── Mutable state ───────────────────────────────────────────────
-    let gridBounds: [number, number, number, number] = [0, 0, 0, 0]; // lng0, lat0, lng1, lat1
-    let hasData = false;
-    let animating = true;
-
-    // ── Animation loop ──────────────────────────────────────────────
-    const animate = () => {
-      if (!animating || !hasData) return;
-
-      // Project grid corners to screen pixels (CSS px)
-      const nw = map.project([gridBounds[0], gridBounds[3]]); // NW
-      const se = map.project([gridBounds[2], gridBounds[1]]); // SE
-      const screenBounds: [number, number, number, number] = [
-        nw.x,
-        nw.y,
-        se.x,
-        se.y,
-      ];
-      const canvasSize: [number, number] = [
-        canvas.clientWidth,
-        canvas.clientHeight,
-      ];
-
-      // Adapt speed factor: ~2px screen displacement per frame at 20 km/h
-      const gridW = Math.abs(se.x - nw.x);
-      windgl.speedFactor = 0.1 / Math.max(gridW, 100);
-
-      windgl.draw(screenBounds, canvasSize);
-      animFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    // ── Adaptive wind-grid fetch ────────────────────────────────────
+    let alive = true;
     let fetchAbort: AbortController | null = null;
     let refetchTimer: ReturnType<typeof setTimeout> | null = null;
 
+    // ── Adaptive wind-grid fetch ────────────────────────────────────
     const fetchWind = () => {
+      if (!alive) return;
       if (fetchAbort) fetchAbort.abort();
       fetchAbort = new AbortController();
       const signal = fetchAbort.signal;
@@ -140,12 +86,15 @@ export function useWindOverlay(
           lons.push(+(bLng0 + j * step).toFixed(1));
         }
 
-      fetch(`/api/wind/grid?lats=${lats.join(",")}&lngs=${lons.join(",")}`, {
+      fetch("/api/wind/grid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lats, lngs: lons }),
         signal,
       })
         .then((r) => {
           if (r.status === 429 || r.status === 502) {
-            if (animating)
+            if (alive)
               refetchTimer = setTimeout(
                 fetchWind,
                 r.status === 429 ? 10000 : 5000,
@@ -156,7 +105,7 @@ export function useWindOverlay(
           return r.json();
         })
         .then((raw: unknown) => {
-          if (!raw || !animating) return;
+          if (!raw || !alive) return;
           const data = (Array.isArray(raw) ? raw : [raw]) as Array<{
             current?: {
               wind_speed_10m: number;
@@ -169,20 +118,12 @@ export function useWindOverlay(
           const lat1Actual = bLat0 + (nLats - 1) * step;
           const lng1Actual = bLng0 + (nLngs - 1) * step;
 
-          windgl.setWind(windData, [bLng0, bLat0, lng1Actual, lat1Actual]);
-          gridBounds = [bLng0, bLat0, lng1Actual, lat1Actual];
-          hasData = true;
-          console.log(
-            `[WindOverlay] Grid ${nLngs}×${nLats}, bounds ${bLng0.toFixed(1)},${bLat0.toFixed(1)}→${lng1Actual.toFixed(1)},${lat1Actual.toFixed(1)}, uRange ${windData.uMin.toFixed(1)}..${windData.uMax.toFixed(1)}, vRange ${windData.vMin.toFixed(1)}..${windData.vMax.toFixed(1)}`,
-          );
-
-          if (!animFrameRef.current)
-            animFrameRef.current = requestAnimationFrame(animate);
+          layer.setWind(windData, [bLng0, bLat0, lng1Actual, lat1Actual]);
+          // MapLibre repaints automatically via triggerRepaint() in render()
         })
         .catch((err) => {
           if (err instanceof DOMException && err.name === "AbortError") return;
-          console.warn("[WindOverlay] fetch error", err);
-          if (animating && !hasData) refetchTimer = setTimeout(fetchWind, 5000);
+          if (alive) refetchTimer = setTimeout(fetchWind, 5000);
         });
     };
 
@@ -191,43 +132,29 @@ export function useWindOverlay(
       if (refetchTimer) clearTimeout(refetchTimer);
       refetchTimer = setTimeout(fetchWind, 3000);
     };
-    const onZoomStart = () => {
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current);
-        animFrameRef.current = null;
-      }
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-    };
     const onZoomEnd = () => {
-      if (hasData && !animFrameRef.current)
-        animFrameRef.current = requestAnimationFrame(animate);
       if (refetchTimer) clearTimeout(refetchTimer);
       refetchTimer = setTimeout(fetchWind, 1500);
     };
-    const onResize = () => setupCanvas();
 
     map.on("moveend", onMoveEnd);
-    map.on("zoomstart", onZoomStart);
     map.on("zoomend", onZoomEnd);
-    window.addEventListener("resize", onResize);
 
     // Kick off first fetch
     fetchWind();
 
     return () => {
-      animating = false;
+      alive = false;
       if (refetchTimer) clearTimeout(refetchTimer);
       if (fetchAbort) fetchAbort.abort();
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
       map.off("moveend", onMoveEnd);
-      map.off("zoomstart", onZoomStart);
       map.off("zoomend", onZoomEnd);
-      window.removeEventListener("resize", onResize);
-      windgl.destroy();
+      if (map.getLayer(LAYER_ID)) {
+        map.removeLayer(LAYER_ID);
+      }
+      layerRef.current = null;
     };
-  }, [showWindOverlay, mapLoaded, mapRef, windCanvasRef]);
+  }, [showWindOverlay, mapLoaded, mapRef]);
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

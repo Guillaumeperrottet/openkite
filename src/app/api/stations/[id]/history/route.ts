@@ -5,7 +5,6 @@ import {
   fetchWindForecast15min,
 } from "@/lib/wind";
 import { fetchMeteoSwissStations } from "@/lib/stations";
-import { fetchPioupiouHistory } from "@/lib/pioupiou";
 
 // No force-dynamic — params already makes this route dynamic,
 // and removing it lets internal fetch() calls use their ISR cache.
@@ -37,7 +36,9 @@ export async function GET(
       );
     }
     try {
-      const history = await fetchPioupiouHistory(numericId);
+      // Use merged history (DB real-time + Pioupiou Archive) to avoid
+      // the ~2h delay inherent to the Pioupiou Archive API alone.
+      const history = await fetchWindHistoryStation(stationId);
       return NextResponse.json(history, { headers: cacheHeaders });
     } catch {
       return NextResponse.json(

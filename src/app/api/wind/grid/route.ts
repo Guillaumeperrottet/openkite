@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const OPEN_METEO = "https://api.open-meteo.com/v1/forecast";
-/** Max locations per Open-Meteo request (keeps response time < 3s). */
-const SUB_BATCH = 10;
+/** Max locations per Open-Meteo request (free tier caps around 30). */
+const SUB_BATCH = 25;
+/** Pause between sequential sub-batches to avoid 429s (ms). */
+const BATCH_DELAY = 500;
 
 // ── Simple sliding-window rate limiter (per Vercel instance) ────────────
 // Tracks Open-Meteo sub-batch calls to stay within free-tier limits.
@@ -25,25 +27,28 @@ function recordCalls(count: number) {
 }
 
 /**
- * GET /api/wind/grid?lats=46.5,47.0&lngs=6.5,7.0
+ * POST /api/wind/grid
+ * Body: { lats: number[], lngs: number[] }
  *
  * Server-side proxy for batch wind requests to Open-Meteo.
  * Splits large requests into sub-batches fetched in parallel,
  * then merges results. Avoids CORS and benefits from Vercel caching.
+ * Uses POST to handle large coordinate arrays that exceed URL length limits.
  */
-export async function GET(request: NextRequest) {
-  const latsParam = request.nextUrl.searchParams.get("lats");
-  const lngsParam = request.nextUrl.searchParams.get("lngs");
+export async function POST(request: NextRequest) {
+  const body = (await request.json()) as {
+    lats?: number[];
+    lngs?: number[];
+  };
+  const allLats = body.lats?.map(String);
+  const allLngs = body.lngs?.map(String);
 
-  if (!latsParam || !lngsParam) {
+  if (!allLats?.length || !allLngs?.length) {
     return NextResponse.json(
       { error: "lats and lngs required" },
       { status: 400 },
     );
   }
-
-  const allLats = latsParam.split(",");
-  const allLngs = lngsParam.split(",");
   const n = Math.min(allLats.length, allLngs.length);
 
   if (n === 0) {
@@ -60,42 +65,47 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Split into sub-batches and fetch in parallel
+    // Split into sub-batches and fetch sequentially to respect Open-Meteo rate limits
     const results: unknown[] = new Array(n).fill(null);
-    const promises: Promise<void>[] = [];
 
     for (let i = 0; i < n; i += SUB_BATCH) {
       const end = Math.min(i + SUB_BATCH, n);
       const lats = allLats.slice(i, end).join(",");
       const lngs = allLngs.slice(i, end).join(",");
       const batchSize = end - i;
-      const offset = i;
 
       const url = `${OPEN_METEO}?latitude=${lats}&longitude=${lngs}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh`;
 
-      promises.push(
-        fetch(url, {
+      try {
+        const res = await fetch(url, {
           next: { revalidate: 600 },
-          signal: AbortSignal.timeout(6000),
-        } as RequestInit)
-          .then((res) => {
-            if (!res.ok) return;
-            return res.json();
-          })
-          .then((raw: unknown) => {
-            if (!raw) return;
-            const data = Array.isArray(raw) ? raw : [raw];
-            for (let j = 0; j < Math.min(data.length, batchSize); j++) {
-              results[offset + j] = data[j];
-            }
-          })
-          .catch(() => {
-            /* leave nulls for failed sub-batches */
-          }),
-      );
+          signal: AbortSignal.timeout(8000),
+        } as RequestInit);
+        if (res.ok) {
+          const raw: unknown = await res.json();
+          const data = Array.isArray(raw) ? raw : [raw];
+          for (let j = 0; j < Math.min(data.length, batchSize); j++) {
+            results[i + j] = data[j];
+          }
+        } else {
+          const text = await res.text().catch(() => "");
+          console.error(
+            `[/api/wind/grid] sub-batch ${i}–${end} failed: HTTP ${res.status} ${text.slice(0, 200)}`,
+          );
+        }
+      } catch (err) {
+        console.error(
+          `[/api/wind/grid] sub-batch ${i}–${end} error:`,
+          err instanceof Error ? err.message : err,
+        );
+      }
+
+      // Small delay between batches to avoid hitting Open-Meteo's per-second limit
+      if (i + SUB_BATCH < n) {
+        await new Promise((r) => setTimeout(r, BATCH_DELAY));
+      }
     }
 
-    await Promise.all(promises);
     recordCalls(subBatchCount);
 
     // Check if we got at least some data

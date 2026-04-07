@@ -205,7 +205,17 @@ export function StationPopup({
           <span className="text-xs font-semibold text-gray-700">
             Historique · 48h
           </span>
-          <span className="text-[9px] text-gray-400">Dernière màj {time}</span>
+          <span className="text-[9px] text-gray-400">
+            Dernière màj{" "}
+            {history?.length
+              ? new Date(
+                  history[history.length - 1].time + ":00Z",
+                ).toLocaleTimeString("fr", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : time}
+          </span>
         </div>
         <div className="px-2 pb-2">
           {loading ? (
@@ -216,7 +226,7 @@ export function StationPopup({
             <WindHistoryChart
               history={history}
               useKnots={useKnots}
-              timezone={isPioupiou ? "UTC" : "Europe/Zurich"}
+              timezone="Europe/Zurich"
             />
           ) : (
             <div className="flex items-center justify-center h-24 text-xs text-gray-400">

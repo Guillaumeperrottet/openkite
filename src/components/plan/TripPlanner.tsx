@@ -100,7 +100,10 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
   const [copied, setCopied] = useState(false);
 
   // Mobile bottom sheet (continuous drag)
-  const [sheetFrac, setSheetFrac] = useState(SNAP_PEEK);
+  const hasAutoSearch = !!searchParams?.startDate;
+  const [sheetFrac, setSheetFrac] = useState(
+    hasAutoSearch ? SNAP_PEEK : SNAP_FULL,
+  );
   const [isDragging, setIsDragging] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef(0);
@@ -109,8 +112,8 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
     typeof window !== "undefined" ? window.innerHeight : 800,
   );
 
-  // Mobile inline filters
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  // Mobile inline filters — open by default on fresh visit
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(!hasAutoSearch);
   const [isMobile, setIsMobile] = useState(false);
 
   // Score detail popover (tap-to-toggle for touch)
@@ -165,13 +168,22 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
       setLat(latitude);
       setLng(longitude);
       reverseGeocode(latitude, longitude);
+      // On mobile, re-open sheet + filters after picking on map
+      if (isMobile) {
+        setSheetFrac(SNAP_FULL);
+        setMobileFiltersOpen(true);
+      }
     },
-    [reverseGeocode],
+    [reverseGeocode, isMobile],
   );
 
   const handleGeolocate = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setError("La géolocalisation n'est pas disponible sur ce navigateur.");
+      return;
+    }
     setGeoLoading(true);
+    setError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLat(pos.coords.latitude);
@@ -179,14 +191,25 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
         reverseGeocode(pos.coords.latitude, pos.coords.longitude);
         setGeoLoading(false);
       },
-      () => setGeoLoading(false),
+      (err) => {
+        setGeoLoading(false);
+        setError(
+          err.code === err.PERMISSION_DENIED
+            ? "Autorisez la localisation dans les réglages de votre navigateur."
+            : "Impossible d'obtenir votre position. Réessayez.",
+        );
+      },
       { timeout: 10000, enableHighAccuracy: true },
     );
   };
 
   const handleSearchNearMe = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setError("La géolocalisation n'est pas disponible sur ce navigateur.");
+      return;
+    }
     setGeoLoading(true);
+    setError(null);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const la = pos.coords.latitude;
@@ -224,10 +247,22 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
           setLoading(false);
         }
       },
-      () => setGeoLoading(false),
+      (err) => {
+        setGeoLoading(false);
+        setError(
+          err.code === err.PERMISSION_DENIED
+            ? "Autorisez la localisation dans les r\u00e9glages de votre navigateur."
+            : "Impossible d'obtenir votre position. R\u00e9essayez.",
+        );
+      },
       { timeout: 10000, enableHighAccuracy: true },
     );
   };
+
+  const handlePickOnMap = useCallback(() => {
+    setSheetFrac(SNAP_PEEK);
+    setMobileFiltersOpen(false);
+  }, []);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -742,6 +777,19 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
             </div>
           )}
 
+          {/* Mobile onboarding — visible before first search */}
+          {!searched && !loading && (
+            <div className="lg:hidden px-4 pt-3 pb-2 border-b border-gray-100">
+              <h2 className="text-base font-semibold text-gray-800">
+                🪁 Planifiez votre session
+              </h2>
+              <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                Choisissez une destination et vos dates, ou lancez une recherche
+                rapide pour trouver le meilleur vent.
+              </p>
+            </div>
+          )}
+
           {/* Mobile inline filters (collapsible) */}
           <div className="lg:hidden shrink-0">
             <button
@@ -777,6 +825,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
                   onRadiusChange={setRadius}
                   onSportChange={setSport}
                   onGeolocate={handleGeolocate}
+                  onPickOnMap={handlePickOnMap}
                   reverseGeocode={reverseGeocode}
                 />
                 <div className="mt-3 flex gap-2">
@@ -898,9 +947,9 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
 
           {/* Results list */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
-            {/* Empty state */}
+            {/* Empty state — desktop only (mobile has the onboarding header + open filters) */}
             {!searched && !loading && (
-              <div className="text-center text-gray-400 text-sm py-12">
+              <div className="hidden lg:block text-center text-gray-400 text-sm py-12">
                 <Navigation className="h-8 w-8 mx-auto mb-3 opacity-20" />
                 <p className="font-medium text-gray-500">
                   Trouvez les meilleurs spots
@@ -998,12 +1047,10 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
                               </>
                             )}
                             {" \u00B7 "}
-                            {spot.sportType === "KITE"
-                              ? "\uD83E\uDE81"
-                              : "\uD83E\uDE82"}
+                            {spot.sportType === "KITE" ? "🪁" : "🪂"}
                             {spot.dataSource === "archive" && (
                               <span className="text-amber-500 ml-0.5">
-                                {" \uD83D\uDCCA"}
+                                {" 📊"}
                               </span>
                             )}
                           </p>

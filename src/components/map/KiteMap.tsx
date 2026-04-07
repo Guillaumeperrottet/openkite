@@ -38,7 +38,6 @@ export function KiteMap({
   );
   const pulseFrameRef = useRef<number | null>(null);
   const piouSocketRef = useRef<Socket | null>(null);
-  const windCanvasRef = useRef<HTMLCanvasElement>(null);
   /** All loaded stations (MeteoSwiss + Pioupiou) for nearest-station wind lookup */
   const stationsRef = useRef<WindStation[]>([]);
 
@@ -265,7 +264,9 @@ export function KiteMap({
       style: MAP_STYLE,
       center: [10, 35],
       zoom: 2.5,
+      attributionControl: false,
     });
+    map.addControl(new maplibregl.AttributionControl({ compact: true }));
 
     const geolocate = new maplibregl.GeolocateControl({
       trackUserLocation: false,
@@ -943,8 +944,8 @@ export function KiteMap({
     };
   }, [showStations, mapLoaded, renderStations]);
 
-  // GPU-accelerated wind particle overlay
-  useWindOverlay(mapRef, windCanvasRef, showWindOverlay, mapLoaded);
+  // GPU-accelerated wind particle overlay (MapLibre custom layer)
+  useWindOverlay(mapRef, showWindOverlay, mapLoaded);
 
   // Push spots to GeoJSON layer (no wind fetch — wind is loaded on click)
   useEffect(() => {
@@ -978,12 +979,6 @@ export function KiteMap({
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
-      {/* WebGL wind particle canvas */}
-      <canvas
-        ref={windCanvasRef}
-        className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: 5 }}
-      />
 
       {/* Live stations toggle + wind overlay toggle — hidden in pickMode (trip planner) */}
       <div
@@ -1031,7 +1026,7 @@ export function KiteMap({
           )}
         </button>
 
-        {/* Wind overlay toggle */}
+        {/* Wind overlay toggle — temporarily hidden
         <button
           onClick={() => setShowWindOverlay((v) => !v)}
           className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold shadow-lg border transition-all ${
@@ -1053,6 +1048,7 @@ export function KiteMap({
           </svg>
           Vent live
         </button>
+        */}
       </div>
 
       {/* Wind legend + unit toggle — hidden on mobile in pickMode (sheet covers it) */}
