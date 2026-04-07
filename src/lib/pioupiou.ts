@@ -119,7 +119,10 @@ export async function fetchPioupiouHistory(
 
   const url = `${PIOUPIOU_ARCHIVE}/${pioupiouId}?start=${encodeURIComponent(start)}&stop=${encodeURIComponent(stop)}`;
 
-  const res = await fetch(url, { next: { revalidate: 600 } });
+  const res = await fetch(url, {
+    next: { revalidate: 600 },
+    signal: AbortSignal.timeout(6000),
+  });
   if (!res.ok) {
     throw new Error(`Pioupiou archive error: HTTP ${res.status}`);
   }
