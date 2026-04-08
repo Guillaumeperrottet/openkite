@@ -65,6 +65,45 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  name: "Openwind",
+                  url: "https://openwind.ch",
+                  description:
+                    "Carte interactive open source des spots de kitesurf et parapente. Vent en direct, prévisions 7 jours.",
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  name: "Carte",
+                  url: "https://openwind.ch",
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  name: "Planification",
+                  url: "https://openwind.ch/plan",
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  name: "Forum",
+                  url: "https://openwind.ch/forum",
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  name: "Ajouter un spot",
+                  url: "https://openwind.ch/spots/new",
+                },
+              ],
+            }),
+          }}
+        />
+      </head>
       <body
         className={`${inter.className} antialiased`}
         suppressHydrationWarning

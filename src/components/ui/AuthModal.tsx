@@ -23,9 +23,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     setError(null);
 
     const supabase = createClient();
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}`;
     const { error: authError } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.href },
+      options: { emailRedirectTo: redirectTo },
     });
 
     setLoading(false);
@@ -38,9 +39,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   const handleOAuth = async (provider: "google" | "github") => {
     const supabase = createClient();
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}`;
     await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.href },
+      options: { redirectTo },
     });
   };
 

@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { ForumPageClient } from "./ForumPageClient";
+
+export const metadata: Metadata = {
+  title: "Forum",
+  description:
+    "Forum communautaire Openwind — discussions sur les spots, le matos, le projet et entraide entre riders.",
+  alternates: { canonical: "https://openwind.ch/forum" },
+};
 
 export default async function ForumPage() {
   const categories = await prisma.forumCategory.findMany({

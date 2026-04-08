@@ -13,6 +13,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/forum`,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/spots/new`,
       changeFrequency: "monthly",
       priority: 0.5,
@@ -35,5 +40,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB unavailable — return static pages only
   }
 
-  return [...staticPages, ...spotPages];
+  // Forum category pages
+  let forumPages: MetadataRoute.Sitemap = [];
+  try {
+    const categories = await prisma.forumCategory.findMany({
+      select: { slug: true },
+    });
+    forumPages = categories.map((cat) => ({
+      url: `${baseUrl}/forum/${cat.slug}`,
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    }));
+  } catch {
+    // DB unavailable
+  }
+
+  return [...staticPages, ...spotPages, ...forumPages];
 }
