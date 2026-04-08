@@ -38,6 +38,11 @@ export function StationPopup({
   const ref = useRef<HTMLDivElement>(null);
   const [flipBelow, setFlipBelow] = useState(false);
   const [popupH, setPopupH] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   // Fetch 48h history (API now returns combined past + 15-min forecast)
   useEffect(() => {
@@ -124,14 +129,26 @@ export function StationPopup({
 
   const maxH = vh - 2 * margin;
 
-  const style: React.CSSProperties = {
-    position: "fixed",
-    left: Math.min(Math.max(position.x, halfW + margin), vw - halfW - margin),
-    top,
-    transform: "translate(-50%, 0)",
-    zIndex: 100,
-    maxHeight: maxH,
-  };
+  const style: React.CSSProperties = isMobile
+    ? {
+        position: "fixed",
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 100,
+        maxHeight: maxH,
+      }
+    : {
+        position: "fixed",
+        left: Math.min(
+          Math.max(position.x, halfW + margin),
+          vw - halfW - margin,
+        ),
+        top,
+        transform: "translate(-50%, 0)",
+        zIndex: 100,
+        maxHeight: maxH,
+      };
 
   return (
     <div

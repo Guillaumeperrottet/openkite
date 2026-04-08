@@ -4,18 +4,9 @@
  *
  * Run: npx tsx prisma/seed.ts
  */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
-
-// Load .env (dotenv not available as direct dep)
-for (const line of readFileSync(resolve(__dirname, "../.env"), "utf-8").split(
-  "\n",
-)) {
-  const m = line.match(/^(\w+)="?([^"]*)"?$/);
-  if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-}
 
 const adapter = new PrismaPg({
   connectionString: process.env.DIRECT_URL ?? process.env.DATABASE_URL!,

@@ -35,6 +35,11 @@ export function SpotPopup({
   const ref = useRef<HTMLDivElement>(null);
   const [flipBelow, setFlipBelow] = useState(false);
   const [popupH, setPopupH] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   // Measure popup height and flip below if not enough room above
   useEffect(() => {
@@ -62,13 +67,21 @@ export function SpotPopup({
     };
   }, [onClose]);
 
-  const style: React.CSSProperties = {
-    position: "absolute",
-    left: position.x,
-    top: flipBelow ? position.y + 12 : position.y - 8,
-    transform: flipBelow ? "translate(-50%, 0)" : "translate(-50%, -100%)",
-    zIndex: 100,
-  };
+  const style: React.CSSProperties = isMobile
+    ? {
+        position: "fixed",
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 100,
+      }
+    : {
+        position: "absolute",
+        left: position.x,
+        top: flipBelow ? position.y + 12 : position.y - 8,
+        transform: flipBelow ? "translate(-50%, 0)" : "translate(-50%, -100%)",
+        zIndex: 100,
+      };
 
   return (
     <div
