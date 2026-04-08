@@ -121,7 +121,7 @@ export function ForumPageClient({ categories, isAdmin }: Props) {
                 </div>
 
                 {cat.lastTopic && (
-                  <div className="text-right shrink-0 hidden md:block max-w-[200px]">
+                  <div className="text-right shrink-0 hidden md:block max-w-50">
                     <div className="text-xs text-gray-600 truncate">
                       {cat.lastTopic.title}
                     </div>

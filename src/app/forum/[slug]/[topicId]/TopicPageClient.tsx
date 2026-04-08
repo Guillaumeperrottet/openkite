@@ -118,7 +118,7 @@ export function TopicPageClient({ topic, categorySlug, isAdmin }: Props) {
               className="flex-1 border border-gray-300 rounded px-2 py-1 text-lg font-semibold text-gray-900 outline-none focus:border-gray-400"
             />
           ) : (
-            <h1 className="text-lg font-semibold text-gray-900 break-words">
+            <h1 className="text-lg font-semibold text-gray-900 wrap-break-words">
               {topic.title}
             </h1>
           )}
