@@ -54,15 +54,26 @@ model Spot {
 
 /// Synced from Supabase Auth on first login.
 model User {
-  id        String     @id // Supabase auth.users.id (UUID)
-  email     String     @unique
-  name      String?
-  avatarUrl String?
-  createdAt DateTime   @default(now())
-  favorites Favorite[]
-  topics    ForumTopic[]
-  posts     ForumPost[]
-  votes     ForumVote[]
+  id          String          @id // Supabase auth.users.id (UUID)
+  email       String          @unique
+  name        String?
+  avatarUrl   String?
+  createdAt   DateTime        @default(now())
+  favorites   Favorite[]
+  topics      ForumTopic[]
+  posts       ForumPost[]
+  votes       ForumVote[]
+  preferences UserPreference?
+}
+
+/// Per-user UI preferences (map filters, units, etc.)
+model UserPreference {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sportFilter String   @default("ALL") // "ALL" | "KITE" | "PARAGLIDE"
+  useKnots    Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
 }
 
 model Favorite {

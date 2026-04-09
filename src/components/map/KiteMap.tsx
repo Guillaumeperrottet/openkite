@@ -10,6 +10,7 @@ import { windColor, windDirectionLabel, getWindData } from "@/lib/utils";
 import { SpotPopup } from "./SpotPopup";
 import { StationPopup } from "./StationPopup";
 import { useWindOverlay } from "./useWindOverlay";
+import { useAuth } from "@/lib/useAuth";
 
 interface KiteMapProps {
   spots: Spot[];
@@ -60,14 +61,45 @@ export function KiteMap({
   const [loadingStations, setLoadingStations] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   /** true = display speeds in knots (kn), false = km/h */
-  const [useKnots, setUseKnots] = useState(true);
+  const [useKnots, _setUseKnots] = useState(true);
   const useKnotsRef = useRef(true);
+  const setUseKnots = useCallback((v: boolean) => {
+    _setUseKnots(v);
+    fetch("/api/preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ useKnots: v }),
+    }).catch(() => {});
+  }, []);
   const [showWindOverlay, setShowWindOverlay] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
   /** Sport filter: "ALL" | "KITE" | "PARAGLIDE" */
-  const [sportFilter, setSportFilter] = useState<"ALL" | "KITE" | "PARAGLIDE">(
+  const { user } = useAuth();
+  const [sportFilter, _setSportFilter] = useState<"ALL" | "KITE" | "PARAGLIDE">(
     "ALL",
   );
+  const setSportFilter = useCallback((v: "ALL" | "KITE" | "PARAGLIDE") => {
+    _setSportFilter(v);
+    // Persist to server (fire-and-forget)
+    fetch("/api/preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sportFilter: v }),
+    }).catch(() => {});
+  }, []);
+  // Load saved preferences when user is available
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/preferences")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        if (data.sportFilter === "KITE" || data.sportFilter === "PARAGLIDE")
+          _setSportFilter(data.sportFilter);
+        if (typeof data.useKnots === "boolean") _setUseKnots(data.useKnots);
+      })
+      .catch(() => {});
+  }, [user]);
 
   // Station popup state (React-based with history chart)
   const [selectedStation, setSelectedStation] = useState<{
@@ -269,11 +301,17 @@ export function KiteMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    // Restore last map position from sessionStorage (unless an explicit center is given)
+    const saved = !initialCenter && sessionStorage.getItem("map-view");
+    const restored = saved
+      ? (JSON.parse(saved) as { center: [number, number]; zoom: number })
+      : null;
+
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: MAP_STYLE,
-      center: initialCenter ?? [10, 35],
-      zoom: initialCenter ? (initialZoom ?? 12) : 2.5,
+      center: initialCenter ?? restored?.center ?? [10, 35],
+      zoom: initialCenter ? (initialZoom ?? 12) : (restored?.zoom ?? 2.5),
       attributionControl: false,
     });
     map.addControl(new maplibregl.AttributionControl({ compact: true }));
@@ -291,7 +329,8 @@ export function KiteMap({
     map.on("load", () => {
       if (!mounted) return; // effect was cleaned up before load fired
       setMapLoaded(true);
-      if (!initialCenter) geolocate.trigger();
+      // Only auto-geolocate on very first visit (no saved position, no explicit center)
+      if (!initialCenter && !restored) geolocate.trigger();
 
       // Place initial pick marker (e.g. edit mode)
       if (initialCenter && pickMode) {
@@ -878,6 +917,15 @@ export function KiteMap({
       // ─────────────────────────────────────────────────────────────────────
     });
     // ─────────────────────────────────────────────────────────────────────
+
+    // Persist map position to sessionStorage on every move
+    map.on("moveend", () => {
+      const c = map.getCenter();
+      sessionStorage.setItem(
+        "map-view",
+        JSON.stringify({ center: [c.lng, c.lat], zoom: map.getZoom() }),
+      );
+    });
 
     mapRef.current = map;
     return () => {

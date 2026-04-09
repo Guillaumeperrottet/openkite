@@ -224,14 +224,21 @@ export function StationPopup({
           </span>
           <span className="text-[9px] text-gray-400">
             Dernière màj{" "}
-            {history?.length
-              ? new Date(
-                  history[history.length - 1].time + ":00Z",
-                ).toLocaleTimeString("fr", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : time}
+            {(() => {
+              if (!history?.length) return time;
+              // Find last point in the past (history may include forecast points)
+              const now = new Date().toISOString().slice(0, 16);
+              const lastPast = [...history]
+                .reverse()
+                .find((p) => p.time <= now);
+              const d = lastPast
+                ? lastPast.time
+                : history[history.length - 1].time;
+              return new Date(d + ":00Z").toLocaleTimeString("fr", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+            })()}
           </span>
         </div>
         <div className="px-2 pb-2">
