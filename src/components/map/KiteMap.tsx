@@ -47,6 +47,9 @@ export function KiteMap({
   const piouSocketRef = useRef<Socket | null>(null);
   /** All loaded stations (MeteoSwiss + Pioupiou) for nearest-station wind lookup */
   const stationsRef = useRef<WindStation[]>([]);
+  /** GeoJSON features refs for the combined clustered source */
+  const stationFeaturesRef = useRef<GeoJSON.Feature[]>([]);
+  const spotFeaturesRef = useRef<GeoJSON.Feature[]>([]);
 
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
   const [selectedWind, setSelectedWind] = useState<WindData | null>(null);
@@ -188,23 +191,33 @@ export function KiteMap({
   }, []);
 
   /**
-   * Update the station GL layers with fresh data.
-   * Uses WebGL rendering — zero DOM allocation, no jitter on zoom.
+   * Push the combined station + spot features to the unified clustered source.
    */
-  const renderStations = useCallback((stations: WindStation[]) => {
+  const updateCombinedSource = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
-    const source = map.getSource("stations-source") as
+    const source = map.getSource("combined-source") as
       | maplibregl.GeoJSONSource
       | undefined;
-    if (!source) return; // style not loaded yet
+    if (!source) return;
 
     source.setData({
       type: "FeatureCollection",
-      features: stations.map((s) => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [s.lng, s.lat] },
+      features: [...stationFeaturesRef.current, ...spotFeaturesRef.current],
+    });
+  }, []);
+
+  /**
+   * Update the station GL layers with fresh data.
+   * Uses WebGL rendering — zero DOM allocation, no jitter on zoom.
+   */
+  const renderStations = useCallback(
+    (stations: WindStation[]) => {
+      stationFeaturesRef.current = stations.map((s) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [s.lng, s.lat] },
         properties: {
+          featureType: "station",
           id: s.id,
           name: s.name,
           windSpeedKmh: s.windSpeedKmh,
@@ -217,55 +230,49 @@ export function KiteMap({
           dirLabel: windDirectionLabel(s.windDirection),
           source: s.source,
         },
-      })),
-    });
-  }, []);
+      }));
+      updateCombinedSource();
+    },
+    [updateCombinedSource],
+  );
 
   /**
-   * Push spot data to the "spots-source" GeoJSON layer.
+   * Push spot data to the combined clustered source.
    * windSpeedKmh defaults to 0 (gray) — updated later when wind data arrives.
    */
   const renderSpots = useCallback(
     (spotList: Spot[], windMap?: Map<string, number>) => {
-      const map = mapRef.current;
-      if (!map) return;
-      const source = map.getSource("spots-source") as
-        | maplibregl.GeoJSONSource
-        | undefined;
-      if (!source) return;
-
-      source.setData({
-        type: "FeatureCollection",
-        features: spotList.map((s) => ({
-          type: "Feature" as const,
-          geometry: {
-            type: "Point" as const,
-            coordinates: [s.longitude, s.latitude],
-          },
-          properties: {
-            id: s.id,
-            name: s.name,
-            description: s.description,
-            country: s.country,
-            region: s.region,
-            difficulty: s.difficulty,
-            waterType: s.waterType,
-            minWindKmh: s.minWindKmh,
-            maxWindKmh: s.maxWindKmh,
-            bestMonths: JSON.stringify(s.bestMonths),
-            hazards: s.hazards,
-            access: s.access,
-            sportType: s.sportType,
-            nearestStationId: s.nearestStationId,
-            createdAt: s.createdAt,
-            updatedAt: s.updatedAt,
-            images: JSON.stringify(s.images),
-            windSpeedKmh: windMap?.get(s.id) ?? 0,
-          },
-        })),
-      });
+      spotFeaturesRef.current = spotList.map((s) => ({
+        type: "Feature" as const,
+        geometry: {
+          type: "Point" as const,
+          coordinates: [s.longitude, s.latitude],
+        },
+        properties: {
+          featureType: "spot",
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          country: s.country,
+          region: s.region,
+          difficulty: s.difficulty,
+          waterType: s.waterType,
+          minWindKmh: s.minWindKmh,
+          maxWindKmh: s.maxWindKmh,
+          bestMonths: JSON.stringify(s.bestMonths),
+          hazards: s.hazards,
+          access: s.access,
+          sportType: s.sportType,
+          nearestStationId: s.nearestStationId,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt,
+          images: JSON.stringify(s.images),
+          windSpeedKmh: windMap?.get(s.id) ?? 0,
+        },
+      }));
+      updateCombinedSource();
     },
-    [],
+    [updateCombinedSource],
   );
 
   /** Fetch stations and render them */
@@ -479,10 +486,87 @@ export function KiteMap({
       });
       // ─────────────────────────────────────────────────────────────────────
 
-      // Empty GeoJSON source — data is pushed in when user enables the toggle
-      map.addSource("stations-source", {
+      // ── Combined GeoJSON source — spots + stations clustered together ─────
+      map.addSource("combined-source", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
+        cluster: !pickMode,
+        clusterMaxZoom: 7,
+        clusterRadius: 60,
+      });
+
+      // ── Cluster layers (spots + stations merged) ────────────────────────
+      map.addLayer({
+        id: "spots-clusters",
+        type: "circle",
+        source: "combined-source",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": [
+            "step",
+            ["get", "point_count"],
+            "#3b82f6", // blue < 20
+            20,
+            "#2563eb", // darker blue 20-100
+            100,
+            "#1e40af", // navy 100+
+          ],
+          "circle-radius": [
+            "step",
+            ["get", "point_count"],
+            14, // < 20
+            20,
+            18, // 20-100
+            100,
+            24, // 100+
+          ],
+          "circle-stroke-color": "rgba(255,255,255,0.7)",
+          "circle-stroke-width": 2,
+        },
+      });
+
+      map.addLayer({
+        id: "spots-cluster-count",
+        type: "symbol",
+        source: "combined-source",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": "{point_count_abbreviated}",
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-size": 11,
+          "text-allow-overlap": true,
+        },
+        paint: {
+          "text-color": "#ffffff",
+        },
+      });
+
+      // Click on cluster → zoom in
+      map.on("click", "spots-clusters", (e) => {
+        const features = map.queryRenderedFeatures(e.point, {
+          layers: ["spots-clusters"],
+        });
+        if (!features.length) return;
+        const clusterId = features[0].properties?.cluster_id;
+        const source = map.getSource(
+          "combined-source",
+        ) as maplibregl.GeoJSONSource;
+        source.getClusterExpansionZoom(clusterId).then((zoom) => {
+          map.easeTo({
+            center: (features[0].geometry as GeoJSON.Point).coordinates as [
+              number,
+              number,
+            ],
+            zoom: zoom + 0.5,
+          });
+        });
+      });
+
+      map.on("mouseenter", "spots-clusters", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "spots-clusters", () => {
+        map.getCanvas().style.cursor = "";
       });
 
       // Circle background — Windguru-style palette (thresholds in km/h)
@@ -490,7 +574,12 @@ export function KiteMap({
       map.addLayer({
         id: "stations-circle",
         type: "circle",
-        source: "stations-source",
+        source: "combined-source",
+        filter: [
+          "all",
+          ["!", ["has", "point_count"]],
+          ["==", ["get", "featureType"], "station"],
+        ],
         paint: {
           "circle-radius": [
             "interpolate",
@@ -532,7 +621,12 @@ export function KiteMap({
         {
           id: "stations-tail",
           type: "symbol",
-          source: "stations-source",
+          source: "combined-source",
+          filter: [
+            "all",
+            ["!", ["has", "point_count"]],
+            ["==", ["get", "featureType"], "station"],
+          ],
           layout: {
             "icon-image": "wind-tail",
             "icon-rotate": ["get", "rotation"],
@@ -559,7 +653,12 @@ export function KiteMap({
       map.addLayer({
         id: "stations-speed-label",
         type: "symbol",
-        source: "stations-source",
+        source: "combined-source",
+        filter: [
+          "all",
+          ["!", ["has", "point_count"]],
+          ["==", ["get", "featureType"], "station"],
+        ],
         layout: {
           "text-field": [
             "to-string",
@@ -592,8 +691,13 @@ export function KiteMap({
         {
           id: "stations-pulse",
           type: "circle",
-          source: "stations-source",
-          filter: [">=", ["get", "windSpeedKmh"], 22],
+          source: "combined-source",
+          filter: [
+            "all",
+            ["!", ["has", "point_count"]],
+            ["==", ["get", "featureType"], "station"],
+            [">=", ["get", "windSpeedKmh"], 22],
+          ],
           paint: {
             "circle-radius": [
               "interpolate",
@@ -671,100 +775,16 @@ export function KiteMap({
         map.getCanvas().style.cursor = "";
       });
 
-      // ── Spot GeoJSON layers (with clustering) ────────────────────────────
-      map.addSource("spots-source", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-        // Disable clustering in pick/plan mode (few results, need individual spots)
-        cluster: !pickMode,
-        clusterMaxZoom: 8,
-        clusterRadius: 40,
-      });
-
-      // ── Cluster layers ──────────────────────────────────────────────────
-      map.addLayer({
-        id: "spots-clusters",
-        type: "circle",
-        source: "spots-source",
-        filter: ["has", "point_count"],
-        paint: {
-          "circle-color": [
-            "step",
-            ["get", "point_count"],
-            "#3b82f6", // blue < 10
-            10,
-            "#2563eb", // darker blue 10-50
-            50,
-            "#1d4ed8", // deep blue 50-200
-            200,
-            "#1e40af", // navy 200+
-          ],
-          "circle-radius": [
-            "step",
-            ["get", "point_count"],
-            18, // < 10
-            10,
-            22, // 10-50
-            50,
-            28, // 50-200
-            200,
-            34, // 200+
-          ],
-          "circle-stroke-color": "rgba(255,255,255,0.7)",
-          "circle-stroke-width": 2,
-        },
-      });
-
-      map.addLayer({
-        id: "spots-cluster-count",
-        type: "symbol",
-        source: "spots-source",
-        filter: ["has", "point_count"],
-        layout: {
-          "text-field": "{point_count_abbreviated}",
-          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
-          "text-size": 13,
-          "text-allow-overlap": true,
-        },
-        paint: {
-          "text-color": "#ffffff",
-        },
-      });
-
-      // Click on cluster → zoom in
-      map.on("click", "spots-clusters", (e) => {
-        const features = map.queryRenderedFeatures(e.point, {
-          layers: ["spots-clusters"],
-        });
-        if (!features.length) return;
-        const clusterId = features[0].properties?.cluster_id;
-        const source = map.getSource(
-          "spots-source",
-        ) as maplibregl.GeoJSONSource;
-        source.getClusterExpansionZoom(clusterId).then((zoom) => {
-          map.easeTo({
-            center: (features[0].geometry as GeoJSON.Point).coordinates as [
-              number,
-              number,
-            ],
-            zoom: zoom + 0.5,
-          });
-        });
-      });
-
-      map.on("mouseenter", "spots-clusters", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-      map.on("mouseleave", "spots-clusters", () => {
-        map.getCanvas().style.cursor = "";
-      });
-
       // ── Unclustered spot circles — green (KITE) / orange (PARAGLIDE) ────
       map.addLayer({
         id: "spots-circle",
         type: "circle",
-        source: "spots-source",
-        filter: ["!", ["has", "point_count"]],
+        source: "combined-source",
+        filter: [
+          "all",
+          ["!", ["has", "point_count"]],
+          ["==", ["get", "featureType"], "spot"],
+        ],
         paint: {
           "circle-radius": 8,
           "circle-color": [
@@ -787,10 +807,11 @@ export function KiteMap({
         {
           id: "spots-pulse",
           type: "circle",
-          source: "spots-source",
+          source: "combined-source",
           filter: [
             "all",
             ["!", ["has", "point_count"]],
+            ["==", ["get", "featureType"], "spot"],
             [">=", ["get", "windSpeedKmh"], 22],
           ],
           paint: {
@@ -815,7 +836,7 @@ export function KiteMap({
       map.addLayer({
         id: "spots-highlight",
         type: "circle",
-        source: "spots-source",
+        source: "combined-source",
         filter: ["==", ["get", "id"], ""],
         paint: {
           "circle-radius": 16,
@@ -1073,11 +1094,9 @@ export function KiteMap({
   useEffect(() => {
     if (!mapLoaded) return; // GL source not ready yet
     if (!showStations) {
-      // Clear station data from GL source (keeps layers, just empties the data)
-      const src = mapRef.current?.getSource("stations-source") as
-        | maplibregl.GeoJSONSource
-        | undefined;
-      src?.setData({ type: "FeatureCollection", features: [] });
+      // Clear station features from the combined source (keeps spot features)
+      stationFeaturesRef.current = [];
+      updateCombinedSource();
       setStationsUpdatedAt(null);
       if (stationIntervalRef.current) {
         clearInterval(stationIntervalRef.current);
@@ -1098,7 +1117,7 @@ export function KiteMap({
         stationIntervalRef.current = null;
       }
     };
-  }, [showStations, loadStations, mapLoaded]);
+  }, [showStations, loadStations, mapLoaded, updateCombinedSource]);
 
   // ── Pioupiou Push API — live WebSocket updates for Pioupiou stations ──────
   useEffect(() => {
