@@ -18,6 +18,10 @@ interface KiteMapProps {
   onPickLocation?: (lat: number, lng: number) => void;
   /** Spot ID to highlight (e.g. on hover from results panel) */
   highlightSpotId?: string | null;
+  /** Initial map center [lng, lat] (e.g. for edit mode) */
+  initialCenter?: [number, number];
+  /** Initial zoom when initialCenter is set */
+  initialZoom?: number;
 }
 
 const MAP_STYLE =
@@ -29,6 +33,8 @@ export function KiteMap({
   pickMode = false,
   onPickLocation,
   highlightSpotId,
+  initialCenter,
+  initialZoom,
 }: KiteMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -266,8 +272,8 @@ export function KiteMap({
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: MAP_STYLE,
-      center: [10, 35],
-      zoom: 2.5,
+      center: initialCenter ?? [10, 35],
+      zoom: initialCenter ? (initialZoom ?? 12) : 2.5,
       attributionControl: false,
     });
     map.addControl(new maplibregl.AttributionControl({ compact: true }));
@@ -280,12 +286,27 @@ export function KiteMap({
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     map.addControl(geolocate, "top-right");
 
-    // Auto-trigger geolocation once the map is ready
+    // Auto-trigger geolocation once the map is ready (skip if we have an initial center)
     let mounted = true;
     map.on("load", () => {
       if (!mounted) return; // effect was cleaned up before load fired
       setMapLoaded(true);
-      geolocate.trigger();
+      if (!initialCenter) geolocate.trigger();
+
+      // Place initial pick marker (e.g. edit mode)
+      if (initialCenter && pickMode) {
+        const el = document.createElement("div");
+        el.className = "pick-marker";
+        el.style.cssText = `
+          width:20px;height:20px;border-radius:50%;
+          background:#f59e0b;border:3px solid white;
+          box-shadow:0 2px 8px rgba(0,0,0,0.5);
+          cursor:crosshair;
+        `;
+        pickMarkerRef.current = new maplibregl.Marker({ element: el })
+          .setLngLat(initialCenter)
+          .addTo(map);
+      }
 
       // ── Station GL layers ─────────────────────────────────────────────────
       // Neutralise MapLibre's default popup white background+tip via injected CSS

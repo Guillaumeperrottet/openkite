@@ -290,6 +290,12 @@ export function CreateSpotForm({ initialData }: Props = {}) {
           spots={[]}
           pickMode={true}
           onPickLocation={handlePickLocation}
+          initialCenter={
+            initialData
+              ? [initialData.longitude, initialData.latitude]
+              : undefined
+          }
+          initialZoom={13}
         />
         {lat && lng && (
           <div className="absolute bottom-4 left-4 z-10 bg-white/95 backdrop-blur rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 shadow-lg">
@@ -405,6 +411,49 @@ export function CreateSpotForm({ initialData }: Props = {}) {
                 {...register("region")}
                 placeholder="Auto-rempli"
                 className={inputClass}
+              />
+            </div>
+          </div>
+          {/* Coordinates (manual edit) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Latitude</label>
+              <Controller
+                control={control}
+                name="latitude"
+                render={({ field }) => (
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      if (!isNaN(v)) field.onChange(v);
+                    }}
+                    placeholder="46.9500"
+                    className={inputClass}
+                  />
+                )}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Longitude</label>
+              <Controller
+                control={control}
+                name="longitude"
+                render={({ field }) => (
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      if (!isNaN(v)) field.onChange(v);
+                    }}
+                    placeholder="7.0160"
+                    className={inputClass}
+                  />
+                )}
               />
             </div>
           </div>
