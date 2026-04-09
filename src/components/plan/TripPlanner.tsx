@@ -1410,7 +1410,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
                                 <button
                                   type="button"
                                   key={day.date}
-                                  className="flex-1 flex flex-col items-center gap-0.5 min-w-[1.75rem] cursor-pointer"
+                                  className="flex-1 flex flex-col items-center gap-0.5 min-w-7 cursor-pointer"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
