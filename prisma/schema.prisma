@@ -122,11 +122,18 @@ model StationMeasurement {
   windDirection  Float    // degrees 0-360
   gustsKmh       Float?
   temperatureC   Float?
-  source         String   @default("meteoswiss") // "meteoswiss" | "pioupiou"
+  source         String   @default("meteoswiss") // "meteoswiss" | "pioupiou" | "netatmo"
   createdAt      DateTime @default(now())
 
   @@unique([stationId, time])
   @@index([stationId, time])
+}
+
+/// Key-value store for internal config (e.g. Netatmo rotating refresh token).
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 // ─── Forum ────────────────────────────────────────────────

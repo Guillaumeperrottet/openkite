@@ -29,7 +29,7 @@ export interface WindStation {
   /** ISO 8601 datetime of the measurement, e.g. "2026-04-01T18:20:00Z" */
   updatedAt: string;
   /** Data source — used for attribution and history fetching */
-  source: "meteoswiss" | "pioupiou";
+  source: "meteoswiss" | "pioupiou" | "netatmo";
 }
 
 // ─── Coordinate conversion ────────────────────────────────────────────────────

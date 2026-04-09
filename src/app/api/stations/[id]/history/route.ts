@@ -13,7 +13,8 @@ import { fetchMeteoSwissStations } from "@/lib/stations";
  * GET /api/stations/:id/history
  *
  * Returns 48h wind history for a station.
- * Supports both MeteoSwiss (e.g. "BER") and Pioupiou (e.g. "piou-110") stations.
+ * Supports MeteoSwiss (e.g. "BER"), Pioupiou (e.g. "piou-110"),
+ * and Netatmo (e.g. "ntm-70:ee:50:b9:01:56") stations.
  */
 export async function GET(
   _req: Request,
@@ -25,6 +26,59 @@ export async function GET(
   const cacheHeaders = {
     "Cache-Control": "public, s-maxage=600, stale-while-revalidate=120",
   };
+
+  // ── Netatmo station (history from DB measurements + Open-Meteo forecast) ──
+  if (stationId.startsWith("ntm-")) {
+    try {
+      // Try DB-stored measurements first (recorded by cron)
+      const history = await fetchWindHistoryStation(stationId);
+
+      // If we have DB history, get forecast for the station's coordinates
+      if (history.length > 0) {
+        // Extract coords from the latest Netatmo fetch
+        const { fetchNetatmoStations } = await import("@/lib/netatmo");
+        const stations = await fetchNetatmoStations().catch(() => []);
+        const station = stations.find((s) => s.id === stationId);
+        const forecast = station
+          ? await fetchWindForecast15min(station.lat, station.lng).catch(
+              () => [],
+            )
+          : [];
+        const lastTime =
+          history.length > 0 ? history[history.length - 1].time : "";
+        const futurePoints = forecast.filter((p) => p.time > lastTime);
+        return NextResponse.json([...history, ...futurePoints], {
+          headers: cacheHeaders,
+        });
+      }
+
+      // Fallback: no DB data yet, use Open-Meteo by coords
+      const { fetchNetatmoStations } = await import("@/lib/netatmo");
+      const stations = await fetchNetatmoStations();
+      const station = stations.find((s) => s.id === stationId);
+      if (!station) {
+        return NextResponse.json(
+          { error: "Netatmo station not found" },
+          { status: 404 },
+        );
+      }
+      const [omHistory, forecast] = await Promise.all([
+        fetchWindHistory(station.lat, station.lng),
+        fetchWindForecast15min(station.lat, station.lng).catch(() => []),
+      ]);
+      const lastTime =
+        omHistory.length > 0 ? omHistory[omHistory.length - 1].time : "";
+      const futurePoints = forecast.filter((p) => p.time > lastTime);
+      return NextResponse.json([...omHistory, ...futurePoints], {
+        headers: cacheHeaders,
+      });
+    } catch {
+      return NextResponse.json(
+        { error: "Netatmo history temporarily unavailable" },
+        { status: 503 },
+      );
+    }
+  }
 
   // ── Pioupiou station ────────────────────────────────────────────────
   if (stationId.startsWith("piou-")) {

@@ -108,7 +108,12 @@ export function StationPopup({
   });
 
   const isPioupiou = station.source === "pioupiou";
-  const sourceLabel = isPioupiou ? "OpenWindMap" : "MeteoSwiss";
+  const isNetatmo = station.source === "netatmo";
+  const sourceLabel = isPioupiou
+    ? "OpenWindMap"
+    : isNetatmo
+      ? "Netatmo"
+      : "MeteoSwiss";
   const sourceFreq = isPioupiou ? "~4 min" : "10 min";
 
   // Position: compute actual top clamped to viewport
@@ -265,12 +270,21 @@ export function StationPopup({
         <span className="text-[10px] text-gray-400">
           {sourceLabel} · Toutes les {sourceFreq} ·
         </span>
-        {!isPioupiou ? (
+        {!isPioupiou && !isNetatmo ? (
           <a
             href={`/stations/${encodeURIComponent(station.id)}`}
             className="text-xs font-semibold text-sky-500 hover:text-sky-600 inline-flex items-center gap-1 transition-colors"
           >
             Toutes les données <ExternalLink className="h-3 w-3" />
+          </a>
+        ) : isNetatmo ? (
+          <a
+            href="https://weathermap.netatmo.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-gray-400 hover:text-sky-500 inline-flex items-center gap-1 transition-colors"
+          >
+            weathermap.netatmo.com <ExternalLink className="h-2.5 w-2.5" />
           </a>
         ) : (
           <a
