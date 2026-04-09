@@ -222,24 +222,22 @@ export function Navbar() {
         </nav>
       </header>
 
-      {/* Mobile search overlay */}
+      {/* Mobile search — inline in a second row below the navbar */}
       {mobileSearch && (
-        <div className="fixed inset-0 z-[60] bg-white sm:hidden">
-          <div className="flex items-center h-14 px-3 gap-2 border-b border-gray-100">
-            <div className="flex-1">
-              <SearchBar
-                favoriteIds={favoriteIds}
-                autoFocus
-                onNavigate={() => setMobileSearch(false)}
-              />
-            </div>
-            <button
-              onClick={() => setMobileSearch(false)}
-              className="flex items-center justify-center h-10 w-10 rounded-lg text-gray-500 hover:text-gray-900"
-            >
-              <X className="h-5 w-5" />
-            </button>
+        <div className="fixed top-14 left-0 right-0 z-50 flex items-center h-12 px-3 gap-2 bg-white border-b border-gray-100 shadow-sm sm:hidden">
+          <div className="flex-1">
+            <SearchBar
+              favoriteIds={favoriteIds}
+              autoFocus
+              onNavigate={() => setMobileSearch(false)}
+            />
           </div>
+          <button
+            onClick={() => setMobileSearch(false)}
+            className="flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:text-gray-900"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
     </>

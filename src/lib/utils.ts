@@ -75,11 +75,10 @@ export function getWindData(
   };
 }
 
-/** Arrow unicode for wind direction */
+/** Arrow unicode for wind direction — points where the wind BLOWS TO */
 export function windArrow(deg: number): string {
   const arrows = ["↓", "↙", "←", "↖", "↑", "↗", "→", "↘"];
-  // wind direction = where wind comes FROM, arrow shows where it blows TO
-  return arrows[Math.round(((deg + 180) % 360) / 45) % 8];
+  return arrows[Math.round(deg / 45) % 8];
 }
 
 export const MONTHS = [
