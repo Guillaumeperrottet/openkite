@@ -117,4 +117,4 @@ On démarre vide intentionnellement — les spots sont ajoutés par la communaut
 
 ## 📄 Licence
 
-En contribuant, tu acceptes que ton code soit sous licence MIT.
+En contribuant, tu acceptes que ton code soit sous licence AGPL v3.

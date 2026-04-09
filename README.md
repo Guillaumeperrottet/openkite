@@ -5,7 +5,7 @@
 [openwind.ch](https://openwind.ch)
 
 ![Status](https://img.shields.io/badge/status-alpha-orange)
-![License](https://img.shields.io/badge/license-MIT-blue)
+![License](https://img.shields.io/badge/license-AGPL--v3-blue)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 
 ---
@@ -131,4 +131,4 @@ Voir [CONTRIBUTING.md](./CONTRIBUTING.md) — toute aide est la bienvenue !
 
 ## Licence
 
-[MIT](./LICENSE) — libre d'utiliser, modifier et héberger.
+[AGPL v3](./LICENSE) — libre d'utiliser, modifier et héberger. Toute version modifiée hébergée publiquement doit publier son code source.
