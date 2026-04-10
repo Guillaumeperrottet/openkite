@@ -25,7 +25,7 @@ export function useNearbyStations(initialLat?: number, initialLng?: number) {
         dist: haversineKm(lat, lng, s.lat, s.lng),
       }));
       withDist.sort((a, b) => a.dist - b.dist);
-      setNearbyStations(withDist.slice(0, 5));
+      setNearbyStations(withDist.filter((s) => s.dist <= 10).slice(0, 5));
     } catch {
       // silent
     } finally {

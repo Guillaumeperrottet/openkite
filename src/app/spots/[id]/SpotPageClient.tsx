@@ -19,6 +19,7 @@ import {
   Pencil,
   Images,
   Star,
+  Radio,
 } from "lucide-react";
 import { WindCompass } from "@/components/spot/WindCompass";
 import { WindDirectionRose } from "@/components/spot/WindDirectionRose";
@@ -26,6 +27,8 @@ import { WindChart } from "@/components/spot/WindChart";
 import { WindHistoryChart } from "@/components/spot/WindHistoryChart";
 import { ForecastTable } from "@/components/spot/ForecastTable";
 import { WindArchives } from "@/components/spot/WindArchives";
+import { NearbyStationsPanel } from "@/components/spot/NearbyStationsPanel";
+import { useNearbyStations } from "@/components/spot/useNearbyStations";
 import { SpotLightbox } from "@/components/spot/SpotLightbox";
 import { windConditionLabel, windDirectionLabel, MONTHS } from "@/lib/utils";
 import { roundKnots } from "@/lib/forecast";
@@ -86,6 +89,10 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
   const router = useRouter();
   const { favoriteIds, toggleFavorite } = useFavContext();
   const isFav = favoriteIds.has(spot.id);
+  const { nearbyStations, loadingStations } = useNearbyStations(
+    spot.latitude,
+    spot.longitude,
+  );
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
@@ -199,6 +206,14 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                 )}
                 {isKite ? "Kitesurf" : "Parapente"}
               </span>
+              <span>·</span>
+              <a
+                href="#balises"
+                className="flex items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Radio className="h-3.5 w-3.5" />
+                Balises à proximité
+              </a>
             </div>
 
             {/* Badges */}
@@ -546,6 +561,19 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
             Prévisions temporairement indisponibles
           </div>
         )}
+
+        {/* ── Balises à proximité ─────────────────────────────── */}
+        <div id="balises" className="mb-10 scroll-mt-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
+            <Radio className="h-4 w-4 text-gray-500" />
+            Balises à proximité
+          </h2>
+          <NearbyStationsPanel
+            stations={nearbyStations}
+            loading={loadingStations}
+            useKnots={useKnots}
+          />
+        </div>
 
         {/* ── Archives vent historiques ────────────────────────── */}
         <div className="mb-10">
