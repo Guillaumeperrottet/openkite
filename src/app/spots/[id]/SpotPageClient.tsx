@@ -17,9 +17,6 @@ import {
   Mountain,
   TrendingUp,
   Pencil,
-  X,
-  ChevronLeft,
-  ChevronRight,
   Images,
   Star,
 } from "lucide-react";
@@ -31,6 +28,7 @@ import { WindChart } from "@/components/spot/WindChart";
 import { WindHistoryChart } from "@/components/spot/WindHistoryChart";
 import { ForecastTable } from "@/components/spot/ForecastTable";
 import { WindArchives } from "@/components/spot/WindArchives";
+import { SpotLightbox } from "@/components/spot/SpotLightbox";
 import { windConditionLabel, windDirectionLabel, MONTHS } from "@/lib/utils";
 import { roundKnots } from "@/lib/forecast";
 import { useFavContext } from "@/lib/FavContext";
@@ -90,24 +88,6 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
   const router = useRouter();
   const { favoriteIds, toggleFavorite } = useFavContext();
   const isFav = favoriteIds.has(spot.id);
-
-  // Close lightbox on Escape, navigate with arrow keys
-  useEffect(() => {
-    if (lightboxIndex === null) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLightboxIndex(null);
-      if (e.key === "ArrowRight")
-        setLightboxIndex((i) =>
-          i !== null ? (i + 1) % spot.images.length : null,
-        );
-      if (e.key === "ArrowLeft")
-        setLightboxIndex((i) =>
-          i !== null ? (i - 1 + spot.images.length) % spot.images.length : null,
-        );
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [lightboxIndex, spot.images.length]);
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
@@ -519,100 +499,13 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
 
         {/* ── Lightbox modal ─────────────────────────────────────── */}
         {lightboxIndex !== null && spot.images.length > 0 && (
-          <div
-            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
-            onClick={() => setLightboxIndex(null)}
-          >
-            {/* Close */}
-            <button
-              className="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
-              onClick={() => setLightboxIndex(null)}
-              aria-label="Fermer"
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            {/* Counter */}
-            <span className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-sm">
-              {lightboxIndex + 1} / {spot.images.length}
-            </span>
-
-            {/* Prev */}
-            {spot.images.length > 1 && (
-              <button
-                className="absolute left-4 text-white/70 hover:text-white p-3 rounded-full hover:bg-white/10 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxIndex(
-                    (lightboxIndex - 1 + spot.images.length) %
-                      spot.images.length,
-                  );
-                }}
-                aria-label="Précédent"
-              >
-                <ChevronLeft className="h-7 w-7" />
-              </button>
-            )}
-
-            {/* Image */}
-            <div
-              className="max-w-4xl max-h-[85vh] mx-16 flex flex-col items-center gap-3"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={spot.images[lightboxIndex].url}
-                alt={spot.images[lightboxIndex].caption || spot.name}
-                className="max-h-[78vh] max-w-full object-contain rounded-lg"
-              />
-              {spot.images[lightboxIndex].caption && (
-                <p className="text-white/60 text-sm text-center">
-                  {spot.images[lightboxIndex].caption}
-                </p>
-              )}
-            </div>
-
-            {/* Next */}
-            {spot.images.length > 1 && (
-              <button
-                className="absolute right-4 text-white/70 hover:text-white p-3 rounded-full hover:bg-white/10 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxIndex((lightboxIndex + 1) % spot.images.length);
-                }}
-                aria-label="Suivant"
-              >
-                <ChevronRight className="h-7 w-7" />
-              </button>
-            )}
-
-            {/* Thumbnail strip */}
-            {spot.images.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 max-w-[90vw] overflow-x-auto px-2">
-                {spot.images.map((img, idx) => (
-                  <button
-                    key={img.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightboxIndex(idx);
-                    }}
-                    className={`shrink-0 w-14 h-10 rounded-md overflow-hidden border-2 transition-colors ${
-                      idx === lightboxIndex
-                        ? "border-sky-400"
-                        : "border-transparent opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={img.url}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <SpotLightbox
+            images={spot.images}
+            currentIndex={lightboxIndex}
+            spotName={spot.name}
+            onClose={() => setLightboxIndex(null)}
+            onNavigate={setLightboxIndex}
+          />
         )}
 
         {/* ── Graphique vent · 7 jours ───────────────────────────── */}

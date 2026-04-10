@@ -4,14 +4,18 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { KiteMap } from "@/components/map/KiteMap";
 import { PlanFilters } from "@/components/plan/PlanFilters";
+import { SpotResultCard } from "@/components/plan/SpotResultCard";
+import {
+  useBottomSheet,
+  SNAP_PEEK,
+  SNAP_HALF,
+  SNAP_FULL,
+} from "@/components/plan/useBottomSheet";
 import { Button } from "@/components/ui/Button";
-import { windColor, windConditionLabel } from "@/lib/utils";
 import type { SpotWithForecast, SportType } from "@/types";
-import Link from "next/link";
 import {
   MapPin,
   Wind,
-  Clock,
   Navigation,
   Locate,
   AlertTriangle,
@@ -27,7 +31,6 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-// Score 0–100 → display color
 function scoreColor(score: number): string {
   if (score >= 70) return "#2e7d32";
   if (score >= 45) return "#f59e0b";
@@ -46,25 +49,6 @@ const toISO = (offset: number) => {
   d.setDate(d.getDate() + offset);
   return d.toISOString().split("T")[0];
 };
-
-// ── Bottom sheet snap positions (fraction of viewport height) ──
-const SNAP_PEEK = 0.08;
-const SNAP_HALF = 0.5;
-const SNAP_FULL = 0.92;
-const SNAPS = [SNAP_PEEK, SNAP_HALF, SNAP_FULL];
-
-function closestSnap(frac: number): number {
-  let best = SNAPS[0];
-  let bestDist = Math.abs(frac - best);
-  for (const s of SNAPS) {
-    const d = Math.abs(frac - s);
-    if (d < bestDist) {
-      best = s;
-      bestDist = d;
-    }
-  }
-  return best;
-}
 
 export function TripPlanner({ searchParams }: TripPlannerProps) {
   const router = useRouter();
@@ -101,47 +85,39 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
 
   // Mobile bottom sheet (continuous drag)
   const hasAutoSearch = !!searchParams?.startDate;
-  const [sheetFrac, setSheetFrac] = useState(
-    hasAutoSearch ? SNAP_PEEK : SNAP_FULL,
-  );
-  const [isDragging, setIsDragging] = useState(false);
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const dragStartY = useRef(0);
-  const dragStartFrac = useRef(0);
-  const viewportH = useRef(
-    typeof window !== "undefined" ? window.innerHeight : 800,
-  );
+  const {
+    sheetFrac,
+    setSheetFrac,
+    isDragging,
+    sheetRef,
+    updateViewportHeight,
+    handleDragStart,
+    handleDragMove,
+    handleDragEnd,
+    handleSheetToggle,
+  } = useBottomSheet(hasAutoSearch ? SNAP_PEEK : SNAP_FULL);
 
   // Mobile inline filters — open by default on fresh visit
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(!hasAutoSearch);
   const [isMobile, setIsMobile] = useState(false);
-
-  // Score detail popover (tap-to-toggle for touch)
-  const [scoreDetailId, setScoreDetailId] = useState<string | null>(null);
 
   // Selected day override per spot (click day circle → see that day's data)
   const [selectedDayMap, setSelectedDayMap] = useState<Record<string, number>>(
     {},
   );
 
-  // Help tooltip ("?" on each card)
-  const [helpTooltipId, setHelpTooltipId] = useState<string | null>(null);
-
-  // Hovered forecast bar cell: "spotId-hourIndex" → show inline label
-  const [hoveredBarCell, setHoveredBarCell] = useState<string | null>(null);
-
   // Auto-search on mount if URL had params
   const [didAutoSearch, setDidAutoSearch] = useState(false);
 
   useEffect(() => {
     const onResize = () => {
-      viewportH.current = window.innerHeight;
+      updateViewportHeight();
       setIsMobile(window.innerWidth < 1024);
     };
     onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, []);
+  }, [updateViewportHeight]);
 
   useEffect(() => {
     if (didAutoSearch) return;
@@ -366,39 +342,6 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
   ]
     .filter(Boolean)
     .join(" · ");
-
-  // ── Fluid bottom sheet drag ──
-  const handleDragStart = (clientY: number) => {
-    setIsDragging(true);
-    dragStartY.current = clientY;
-    dragStartFrac.current = sheetFrac;
-  };
-
-  const handleDragMove = (clientY: number) => {
-    if (!isDragging) return;
-    const deltaY = dragStartY.current - clientY;
-    const deltaFrac = deltaY / viewportH.current;
-    const newFrac = Math.max(
-      SNAP_PEEK,
-      Math.min(SNAP_FULL, dragStartFrac.current + deltaFrac),
-    );
-    setSheetFrac(newFrac);
-  };
-
-  const handleDragEnd = (clientY: number) => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    const deltaY = dragStartY.current - clientY;
-    const velocity = deltaY / viewportH.current;
-    const biasedFrac = sheetFrac + velocity * 0.3;
-    setSheetFrac(closestSnap(biasedFrac));
-  };
-
-  const handleSheetToggle = () => {
-    if (sheetFrac < SNAP_HALF - 0.05) setSheetFrac(SNAP_HALF);
-    else if (sheetFrac < SNAP_FULL - 0.05) setSheetFrac(SNAP_FULL);
-    else setSheetFrac(SNAP_PEEK);
-  };
 
   // First result for peek
   const firstResult = sorted[0] ?? null;
@@ -1020,440 +963,22 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
               sorted.map((spot) => {
                 const activeDayIdx =
                   selectedDayMap[spot.id] ?? spot.bestDayIndex ?? 0;
-                const activeDay = spot.days?.[activeDayIdx];
-                const bestDay = activeDay;
-                const sc = activeDay?.score ?? spot.bestScore ?? 0;
-                const isForecastError = spot.forecastError;
-                const showDetail = scoreDetailId === spot.id;
-
-                if (!bestDay && !isForecastError) return null;
-                const color = bestDay
-                  ? windColor(bestDay.peakWindKmh)
-                  : "#d1d5db";
 
                 return (
-                  <div
+                  <SpotResultCard
                     key={spot.id}
-                    className="rounded-xl bg-white border border-gray-200 hover:border-sky-400/60 hover:shadow-sm transition-all"
-                    onMouseEnter={() => setHoveredSpotId(spot.id)}
-                    onMouseLeave={() => setHoveredSpotId(null)}
-                  >
-                    <Link href={`/spots/${spot.id}`} className="block p-3">
-                      {/* Header */}
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-gray-900 text-sm truncate">
-                            {spot.name}
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {[spot.region, spot.country]
-                              .filter(Boolean)
-                              .join(", ")}
-                            {hasLocation && (
-                              <>
-                                {" · "}
-                                {Math.round(spot.distanceKm)} km
-                              </>
-                            )}
-                            {" · "}
-                            {spot.sportType === "KITE" ? "🪁" : "🪂"}
-                            {spot.dataSource === "archive" && (
-                              <span className="text-amber-500 ml-0.5">
-                                {" 📊"}
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                        {/* Score badge — tap toggles detail */}
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setScoreDetailId(showDetail ? null : spot.id);
-                            }}
-                            className="shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center text-white"
-                            style={{
-                              background: isForecastError
-                                ? "#9ca3af"
-                                : scoreColor(sc),
-                            }}
-                          >
-                            {isForecastError ? (
-                              <AlertTriangle className="h-4 w-4" />
-                            ) : (
-                              <>
-                                <span className="text-base font-bold leading-none">
-                                  {sc}
-                                </span>
-                                <span className="text-[8px] opacity-80">
-                                  /100
-                                </span>
-                              </>
-                            )}
-                          </button>
-                          {/* Score breakdown popover */}
-                          {showDetail && bestDay?.breakdown && (
-                            <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 text-white text-[11px] rounded-lg p-2.5 shadow-xl w-44">
-                              <div className="font-semibold mb-1.5 text-xs">
-                                Détails du score
-                              </div>
-                              {(spot.sportType === "PARAGLIDE"
-                                ? [
-                                    ["Calme", bestDay.breakdown.hours, "30%"],
-                                    [
-                                      "Soleil",
-                                      bestDay.breakdown.sunshine ?? 0,
-                                      "30%",
-                                    ],
-                                    [
-                                      "Rafales",
-                                      bestDay.breakdown.regularity,
-                                      "20%",
-                                    ],
-                                    ["Pluie", bestDay.breakdown.quality, "20%"],
-                                  ]
-                                : [
-                                    ["Heures", bestDay.breakdown.hours, "35%"],
-                                    [
-                                      "Qualité vent",
-                                      bestDay.breakdown.quality,
-                                      "25%",
-                                    ],
-                                    [
-                                      "Régularité",
-                                      bestDay.breakdown.regularity,
-                                      "20%",
-                                    ],
-                                    [
-                                      "Direction",
-                                      bestDay.breakdown.direction,
-                                      "20%",
-                                    ],
-                                  ]
-                              ).map(([label, val, weight]) => (
-                                <div
-                                  key={label as string}
-                                  className="flex items-center gap-1.5 mb-1"
-                                >
-                                  <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                                    <div
-                                      className="h-full rounded-full"
-                                      style={{
-                                        width: `${val}%`,
-                                        background:
-                                          (val as number) >= 70
-                                            ? "#4ade80"
-                                            : (val as number) >= 40
-                                              ? "#fbbf24"
-                                              : "#f87171",
-                                      }}
-                                    />
-                                  </div>
-                                  <span className="w-16 text-gray-300">
-                                    {label}
-                                  </span>
-                                  <span className="w-6 text-right tabular-nums">
-                                    {val}
-                                  </span>
-                                  <span className="text-gray-500 w-6 text-right">
-                                    {weight}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Forecast error */}
-                      {isForecastError && (
-                        <div className="text-xs text-gray-400 flex items-center gap-1.5">
-                          <AlertTriangle className="h-3 w-3 text-orange-400" />
-                          Prévisions indisponibles
-                        </div>
-                      )}
-
-                      {/* Wind summary */}
-                      {bestDay && (
-                        <>
-                          <div className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-1.5 relative">
-                            {/* Help tooltip */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setHelpTooltipId(
-                                  helpTooltipId === spot.id ? null : spot.id,
-                                );
-                              }}
-                              className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-[8px] text-gray-500 z-10 transition-colors"
-                            >
-                              ?
-                            </button>
-                            {helpTooltipId === spot.id && (
-                              <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 text-white text-[10px] rounded-lg p-2.5 shadow-xl w-52 leading-relaxed">
-                                <div className="font-semibold mb-1">
-                                  Lecture rapide
-                                </div>
-                                <div className="space-y-0.5">
-                                  <p>
-                                    <span className="text-sky-300 font-medium">
-                                      {spot.sportType === "PARAGLIDE"
-                                        ? "Chiffre"
-                                        : "Chiffre"}
-                                    </span>{" "}
-                                    —{" "}
-                                    {spot.sportType === "PARAGLIDE"
-                                      ? "vent moyen en km/h"
-                                      : "vent en pointe (nœuds)"}
-                                  </p>
-                                  <p>
-                                    <span className="text-sky-300 font-medium">
-                                      Score /100
-                                    </span>{" "}
-                                    — qualité globale de la journée
-                                  </p>
-                                  <p>
-                                    <span className="text-sky-300 font-medium">
-                                      Heures
-                                    </span>{" "}
-                                    — durée{" "}
-                                    {spot.sportType === "PARAGLIDE"
-                                      ? "calme favorable"
-                                      : "de vent kitable"}
-                                  </p>
-                                  <p>
-                                    <span className="text-sky-300 font-medium">
-                                      Barre colorée
-                                    </span>{" "}
-                                    — force du vent heure par heure (6h–21h)
-                                  </p>
-                                  {spot.sportType !== "PARAGLIDE" && (
-                                    <p>
-                                      <span className="text-orange-400 font-medium">
-                                        ×rafales
-                                      </span>{" "}
-                                      — irrégularité (1.0 = stable)
-                                    </p>
-                                  )}
-                                  <p>
-                                    <span className="text-sky-300 font-medium">
-                                      Cercles
-                                    </span>{" "}
-                                    — scores par jour sur la période
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                            <div
-                              className="text-xl font-bold tabular-nums leading-none"
-                              style={{
-                                color:
-                                  spot.sportType === "PARAGLIDE"
-                                    ? bestDay.avgWindKmh < 10
-                                      ? "#2e7d32"
-                                      : bestDay.avgWindKmh < 20
-                                        ? "#f59e0b"
-                                        : "#d1d5db"
-                                    : color,
-                              }}
-                            >
-                              {spot.sportType === "PARAGLIDE"
-                                ? Math.round(bestDay.avgWindKmh)
-                                : Math.round(bestDay.peakWindKmh / 1.852)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-[10px] text-gray-400 uppercase tracking-wide">
-                                {spot.sportType === "PARAGLIDE"
-                                  ? "Moy. km/h"
-                                  : "Pic kts"}
-                              </div>
-                              <div
-                                className="text-xs font-medium"
-                                style={{
-                                  color:
-                                    spot.sportType === "PARAGLIDE"
-                                      ? bestDay.avgWindKmh < 10
-                                        ? "#2e7d32"
-                                        : bestDay.avgWindKmh < 15
-                                          ? "#f59e0b"
-                                          : "#d1d5db"
-                                      : color,
-                                }}
-                              >
-                                {spot.sportType === "PARAGLIDE"
-                                  ? bestDay.avgWindKmh < 10
-                                    ? "Calme idéal"
-                                    : bestDay.avgWindKmh < 15
-                                      ? "Acceptable"
-                                      : "Venteux"
-                                  : windConditionLabel(bestDay.peakWindKmh) ||
-                                    "—"}
-                              </div>
-                            </div>
-                            <div className="text-right space-y-0.5">
-                              <div className="flex items-center gap-1 text-xs text-gray-500 justify-end">
-                                <Clock className="h-3 w-3" />
-                                {bestDay.kitableHours}h
-                              </div>
-                              {bestDay.bestHour && (
-                                <div className="text-[10px] text-gray-400">
-                                  Pic{" "}
-                                  {new Date(bestDay.bestHour.time).getHours()}h
-                                </div>
-                              )}
-                              {spot.sportType !== "PARAGLIDE" &&
-                                bestDay.gustFactor > 1.35 && (
-                                  <div className="relative group/gust">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                      }}
-                                      className="flex items-center gap-0.5 text-[10px] text-orange-500 justify-end cursor-help"
-                                    >
-                                      <AlertTriangle className="h-2.5 w-2.5" />×
-                                      {bestDay.gustFactor.toFixed(1)}
-                                    </button>
-                                    <div className="invisible group-hover/gust:visible group-focus-within/gust:visible absolute right-0 bottom-full mb-1 z-50 bg-gray-900 text-white text-[10px] rounded-md px-2 py-1.5 shadow-lg w-40 leading-snug pointer-events-none">
-                                      Rafales {bestDay.gustFactor.toFixed(1)}×
-                                      plus fortes que la moyenne —{" "}
-                                      {bestDay.gustFactor < 1.6
-                                        ? "légèrement irrégulier"
-                                        : bestDay.gustFactor < 2
-                                          ? "irrégulier"
-                                          : "très irrégulier"}
-                                    </div>
-                                  </div>
-                                )}
-                            </div>
-                          </div>
-
-                          {/* Mini forecast bar */}
-                          {bestDay.forecast.length > 0 && (
-                            <div
-                              className="mt-1.5"
-                              onMouseLeave={() => setHoveredBarCell(null)}
-                            >
-                              <div className="flex gap-px h-3 rounded overflow-hidden">
-                                {bestDay.forecast.slice(6, 22).map((h, i) => {
-                                  const cellKey = `${spot.id}-${i}`;
-                                  const isHovered = hoveredBarCell === cellKey;
-                                  return (
-                                    <div
-                                      key={i}
-                                      className={`flex-1 transition-opacity ${hoveredBarCell && !isHovered ? "opacity-50" : ""}`}
-                                      style={{
-                                        background: windColor(h.windSpeedKmh),
-                                      }}
-                                      onMouseEnter={() =>
-                                        setHoveredBarCell(cellKey)
-                                      }
-                                    />
-                                  );
-                                })}
-                              </div>
-                              <div className="flex justify-between text-[9px] text-gray-400 mt-0.5 px-0.5">
-                                {hoveredBarCell?.startsWith(spot.id) ? (
-                                  (() => {
-                                    const idx = parseInt(
-                                      hoveredBarCell.split("-").pop()!,
-                                    );
-                                    const h = bestDay.forecast.slice(6, 22)[
-                                      idx
-                                    ];
-                                    if (!h) return <span>6h</span>;
-                                    const hour = new Date(h.time).getHours();
-                                    const wind =
-                                      spot.sportType === "PARAGLIDE"
-                                        ? `${Math.round(h.windSpeedKmh)} km/h`
-                                        : `${Math.round(h.windSpeedKmh / 1.852)} kts`;
-                                    return (
-                                      <span className="w-full text-center text-gray-500 font-medium">
-                                        {hour}h · {wind}
-                                      </span>
-                                    );
-                                  })()
-                                ) : (
-                                  <>
-                                    <span>6h</span>
-                                    <span>21h</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {/* Multi-day strip (scrollable if >7 days) */}
-                      {isMultiDay && spot.days && spot.days.length > 1 && (
-                        <div className="mt-2 pt-2 border-t border-gray-100 overflow-x-auto -mx-1 px-1 scrollbar-none">
-                          <div
-                            className="flex gap-1"
-                            style={{
-                              minWidth:
-                                spot.days.length > 7
-                                  ? `${spot.days.length * 2}rem`
-                                  : undefined,
-                            }}
-                          >
-                            {spot.days.map((day, i) => {
-                              const isBest = i === (spot.bestDayIndex ?? 0);
-                              const isSelected = i === activeDayIdx;
-                              const dayDate = new Date(day.date + "T12:00:00Z");
-                              return (
-                                <button
-                                  type="button"
-                                  key={day.date}
-                                  className="flex-1 flex flex-col items-center gap-0.5 min-w-7 cursor-pointer"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setSelectedDayMap((prev) => ({
-                                      ...prev,
-                                      [spot.id]: i,
-                                    }));
-                                  }}
-                                >
-                                  <span className="text-[8px] text-gray-400 uppercase">
-                                    {dayDate.toLocaleDateString("fr", {
-                                      weekday: "narrow",
-                                    })}
-                                  </span>
-                                  <div
-                                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white transition-all ${isSelected ? "ring-2 ring-offset-1" : ""}`}
-                                    style={{
-                                      background: scoreColor(day.score),
-                                      ...(isBest && !isSelected
-                                        ? {
-                                            outline: `2px solid ${scoreColor(day.score)}`,
-                                            outlineOffset: "1px",
-                                          }
-                                        : {}),
-                                      ...(isSelected
-                                        ? {
-                                            ["--tw-ring-color" as string]:
-                                              scoreColor(day.score),
-                                          }
-                                        : {}),
-                                    }}
-                                    title={`${day.date} — ${day.score}/100 · ${day.kitableHours}h`}
-                                  >
-                                    {day.score > 0 ? day.score : "·"}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </Link>
-                  </div>
+                    spot={spot}
+                    activeDayIdx={activeDayIdx}
+                    hasLocation={hasLocation}
+                    isMultiDay={isMultiDay}
+                    onHover={setHoveredSpotId}
+                    onSelectDay={(spotId, dayIdx) =>
+                      setSelectedDayMap((prev) => ({
+                        ...prev,
+                        [spotId]: dayIdx,
+                      }))
+                    }
+                  />
                 );
               })}
           </div>

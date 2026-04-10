@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { windCellStyle, roundKnots } from "@/lib/forecast";
-import { windDirectionLabel } from "@/lib/utils";
+import { HistoryTooltip } from "./HistoryTooltip";
 import type { HistoryPoint } from "@/types";
 import type { HourlyPoint } from "@/lib/forecast";
 
@@ -229,11 +229,14 @@ export function WindHistoryChart({
       fcstIdx: i,
     })),
   ];
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    const svgRect = e.currentTarget.getBoundingClientRect();
+  const handlePointer = (
+    svgEl: SVGSVGElement,
+    clientX: number,
+    clientY: number,
+  ) => {
+    const svgRect = svgEl.getBoundingClientRect();
     const svgX =
-      (e.clientX - svgRect.left) * (totalW / (svgRect.width || totalW));
-    // Find closest point
+      (clientX - svgRect.left) * (totalW / (svgRect.width || totalW));
     let bestIdx = -1;
     let bestDist = Infinity;
     for (let i = 0; i < allPoints.length; i++) {
@@ -245,40 +248,20 @@ export function WindHistoryChart({
     }
     if (bestIdx >= 0) {
       setHoveredIdx(bestIdx);
-      const container = containerRef.current!;
-      const containerRect = container.getBoundingClientRect();
+      const containerRect = containerRef.current!.getBoundingClientRect();
       setTooltipPos({
-        x: e.clientX - containerRect.left,
-        y: e.clientY - containerRect.top,
+        x: clientX - containerRect.left,
+        y: clientY - containerRect.top,
       });
     }
   };
 
-  // Touch handler for mobile (same logic)
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) =>
+    handlePointer(e.currentTarget, e.clientX, e.clientY);
+
   const handleSvgTouch = (e: React.TouchEvent<SVGSVGElement>) => {
     const touch = e.touches[0];
-    if (!touch) return;
-    const svgRect = e.currentTarget.getBoundingClientRect();
-    const svgX =
-      (touch.clientX - svgRect.left) * (totalW / (svgRect.width || totalW));
-    let bestIdx = -1;
-    let bestDist = Infinity;
-    for (let i = 0; i < allPoints.length; i++) {
-      const dist = Math.abs(allPoints[i].x - svgX);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = i;
-      }
-    }
-    if (bestIdx >= 0) {
-      setHoveredIdx(bestIdx);
-      const container = containerRef.current!;
-      const containerRect = container.getBoundingClientRect();
-      setTooltipPos({
-        x: touch.clientX - containerRect.left,
-        y: touch.clientY - containerRect.top,
-      });
-    }
+    if (touch) handlePointer(e.currentTarget, touch.clientX, touch.clientY);
   };
 
   // Hover point: history or forecast?
@@ -293,7 +276,6 @@ export function WindHistoryChart({
       ? futureForecast[hovPt.fcstIdx]
       : null;
   const hovPoint = hovHistPoint ?? null;
-  const TTW = 190;
 
   return (
     <div
@@ -304,77 +286,16 @@ export function WindHistoryChart({
       onTouchCancel={() => setHoveredIdx(null)}
     >
       {/* ── Hover tooltip ───────────────────────────────────────────────── */}
-      {(hovPoint ?? hovFcstPoint) &&
-        (() => {
-          const pt = (hovPoint ?? hovFcstPoint)!;
-          const isFcst = hovFcstPoint !== null;
-          const style = windCellStyle(pt.windSpeedKmh);
-          const container = containerRef.current;
-          const containerW = container?.clientWidth ?? 0;
-          const tipX = Math.max(
-            4,
-            Math.min(
-              tooltipPos.x + 14 + TTW > containerW
-                ? tooltipPos.x - TTW - 6
-                : tooltipPos.x + 14,
-              containerW - TTW - 4,
-            ),
-          );
-          const tipY = Math.max(tooltipPos.y - 110, 4);
-          // Format time: history uses UTC string, forecast uses local string
-          const displayTime = isFcst
-            ? pt.time
-            : toTZ((pt as HistoryPoint).time);
-
-          return (
-            <div
-              className="absolute z-20 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2.5 pointer-events-none"
-              style={{ left: tipX, top: tipY, width: TTW }}
-            >
-              {isFcst && (
-                <div className="text-[9px] font-semibold text-sky-500 mb-1 uppercase tracking-wide">
-                  Prévision
-                </div>
-              )}
-              <div className="text-[10px] text-gray-400 font-medium mb-2">
-                {new Date(
-                  displayTime.slice(0, 10) + "T12:00:00Z",
-                ).toLocaleDateString("fr", {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                  timeZone: "UTC",
-                })}{" "}
-                — {displayTime.slice(11, 16)}
-              </div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-gray-500">Vent moyen</span>
-                <span
-                  className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded"
-                  style={{ background: style.background, color: style.color }}
-                >
-                  {useKnots
-                    ? roundKnots(pt.windSpeedKmh)
-                    : Math.round(pt.windSpeedKmh)}{" "}
-                  {useKnots ? "kts" : "km/h"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-gray-500">Rafales</span>
-                <span className="text-xs font-semibold tabular-nums text-gray-600">
-                  {useKnots ? roundKnots(pt.gustsKmh) : Math.round(pt.gustsKmh)}{" "}
-                  {useKnots ? "kts" : "km/h"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">Direction</span>
-                <span className="text-xs text-gray-600">
-                  {windDirectionLabel(pt.windDirection)} {pt.windDirection}°
-                </span>
-              </div>
-            </div>
-          );
-        })()}
+      {(hovPoint ?? hovFcstPoint) && (
+        <HistoryTooltip
+          point={(hovPoint ?? hovFcstPoint)!}
+          isForecast={hovFcstPoint !== null}
+          useKnots={useKnots}
+          tooltipPos={tooltipPos}
+          containerWidth={containerRef.current?.clientWidth ?? 0}
+          toTZ={toTZ}
+        />
+      )}
 
       {/* ── Main SVG chart ───────────────────────────────────────────────── */}
       <svg
