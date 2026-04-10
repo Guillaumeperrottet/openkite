@@ -5,6 +5,7 @@ import {
   fetchWindForecast15min,
 } from "@/lib/wind";
 import { fetchMeteoSwissStations } from "@/lib/stations";
+import { fetchMeteoFranceStations } from "@/lib/meteofrance";
 
 // No force-dynamic — params already makes this route dynamic,
 // and removing it lets internal fetch() calls use their ISR cache.
@@ -14,7 +15,7 @@ import { fetchMeteoSwissStations } from "@/lib/stations";
  *
  * Returns 48h wind history for a station.
  * Supports MeteoSwiss (e.g. "BER"), Pioupiou (e.g. "piou-110"),
- * and Netatmo (e.g. "ntm-70:ee:50:b9:01:56") stations.
+ * Netatmo (e.g. "ntm-70:ee:50:b9:01:56"), and Météo-France (e.g. "mf-07245") stations.
  */
 export async function GET(
   _req: Request,
@@ -97,6 +98,50 @@ export async function GET(
     } catch {
       return NextResponse.json(
         { error: "Pioupiou history temporarily unavailable" },
+        { status: 503 },
+      );
+    }
+  }
+
+  // ── Météo-France station (DB history + Open-Meteo forecast) ──────────
+  if (stationId.startsWith("mf-")) {
+    try {
+      const history = await fetchWindHistoryStation(stationId);
+
+      // Get station coords for Open-Meteo forecast
+      const stations = await fetchMeteoFranceStations().catch(() => []);
+      const station = stations.find((s) => s.id === stationId);
+
+      if (history.length > 0 && station) {
+        const forecast = await fetchWindForecast15min(
+          station.lat,
+          station.lng,
+        ).catch(() => []);
+        const lastTime = history[history.length - 1].time;
+        const futurePoints = forecast.filter((p) => p.time > lastTime);
+        return NextResponse.json([...history, ...futurePoints], {
+          headers: cacheHeaders,
+        });
+      }
+
+      // If no DB data yet, fallback to Open-Meteo grid history
+      if (station) {
+        const [omHistory, forecast] = await Promise.all([
+          fetchWindHistory(station.lat, station.lng),
+          fetchWindForecast15min(station.lat, station.lng).catch(() => []),
+        ]);
+        const lastTime =
+          omHistory.length > 0 ? omHistory[omHistory.length - 1].time : "";
+        const futurePoints = forecast.filter((p) => p.time > lastTime);
+        return NextResponse.json([...omHistory, ...futurePoints], {
+          headers: cacheHeaders,
+        });
+      }
+
+      return NextResponse.json(history, { headers: cacheHeaders });
+    } catch {
+      return NextResponse.json(
+        { error: "Météo-France history temporarily unavailable" },
         { status: 503 },
       );
     }

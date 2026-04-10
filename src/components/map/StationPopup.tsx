@@ -107,12 +107,15 @@ export function StationPopup({
 
   const isPioupiou = station.source === "pioupiou";
   const isNetatmo = station.source === "netatmo";
+  const isMF = station.source === "meteofrance";
   const sourceLabel = isPioupiou
     ? "OpenWindMap"
     : isNetatmo
       ? "Netatmo"
-      : "MeteoSwiss";
-  const sourceFreq = isPioupiou ? "~4 min" : "10 min";
+      : isMF
+        ? "Météo-France"
+        : "MeteoSwiss";
+  const sourceFreq = isPioupiou ? "~4 min" : isMF ? "15 min" : "10 min";
 
   // Position: compute actual top clamped to viewport
   const vw = typeof window !== "undefined" ? window.innerWidth : 800;

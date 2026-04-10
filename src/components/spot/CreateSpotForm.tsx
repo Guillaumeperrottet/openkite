@@ -630,7 +630,11 @@ export function CreateSpotForm({ initialData }: Props = {}) {
                               {Math.round(s.windSpeedKmh / 1.852)} kts ·{" "}
                               {s.source === "pioupiou"
                                 ? "OpenwindMap"
-                                : "MeteoSwiss"}
+                                : s.source === "netatmo"
+                                  ? "Netatmo"
+                                  : s.source === "meteofrance"
+                                    ? "Météo-France"
+                                    : "MeteoSwiss"}
                             </div>
                           </div>
                           {selected && (
