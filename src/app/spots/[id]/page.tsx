@@ -77,8 +77,9 @@ export default async function SpotPage({ params }: Props) {
 
   // ── Current wind: prefer nearest station (instant, no Open-Meteo) ──────
   let wind: WindData | null = null;
+  let windSource: { name: string; network: string } | null = null;
 
-  // Try to get wind from the nearest station (all 4 networks)
+  // Try to get wind from the nearest station (all 5 networks)
   if (spot.nearestStationId) {
     try {
       const [meteo, piou, ntm, mf, wb] = await Promise.allSettled([
@@ -102,6 +103,17 @@ export default async function SpotPage({ params }: Props) {
           station.windDirection,
           Math.round(station.windSpeedKmh * 1.3),
         );
+        const NETWORK_LABELS: Record<string, string> = {
+          meteoswiss: "MeteoSwiss",
+          pioupiou: "Pioupiou",
+          netatmo: "Netatmo",
+          meteofrance: "Météo-France",
+          windball: "Windball",
+        };
+        windSource = {
+          name: station.name,
+          network: NETWORK_LABELS[station.source] ?? station.source,
+        };
       }
     } catch {
       /* fallback below */
@@ -155,6 +167,7 @@ export default async function SpotPage({ params }: Props) {
       <SpotPageClient
         spot={JSON.parse(JSON.stringify(spot))}
         wind={wind}
+        windSource={windSource}
         forecast={
           forecastResult.status === "fulfilled" ? forecastResult.value : null
         }

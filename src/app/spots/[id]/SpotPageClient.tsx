@@ -78,11 +78,18 @@ interface SpotData {
 interface Props {
   spot: SpotData;
   wind: WindData | null;
+  windSource: { name: string; network: string } | null;
   forecast: FullForecast | null;
   history: HistoryPoint[] | null;
 }
 
-export function SpotPageClient({ spot, wind, forecast, history }: Props) {
+export function SpotPageClient({
+  spot,
+  wind,
+  windSource,
+  forecast,
+  history,
+}: Props) {
   const [useKnots, setUseKnots] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -343,7 +350,11 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                 wind={wind}
                 size={170}
                 light
-                sourceLabel="Open-Meteo · NWP"
+                sourceLabel={
+                  windSource
+                    ? `${windSource.name} · ${windSource.network}`
+                    : "Open-Meteo · NWP"
+                }
               />
             ) : (
               <div className="flex items-center justify-center h-48 w-48 text-sm text-gray-400">
@@ -351,15 +362,19 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
               </div>
             )}
             <p className="text-[10px] text-gray-500 text-center leading-snug">
-              <a
-                href="https://open-meteo.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-gray-700 inline-flex items-center gap-0.5"
-              >
-                Open-Meteo
-                <ExternalLink className="h-2 w-2 ml-0.5" />
-              </a>
+              {windSource ? (
+                <span>{windSource.network}</span>
+              ) : (
+                <a
+                  href="https://open-meteo.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-gray-700 inline-flex items-center gap-0.5"
+                >
+                  Open-Meteo
+                  <ExternalLink className="h-2 w-2 ml-0.5" />
+                </a>
+              )}
             </p>
           </div>
 
@@ -483,15 +498,21 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
                 <TrendingUp className="h-4 w-4 text-gray-500" />
                 Historique · 48h
               </h2>
-              <a
-                href="https://open-meteo.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-gray-500 hover:text-gray-700 inline-flex items-center gap-0.5"
-              >
-                Open-Meteo · NWP open source
-                <ExternalLink className="h-2.5 w-2.5 ml-0.5" />
-              </a>
+              {windSource ? (
+                <span className="text-[10px] text-gray-500">
+                  {windSource.name} · {windSource.network}
+                </span>
+              ) : (
+                <a
+                  href="https://open-meteo.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-gray-500 hover:text-gray-700 inline-flex items-center gap-0.5"
+                >
+                  Open-Meteo · NWP open source
+                  <ExternalLink className="h-2.5 w-2.5 ml-0.5" />
+                </a>
+              )}
             </div>
             <div className="px-3 py-2">
               {history && history.length > 0 ? (
