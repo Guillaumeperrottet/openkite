@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -21,9 +21,7 @@ import {
   Star,
 } from "lucide-react";
 import { WindCompass } from "@/components/spot/WindCompass";
-// WindDirectionRose available for future use
-// import { WindDirectionRose } from "@/components/spot/WindDirectionRose";
-import { WindFrequencyRose } from "@/components/spot/WindFrequencyRose";
+import { WindDirectionRose } from "@/components/spot/WindDirectionRose";
 import { WindChart } from "@/components/spot/WindChart";
 import { WindHistoryChart } from "@/components/spot/WindHistoryChart";
 import { ForecastTable } from "@/components/spot/ForecastTable";
@@ -170,14 +168,14 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 wrap-break-word">
                 {spot.name}
               </h1>
               {spot.bestWindDirections.length > 0 && (
                 <div
                   title={`Meilleures directions : ${spot.bestWindDirections.join(", ")}`}
                 >
-                  <WindFrequencyRose
+                  <WindDirectionRose
                     bestDirections={spot.bestWindDirections}
                     size={80}
                     showLabels={false}
@@ -557,6 +555,21 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
           <WindArchives spotId={spot.id} useKnots={useKnots} />
         </div>
 
+        {/* ── Situation ─────────────────────────────────────────── */}
+        <div className="mb-10">
+          <h2 className="text-base font-semibold text-gray-900 mb-3">
+            Situation
+          </h2>
+          <div className="relative rounded-2xl border border-gray-200 overflow-hidden shadow-sm h-72 sm:h-96">
+            <SpotMiniMap
+              lat={spot.latitude}
+              lng={spot.longitude}
+              name={spot.name}
+              bestDirections={spot.bestWindDirections}
+            />
+          </div>
+        </div>
+
         {/* ── Coordonnées + liens ──────────────────────────────────── */}
         <div className="mt-14 pt-6 border-t border-gray-200">
           <div className="flex justify-between items-center text-xs text-gray-400">
@@ -574,6 +587,90 @@ export function SpotPageClient({ spot, wind, forecast, history }: Props) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Mini Map for Spot location ────────────────────────────────────────────────
+
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+function SpotMiniMap({
+  lat,
+  lng,
+  name,
+  bestDirections,
+}: {
+  lat: number;
+  lng: number;
+  name: string;
+  bestDirections: string[];
+}) {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const roseRef = useRef<HTMLDivElement>(null);
+
+  const initMap = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || mapRef.current) return;
+      mapContainer.current = node;
+
+      const map = new maplibregl.Map({
+        container: node,
+        style:
+          process.env.NEXT_PUBLIC_MAP_STYLE ||
+          "https://tiles.openfreemap.org/styles/liberty",
+        center: [lng, lat],
+        zoom: 10,
+        interactive: true,
+        attributionControl: false,
+      });
+
+      map.addControl(
+        new maplibregl.NavigationControl({ showCompass: false }),
+        "top-right",
+      );
+
+      const positionRose = () => {
+        if (!roseRef.current) return;
+        const px = map.project([lng, lat]);
+        roseRef.current.style.left = `${px.x}px`;
+        roseRef.current.style.top = `${px.y}px`;
+      };
+
+      map.on("load", () => {
+        new maplibregl.Marker({ color: "#0ea5e9" })
+          .setLngLat([lng, lat])
+          .setPopup(
+            new maplibregl.Popup({ offset: 25, closeButton: false }).setText(
+              name,
+            ),
+          )
+          .addTo(map);
+        positionRose();
+      });
+
+      map.on("move", positionRose);
+      map.on("zoom", positionRose);
+      map.on("resize", positionRose);
+
+      mapRef.current = map;
+    },
+    [lat, lng, name],
+  );
+
+  return (
+    <div ref={initMap} className="w-full h-full relative">
+      {bestDirections.length > 0 && (
+        <div
+          ref={roseRef}
+          className="absolute z-10 pointer-events-none -translate-x-1/2 -translate-y-1/2"
+          style={{ left: "50%", top: "50%" }}
+        >
+          <WindDirectionRose bestDirections={bestDirections} size={180} />
+        </div>
+      )}
     </div>
   );
 }
