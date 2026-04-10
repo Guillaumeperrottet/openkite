@@ -7,6 +7,33 @@ interface Props {
   params: Promise<{ slug: string; topicId: string }>;
 }
 
+export async function generateMetadata({ params }: Props) {
+  const { slug, topicId } = await params;
+  try {
+    const topic = await prisma.forumTopic.findUnique({
+      where: { id: topicId },
+      select: { title: true, body: true, category: { select: { name: true } } },
+    });
+    if (!topic) return { title: "Sujet introuvable" };
+    const desc =
+      topic.body.length > 155 ? topic.body.slice(0, 152) + "…" : topic.body;
+    return {
+      title: topic.title,
+      description: desc,
+      alternates: {
+        canonical: `https://openwind.ch/forum/${slug}/${topicId}`,
+      },
+      openGraph: {
+        title: `${topic.title} — Forum Openwind`,
+        description: desc,
+        type: "article" as const,
+      },
+    };
+  } catch {
+    return { title: "Forum" };
+  }
+}
+
 export default async function TopicPage({ params }: Props) {
   const { slug, topicId } = await params;
 

@@ -17,18 +17,23 @@ export const metadata: Metadata = {
     google: "IPK5LP6dD1gvar2XIppMLxIbce_yOzD3OfiPN1Cj1cU",
   },
   title: {
-    default: "Openwind — Carte interactive des spots de kitesurf et parapente",
+    default: "Openwind — Balises vent en direct, spots kitesurf et parapente",
     template: "%s — Openwind",
   },
   description:
-    "Carte interactive open source des spots de kitesurf et parapente. Vent en direct, prévisions 7 jours, archives historiques et planification de voyages.",
+    "Balises vent en direct, carte interactive des spots de kitesurf et parapente. Stations météo temps réel, prévisions 7 jours, archives historiques et planificateur de voyages.",
   keywords: [
+    "balise vent",
+    "balise vent direct",
+    "balise vent temps réel",
+    "station météo vent",
     "kitesurf",
     "parapente",
-    "vent",
-    "spots",
-    "prévisions",
-    "carte",
+    "vent en direct",
+    "spots kitesurf",
+    "spots parapente",
+    "prévisions vent",
+    "carte vent",
     "open source",
     "météo",
     "kite",
@@ -39,19 +44,28 @@ export const metadata: Metadata = {
   authors: [{ name: "Openwind" }],
   creator: "Openwind",
   openGraph: {
-    title: "Openwind — Carte interactive des spots de kitesurf et parapente",
+    title: "Openwind — Balises vent en direct, spots kitesurf et parapente",
     description:
-      "Carte interactive open source du vent et des spots de kitesurf et parapente. Vent en direct, prévisions, planification de voyages.",
+      "Balises vent en direct et carte interactive des spots de kitesurf et parapente. Stations météo temps réel, prévisions, planificateur de voyages.",
     url: "https://openwind.ch",
     siteName: "Openwind",
     locale: "fr_CH",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Openwind — Balises vent en direct, spots kitesurf et parapente",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Openwind — Carte des spots kite & parapente",
+    title: "Openwind — Balises vent en direct, spots kite & parapente",
     description:
-      "Vent en direct, prévisions 7 jours, archives historiques. Open source.",
+      "Balises vent en direct, prévisions 7 jours, archives historiques. Open source.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -81,7 +95,7 @@ export default function RootLayout({
                   name: "Openwind",
                   url: "https://openwind.ch",
                   description:
-                    "Carte interactive open source des spots de kitesurf et parapente. Vent en direct, prévisions 7 jours.",
+                    "Balises vent en direct et carte interactive des spots de kitesurf et parapente. Stations météo temps réel, prévisions 7 jours.",
                 },
                 {
                   "@type": "SiteNavigationElement",

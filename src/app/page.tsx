@@ -28,6 +28,10 @@ export default async function HomePage() {
 
   return (
     <div className="bg-white" style={{ height: "calc(100dvh - 56px)" }}>
+      <h1 className="sr-only">
+        Openwind — Balises vent en direct, carte des spots de kitesurf et
+        parapente
+      </h1>
       <KiteMap spots={spots} />
     </div>
   );

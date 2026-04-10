@@ -17,6 +17,7 @@ export default async function PlanPage({ searchParams }: Props) {
       className="bg-white text-gray-900"
       style={{ height: "calc(100dvh - 56px)" }}
     >
+      <h1 className="sr-only">Planifier un voyage kitesurf ou parapente</h1>
       <TripPlanner searchParams={sp} />
     </div>
   );

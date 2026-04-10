@@ -55,5 +55,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB unavailable
   }
 
-  return [...staticPages, ...spotPages, ...forumPages];
+  // Forum topic pages
+  let topicPages: MetadataRoute.Sitemap = [];
+  try {
+    const topics = await prisma.forumTopic.findMany({
+      select: {
+        id: true,
+        updatedAt: true,
+        category: { select: { slug: true } },
+      },
+    });
+    topicPages = topics.map((t: (typeof topics)[number]) => ({
+      url: `${baseUrl}/forum/${t.category.slug}/${t.id}`,
+      lastModified: t.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // DB unavailable
+  }
+
+  // Station pages (distinct IDs from recent measurements)
+  let stationPages: MetadataRoute.Sitemap = [];
+  try {
+    const stationIds = await prisma.stationMeasurement.findMany({
+      select: { stationId: true },
+      distinct: ["stationId"],
+    });
+    stationPages = stationIds.map((s: (typeof stationIds)[number]) => ({
+      url: `${baseUrl}/stations/${encodeURIComponent(s.stationId)}`,
+      changeFrequency: "daily" as const,
+      priority: 0.5,
+    }));
+  } catch {
+    // DB unavailable
+  }
+
+  return [
+    ...staticPages,
+    ...spotPages,
+    ...forumPages,
+    ...topicPages,
+    ...stationPages,
+  ];
 }

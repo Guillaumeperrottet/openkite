@@ -21,9 +21,19 @@ interface Props {
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
   const name = decodeURIComponent(id);
+  const description = `Balise vent ${name} — vent en direct, historique 48h et prévisions 7 jours.`;
   return {
     title: `Station ${name}`,
-    description: `Station météo ${name} — vent en direct, historique 48h et prévisions 7 jours.`,
+    description,
+    alternates: {
+      canonical: `https://openwind.ch/stations/${encodeURIComponent(name)}`,
+    },
+    openGraph: {
+      title: `Station ${name} — Openwind`,
+      description,
+      url: `https://openwind.ch/stations/${encodeURIComponent(name)}`,
+      type: "website",
+    },
   };
 }
 

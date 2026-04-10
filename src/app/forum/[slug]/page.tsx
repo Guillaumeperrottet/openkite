@@ -6,6 +6,27 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params;
+  try {
+    const cat = await prisma.forumCategory.findUnique({
+      where: { slug },
+      select: { name: true, description: true },
+    });
+    if (!cat) return { title: "Catégorie introuvable" };
+    return {
+      title: cat.name,
+      description:
+        cat.description || `Discussions ${cat.name} sur le forum Openwind.`,
+      alternates: {
+        canonical: `https://openwind.ch/forum/${slug}`,
+      },
+    };
+  } catch {
+    return { title: "Forum" };
+  }
+}
+
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
 

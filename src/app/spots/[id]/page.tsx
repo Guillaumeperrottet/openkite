@@ -46,9 +46,14 @@ export async function generateMetadata({ params }: Props) {
     return {
       title: spot.name,
       description,
+      alternates: {
+        canonical: `https://openwind.ch/spots/${id}`,
+      },
       openGraph: {
         title: `${spot.name} — Openwind`,
         description,
+        url: `https://openwind.ch/spots/${id}`,
+        type: "article",
         ...(spot.images[0] && { images: [{ url: spot.images[0].url }] }),
       },
     };
@@ -122,16 +127,38 @@ export default async function SpotPage({ params }: Props) {
     historyPromise,
   ]);
 
+  const sport = spot.sportType === "KITE" ? "kitesurf" : "parapente";
+  const location = [spot.region, spot.country].filter(Boolean).join(", ");
+
   return (
-    <SpotPageClient
-      spot={JSON.parse(JSON.stringify(spot))}
-      wind={wind}
-      forecast={
-        forecastResult.status === "fulfilled" ? forecastResult.value : null
-      }
-      history={
-        historyResult.status === "fulfilled" ? historyResult.value : null
-      }
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Place",
+            name: spot.name,
+            description: `Spot de ${sport}${location ? ` à ${location}` : ""}. Vent en direct et prévisions.`,
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: spot.latitude,
+              longitude: spot.longitude,
+            },
+            ...(spot.images[0] && { image: spot.images[0].url }),
+          }),
+        }}
+      />
+      <SpotPageClient
+        spot={JSON.parse(JSON.stringify(spot))}
+        wind={wind}
+        forecast={
+          forecastResult.status === "fulfilled" ? forecastResult.value : null
+        }
+        history={
+          historyResult.status === "fulfilled" ? historyResult.value : null
+        }
+      />
+    </>
   );
 }
