@@ -8,6 +8,7 @@ import { fetchWindballStations } from "@/lib/windball";
 // ISR: cache the entire response for 10 min, revalidate in the background.
 // This avoids hammering MeteoSwiss + Pioupiou on every single browser request.
 export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/stations

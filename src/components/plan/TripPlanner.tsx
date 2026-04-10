@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { KiteMap } from "@/components/map/KiteMap";
 import { PlanFilters } from "@/components/plan/PlanFilters";
 import { SpotResultCard } from "@/components/plan/SpotResultCard";
+import { SpotPreview } from "@/components/plan/SpotPreview";
 import {
   useBottomSheet,
   SNAP_PEEK,
@@ -29,6 +30,8 @@ import {
   ChevronUp,
   ChevronDown,
   SlidersHorizontal,
+  PanelRightOpen,
+  PanelRightClose,
 } from "lucide-react";
 
 function scoreColor(score: number): string {
@@ -82,6 +85,8 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
   const [geoLoading, setGeoLoading] = useState(false);
   const [hoveredSpotId, setHoveredSpotId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [panelExpanded, setPanelExpanded] = useState(false);
+  const [previewSpotId, setPreviewSpotId] = useState<string | null>(null);
 
   // Mobile bottom sheet (continuous drag)
   const hasAutoSearch = !!searchParams?.startDate;
@@ -668,14 +673,34 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
         </div>
 
         {/* ═══ Bottom Sheet (mobile) / Side Panel (desktop) ═══ */}
+        <div className="hidden lg:block relative shrink-0">
+          {/* Desktop expand toggle — centered on left edge */}
+          {searched && results.length > 0 && (
+            <button
+              onClick={() => setPanelExpanded((p) => !p)}
+              className="absolute -left-3.5 top-1/2 -translate-y-1/2 z-30 w-7 h-14 flex items-center justify-center bg-white border border-gray-200 rounded-l-lg shadow-sm hover:bg-gray-50 hover:shadow transition-all"
+              title={panelExpanded ? "Réduire le panel" : "Élargir le panel"}
+            >
+              {panelExpanded ? (
+                <PanelRightClose className="h-4 w-4 text-gray-500" />
+              ) : (
+                <PanelRightOpen className="h-4 w-4 text-gray-500" />
+              )}
+            </button>
+          )}
+        </div>
         <div
           ref={sheetRef}
-          className="absolute bottom-0 left-0 right-0 z-20 lg:static lg:z-auto w-full lg:w-105 flex flex-col min-h-0 bg-white rounded-t-2xl lg:rounded-none shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:shadow-none border-t border-gray-200 lg:border-t-0"
+          className={`absolute bottom-0 left-0 right-0 z-20 lg:static lg:z-auto w-full flex flex-col min-h-0 bg-white rounded-t-2xl lg:rounded-none shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:shadow-none border-t border-gray-200 lg:border-t-0 transition-[width] duration-300 ease-in-out ${
+            panelExpanded ? "lg:w-[65vw]" : "lg:w-105"
+          }`}
           style={{
             height: isMobile ? `${sheetFrac * 100}vh` : undefined,
             transition: isDragging
               ? "none"
-              : "height 0.3s cubic-bezier(0.32,0.72,0,1)",
+              : isMobile
+                ? "height 0.3s cubic-bezier(0.32,0.72,0,1)"
+                : "width 0.3s cubic-bezier(0.32,0.72,0,1)",
           }}
         >
           {/* Drag handle */}
@@ -902,10 +927,12 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
           )}
 
           {/* Results list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+          <div
+            className={`flex-1 overflow-y-auto p-4 ${panelExpanded ? "grid grid-cols-2 gap-3 auto-rows-min items-start" : "space-y-2.5"}`}
+          >
             {/* Empty state — desktop only (mobile has the onboarding header + open filters) */}
             {!searched && !loading && (
-              <div className="hidden lg:block text-center text-gray-400 text-sm py-12">
+              <div className="hidden lg:block text-center text-gray-400 text-sm py-12 col-span-full">
                 <Navigation className="h-8 w-8 mx-auto mb-3 opacity-20" />
                 <p className="font-medium text-gray-500">
                   Trouvez les meilleurs spots
@@ -920,7 +947,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
 
             {/* Skeleton */}
             {loading && (
-              <div className="space-y-2.5">
+              <div className="space-y-2.5 col-span-full">
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
@@ -941,7 +968,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
 
             {/* Error */}
             {error && (
-              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl p-3 border border-red-200">
+              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl p-3 border border-red-200 col-span-full">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 {error}
               </div>
@@ -949,7 +976,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
 
             {/* No results */}
             {!loading && searched && results.length === 0 && !error && (
-              <div className="text-center text-gray-400 text-sm py-12">
+              <div className="text-center text-gray-400 text-sm py-12 col-span-full">
                 <Wind className="h-7 w-7 mx-auto mb-3 opacity-30" />
                 {hasLocation ? (
                   <>
@@ -965,29 +992,58 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
               </div>
             )}
 
-            {/* Result cards */}
-            {!loading &&
-              sorted.map((spot) => {
-                const activeDayIdx =
-                  selectedDayMap[spot.id] ?? spot.bestDayIndex ?? 0;
+            {/* Result cards / Spot preview */}
+            {!loading && previewSpotId && panelExpanded
+              ? (() => {
+                  const previewSpot = sorted.find(
+                    (s) => s.id === previewSpotId,
+                  );
+                  if (!previewSpot) return null;
+                  const dayIdx =
+                    selectedDayMap[previewSpot.id] ??
+                    previewSpot.bestDayIndex ??
+                    0;
+                  return (
+                    <div className="col-span-full h-full">
+                      <SpotPreview
+                        spot={previewSpot}
+                        activeDayIdx={dayIdx}
+                        onBack={() => setPreviewSpotId(null)}
+                        onSelectDay={(i) =>
+                          setSelectedDayMap((prev) => ({
+                            ...prev,
+                            [previewSpot.id]: i,
+                          }))
+                        }
+                      />
+                    </div>
+                  );
+                })()
+              : !loading &&
+                sorted.map((spot) => {
+                  const activeDayIdx =
+                    selectedDayMap[spot.id] ?? spot.bestDayIndex ?? 0;
 
-                return (
-                  <SpotResultCard
-                    key={spot.id}
-                    spot={spot}
-                    activeDayIdx={activeDayIdx}
-                    hasLocation={hasLocation}
-                    isMultiDay={isMultiDay}
-                    onHover={setHoveredSpotId}
-                    onSelectDay={(spotId, dayIdx) =>
-                      setSelectedDayMap((prev) => ({
-                        ...prev,
-                        [spotId]: dayIdx,
-                      }))
-                    }
-                  />
-                );
-              })}
+                  return (
+                    <SpotResultCard
+                      key={spot.id}
+                      spot={spot}
+                      activeDayIdx={activeDayIdx}
+                      hasLocation={hasLocation}
+                      isMultiDay={isMultiDay}
+                      onHover={setHoveredSpotId}
+                      onSelectDay={(spotId, dayIdx) =>
+                        setSelectedDayMap((prev) => ({
+                          ...prev,
+                          [spotId]: dayIdx,
+                        }))
+                      }
+                      onSelect={
+                        panelExpanded ? (id) => setPreviewSpotId(id) : undefined
+                      }
+                    />
+                  );
+                })}
           </div>
         </div>
       </div>

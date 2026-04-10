@@ -20,6 +20,7 @@ interface SpotResultCardProps {
   isMultiDay: boolean;
   onHover: (id: string | null) => void;
   onSelectDay: (spotId: string, dayIdx: number) => void;
+  onSelect?: (id: string) => void;
 }
 
 export function SpotResultCard({
@@ -29,6 +30,7 @@ export function SpotResultCard({
   isMultiDay,
   onHover,
   onSelectDay,
+  onSelect,
 }: SpotResultCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -44,11 +46,23 @@ export function SpotResultCard({
 
   return (
     <div
-      className="rounded-xl bg-white border border-gray-200 hover:border-sky-400/60 hover:shadow-sm transition-all"
+      className="rounded-xl bg-white border border-gray-200 hover:border-sky-400/60 hover:shadow-sm transition-all cursor-pointer"
       onMouseEnter={() => onHover(spot.id)}
       onMouseLeave={() => onHover(null)}
+      onClick={
+        onSelect
+          ? (e) => {
+              e.preventDefault();
+              onSelect(spot.id);
+            }
+          : undefined
+      }
     >
-      <Link href={`/spots/${spot.id}`} className="block px-3 pt-3 pb-2">
+      <Link
+        href={`/spots/${spot.id}`}
+        className="block px-3 pt-3 pb-2"
+        onClick={onSelect ? (e) => e.preventDefault() : undefined}
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
