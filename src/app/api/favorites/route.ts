@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const toggleFavoriteSchema = z.object({
+  spotId: z.string().min(1),
+});
 
 /**
  * GET /api/favorites — list current user's favorites
@@ -43,12 +48,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const spotId = body?.spotId;
-
-  if (!spotId || typeof spotId !== "string") {
-    return NextResponse.json({ error: "spotId requis" }, { status: 400 });
+  const raw = await request.json();
+  const parsed = toggleFavoriteSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "spotId requis" },
+      { status: 400 },
+    );
   }
+  const { spotId } = parsed.data;
 
   // Check if already favorited
   const existing = await prisma.favorite.findUnique({

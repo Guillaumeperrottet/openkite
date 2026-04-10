@@ -161,7 +161,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
         setMobileFiltersOpen(true);
       }
     },
-    [reverseGeocode, isMobile],
+    [reverseGeocode, isMobile, setSheetFrac],
   );
 
   const handleGeolocate = () => {
@@ -250,7 +250,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
   const handlePickOnMap = useCallback(() => {
     setSheetFrac(SNAP_PEEK);
     setMobileFiltersOpen(false);
-  }, []);
+  }, [setSheetFrac]);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -379,6 +379,13 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
         setDeskGeoResults([]);
       }
     }, 300);
+  }, []);
+
+  // Cleanup deskGeoTimer on unmount to prevent stale state updates
+  useEffect(() => {
+    return () => {
+      if (deskGeoTimer.current) clearTimeout(deskGeoTimer.current);
+    };
   }, []);
 
   return (

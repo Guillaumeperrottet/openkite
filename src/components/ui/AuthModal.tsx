@@ -54,14 +54,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           setError(authError.message);
         }
       } else {
-        // Sync user to Prisma
-        try {
-          await fetch("/api/auth/sync", { method: "POST" });
-        } catch {
-          // Non-blocking
-        }
+        // Sync user to Prisma (non-blocking)
+        fetch("/api/auth/sync", { method: "POST" }).catch(() => {});
         onClose();
-        window.location.reload();
       }
     }
   };

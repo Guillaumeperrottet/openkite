@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const updateTopicSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  body: z.string().min(1).max(50000).optional(),
+  pinned: z.boolean().optional(),
+});
 
 interface Ctx {
   params: Promise<{ id: string }>;
@@ -112,11 +119,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
 
-  const { title, body, pinned } = (await req.json()) as {
-    title?: string;
-    body?: string;
-    pinned?: boolean;
-  };
+  const raw = await req.json();
+  const parsed = updateTopicSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Données invalides" },
+      { status: 400 },
+    );
+  }
+  const { title, body, pinned } = parsed.data;
 
   const data: {
     title?: string;
@@ -126,7 +137,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   } = {};
   // Author or admin can edit title/body
   if (isAuthor || isAdmin) {
-    if (typeof title === "string" && title.trim()) {
+    if (title) {
       data.title = title.trim();
       data.slug = title
         .trim()
@@ -136,12 +147,12 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
     }
-    if (typeof body === "string" && body.trim()) {
+    if (body) {
       data.body = body.trim();
     }
   }
   // Only admin can pin
-  if (typeof pinned === "boolean" && isAdmin) {
+  if (pinned !== undefined && isAdmin) {
     data.pinned = pinned;
   }
 

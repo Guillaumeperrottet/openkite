@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import type { User } from "@supabase/supabase-js";
 import { useAuth } from "@/lib/useAuth";
 import { useFavorites } from "@/lib/useFavorites";
@@ -51,10 +57,13 @@ export function FavProvider({ children }: { children: React.ReactNode }) {
 
   const requestAuth = useCallback(() => setShowAuth(true), []);
 
+  const value = useMemo(
+    () => ({ user, favoriteIds, toggleFavorite, requestAuth, signOut }),
+    [user, favoriteIds, toggleFavorite, requestAuth, signOut],
+  );
+
   return (
-    <FavContext.Provider
-      value={{ user, favoriteIds, toggleFavorite, requestAuth, signOut }}
-    >
+    <FavContext.Provider value={value}>
       {children}
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </FavContext.Provider>

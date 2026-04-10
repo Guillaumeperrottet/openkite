@@ -107,10 +107,10 @@ export function scoreDayForecast(
   const t = SPORT_THRESHOLDS[sport];
   const date = forecast[0]?.time?.split("T")[0] ?? "";
 
-  // Focus on daytime hours (7h–20h)
+  // Focus on daytime hours (6h–20h)
   const daytime = forecast.filter((f) => {
     const h = new Date(f.time).getHours();
-    return h >= 7 && h <= 20;
+    return h >= 6 && h <= 20;
   });
   if (!daytime.length) {
     return {

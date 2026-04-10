@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const createTopicSchema = z.object({
+  title: z.string().min(1).max(200),
+  body: z.string().min(1).max(50000),
+  categorySlug: z.string().min(1),
+});
 
 /** GET /api/forum/topics?category=slug&page=1 */
 export async function GET(request: NextRequest) {
@@ -55,29 +62,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { title, body: topicBody, categorySlug } = body ?? {};
-
-  if (
-    !title ||
-    typeof title !== "string" ||
-    !topicBody ||
-    typeof topicBody !== "string" ||
-    !categorySlug ||
-    typeof categorySlug !== "string"
-  ) {
+  const raw = await request.json();
+  const parsed = createTopicSchema.safeParse(raw);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "title, body et categorySlug requis" },
+      { error: parsed.error.issues[0]?.message ?? "Données invalides" },
       { status: 400 },
     );
   }
-
-  if (title.length > 200) {
-    return NextResponse.json(
-      { error: "Titre trop long (200 max)" },
-      { status: 400 },
-    );
-  }
+  const { title, body: topicBody, categorySlug } = parsed.data;
 
   const category = await prisma.forumCategory.findUnique({
     where: { slug: categorySlug },

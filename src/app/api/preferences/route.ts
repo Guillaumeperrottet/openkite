@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 const SPORT_FILTERS = ["ALL", "KITE", "PARAGLIDE"] as const;
+
+const updatePreferencesSchema = z.object({
+  sportFilter: z.enum(SPORT_FILTERS).optional(),
+  useKnots: z.boolean().optional(),
+});
 
 /**
  * GET /api/preferences — return current user's preferences
@@ -41,27 +47,21 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const body = await request.json();
+  const raw = await request.json();
+  const parsed = updatePreferencesSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Données invalides" },
+      { status: 400 },
+    );
+  }
   const data: Record<string, unknown> = {};
 
-  if (body.sportFilter !== undefined) {
-    if (!SPORT_FILTERS.includes(body.sportFilter)) {
-      return NextResponse.json(
-        { error: "sportFilter invalide" },
-        { status: 400 },
-      );
-    }
-    data.sportFilter = body.sportFilter;
+  if (parsed.data.sportFilter !== undefined) {
+    data.sportFilter = parsed.data.sportFilter;
   }
-
-  if (body.useKnots !== undefined) {
-    if (typeof body.useKnots !== "boolean") {
-      return NextResponse.json(
-        { error: "useKnots doit être un booléen" },
-        { status: 400 },
-      );
-    }
-    data.useKnots = body.useKnots;
+  if (parsed.data.useKnots !== undefined) {
+    data.useKnots = parsed.data.useKnots;
   }
 
   if (Object.keys(data).length === 0) {

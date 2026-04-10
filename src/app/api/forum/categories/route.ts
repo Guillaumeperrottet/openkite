@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const createCategorySchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  icon: z.string().max(50).optional(),
+});
 
 function isAdmin(userId: string) {
   const ids = (process.env.ADMIN_USER_IDS ?? "").split(",").filter(Boolean);
@@ -36,15 +43,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
 
-  const { name, description, icon } = (await req.json()) as {
-    name?: string;
-    description?: string;
-    icon?: string;
-  };
-
-  if (!name || !name.trim()) {
-    return NextResponse.json({ error: "Nom requis" }, { status: 400 });
+  const raw = await req.json();
+  const parsed = createCategorySchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Données invalides" },
+      { status: 400 },
+    );
   }
+  const { name, description, icon } = parsed.data;
 
   const slug = name
     .trim()

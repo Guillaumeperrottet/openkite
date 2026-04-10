@@ -25,10 +25,14 @@ const CONFIG_KEY = "netatmo_refresh_token";
 
 let cachedToken: { access_token: string; expires_at: number } | null = null;
 
+/** In-flight refresh promise to prevent concurrent token rotations. */
+let refreshPromise: Promise<string> | null = null;
+
 /**
  * Get a valid access token, refreshing if needed.
  * Reads the refresh_token from DB (persisted across deploys/cold starts).
  * After each refresh, the NEW refresh_token is saved back to DB.
+ * Uses a shared promise to prevent concurrent refresh race conditions.
  */
 async function getAccessToken(): Promise<string> {
   // Return cached token if still valid (with 60s margin)
@@ -36,6 +40,20 @@ async function getAccessToken(): Promise<string> {
     return cachedToken.access_token;
   }
 
+  // If a refresh is already in-flight, wait for it instead of starting another
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = refreshAccessToken();
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
+async function refreshAccessToken(): Promise<string> {
   const clientId = process.env.NETATMO_CLIENT_ID;
   const clientSecret = process.env.NETATMO_CLIENT_SECRET;
 

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const updatePostSchema = z.object({
+  body: z.string().min(1).max(10000),
+});
 
 /** PATCH /api/forum/posts/[id] — edit own post body */
 export async function PATCH(
@@ -28,10 +33,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
 
-  const { body } = (await req.json()) as { body?: string };
-  if (typeof body !== "string" || !body.trim()) {
-    return NextResponse.json({ error: "Body requis" }, { status: 400 });
+  const raw = await req.json();
+  const parsed = updatePostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Données invalides" },
+      { status: 400 },
+    );
   }
+  const { body } = parsed.data;
 
   const updated = await prisma.forumPost.update({
     where: { id },

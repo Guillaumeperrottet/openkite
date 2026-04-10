@@ -516,8 +516,8 @@ export function KiteMap({
     mapRef.current = map;
     return () => {
       mounted = false;
-      if (pulseFrameRef.current !== null)
-        cancelAnimationFrame(pulseFrameRef.current);
+      const pulseFrame = pulseFrameRef.current;
+      if (pulseFrame !== null) cancelAnimationFrame(pulseFrame);
       map.remove();
       mapRef.current = null;
     };

@@ -77,7 +77,8 @@ function calcKitableScore(kmh: number, gustsKmh: number): 0 | 1 | 2 | 3 {
 
   if (kmh >= 15 && kmh <= 45 && isSteady && isIdealSpeed) return 3;
   if (kmh >= 15 && kmh <= 45 && isSteady) return 2;
-  if (kmh >= 15 && kmh <= 45) return 1;
+  if (kmh >= 15 && kmh <= 45) return 1; // gusty but rideable
+  // 12–15 or 45–55: marginal zone (too light or too strong)
   return 0;
 }
 

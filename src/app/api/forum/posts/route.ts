@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const createPostSchema = z.object({
+  topicId: z.string().min(1),
+  parentId: z.string().min(1).optional(),
+  body: z.string().min(1).max(10000),
+});
 
 /** POST /api/forum/posts — create a reply */
 export async function POST(request: NextRequest) {
@@ -13,15 +20,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { topicId, parentId, body: postBody } = body ?? {};
-
-  if (!topicId || typeof topicId !== "string") {
-    return NextResponse.json({ error: "topicId requis" }, { status: 400 });
+  const raw = await request.json();
+  const parsed = createPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Données invalides" },
+      { status: 400 },
+    );
   }
-  if (!postBody || typeof postBody !== "string" || !postBody.trim()) {
-    return NextResponse.json({ error: "body requis" }, { status: 400 });
-  }
+  const { topicId, parentId, body: postBody } = parsed.data;
 
   const topic = await prisma.forumTopic.findUnique({ where: { id: topicId } });
   if (!topic) {

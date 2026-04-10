@@ -38,7 +38,7 @@ export function windDirectionLabel(deg: number): string {
  */
 export function windColor(kmh: number): string {
   const kn = kmh / 1.852;
-  if (kn < 2) return "#d0d0d0";
+  if (kn < 2) return "#f5f5f5";
   if (kn < 5) return "#d5f0d5";
   if (kn < 8) return "#8edb8e";
   if (kn < 12) return "#3dbc3d";
@@ -53,7 +53,7 @@ export function windColor(kmh: number): string {
 export function windConditionLabel(kmh: number): string {
   if (kmh < 8) return "Calme";
   if (kmh < 15) return "Faible";
-  if (kmh < 22) return "";
+  if (kmh < 22) return "Léger";
   if (kmh < 30) return "Bon";
   if (kmh < 38) return "Fort";
   if (kmh < 50) return "Très fort";

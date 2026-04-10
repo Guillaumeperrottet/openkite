@@ -190,23 +190,29 @@ export async function fetchWindArchives(
         dataDays: 0,
       };
     }
-    const n = monthData.length;
+    const totalDays = monthData.reduce((s, d) => s + d.dataDays, 0);
     return {
       month: m + 1,
       avgWindKmh:
-        Math.round((monthData.reduce((s, d) => s + d.avgWindKmh, 0) / n) * 10) /
-        10,
+        Math.round(
+          (monthData.reduce((s, d) => s + d.avgWindKmh * d.dataDays, 0) /
+            totalDays) *
+            10,
+        ) / 10,
       avgGustsKmh:
         Math.round(
-          (monthData.reduce((s, d) => s + d.avgGustsKmh, 0) / n) * 10,
+          (monthData.reduce((s, d) => s + d.avgGustsKmh * d.dataDays, 0) /
+            totalDays) *
+            10,
         ) / 10,
       maxWindKmh:
         Math.round(Math.max(...monthData.map((d) => d.maxWindKmh)) * 10) / 10,
       dominantDirection: dominantDir(monthData.map((d) => d.dominantDirection)),
       goodDaysPct: Math.round(
-        monthData.reduce((s, d) => s + d.goodDaysPct, 0) / n,
+        monthData.reduce((s, d) => s + d.goodDaysPct * d.dataDays, 0) /
+          totalDays,
       ),
-      dataDays: monthData.reduce((s, d) => s + d.dataDays, 0),
+      dataDays: totalDays,
     };
   });
 

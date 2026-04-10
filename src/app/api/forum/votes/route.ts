@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const voteSchema = z
+  .object({
+    topicId: z.string().min(1).optional(),
+    postId: z.string().min(1).optional(),
+    value: z.union([z.literal(1), z.literal(-1)]),
+  })
+  .refine((d) => d.topicId || d.postId, {
+    message: "topicId ou postId requis",
+  });
 
 /**
  * POST /api/forum/votes
@@ -17,22 +28,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { topicId, postId, value } = body ?? {};
-
-  if (value !== 1 && value !== -1) {
+  const raw = await request.json();
+  const parsed = voteSchema.safeParse(raw);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "value doit être 1 ou -1" },
+      { error: parsed.error.issues[0]?.message ?? "Données invalides" },
       { status: 400 },
     );
   }
-
-  if (!topicId && !postId) {
-    return NextResponse.json(
-      { error: "topicId ou postId requis" },
-      { status: 400 },
-    );
-  }
+  const { topicId, postId, value } = parsed.data;
 
   // Ensure user exists
   await prisma.user.upsert({

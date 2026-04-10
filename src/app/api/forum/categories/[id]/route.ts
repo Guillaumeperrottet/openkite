@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const updateCategorySchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  icon: z.string().max(50).optional(),
+  order: z.number().int().min(0).optional(),
+});
 
 function isAdmin(userId: string) {
   const ids = (process.env.ADMIN_USER_IDS ?? "").split(",").filter(Boolean);
@@ -27,12 +35,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   }
 
-  const { name, description, icon, order } = (await req.json()) as {
-    name?: string;
-    description?: string;
-    icon?: string;
-    order?: number;
-  };
+  const raw = await req.json();
+  const parsed = updateCategorySchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Données invalides" },
+      { status: 400 },
+    );
+  }
+  const { name, description, icon, order } = parsed.data;
 
   const data: {
     name?: string;
