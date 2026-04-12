@@ -27,7 +27,7 @@ import { WindDirectionRose } from "@/components/spot/WindDirectionRose";
 import { WindChart } from "@/components/spot/WindChart";
 import { WindHistoryChart } from "@/components/spot/WindHistoryChart";
 import { NearbyStationsPanel } from "@/components/spot/NearbyStationsPanel";
-import type { StationWithDist } from "@/components/spot/useNearbyStations";
+import { useNearbyStations } from "@/components/spot/useNearbyStations";
 import { SpotLightbox } from "@/components/spot/SpotLightbox";
 
 // Lazy-load heavy below-fold components — keeps initial bundle small
@@ -89,25 +89,37 @@ interface Props {
   spot: SpotData;
   wind: WindData | null;
   windSource: { name: string; network: string } | null;
-  forecast: FullForecast | null;
-  history: HistoryPoint[] | null;
-  nearbyStations: StationWithDist[];
 }
 
-export function SpotPageClient({
-  spot,
-  wind,
-  windSource,
-  forecast,
-  history,
-  nearbyStations,
-}: Props) {
+export function SpotPageClient({ spot, wind, windSource }: Props) {
   const [useKnots, setUseKnots] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [forecast, setForecast] = useState<FullForecast | null>(null);
+  const [history, setHistory] = useState<HistoryPoint[] | null>(null);
   const router = useRouter();
   const { favoriteIds, toggleFavorite } = useFavContext();
   const isFav = favoriteIds.has(spot.id);
+  const { nearbyStations, loadingStations } = useNearbyStations(
+    spot.latitude,
+    spot.longitude,
+  );
+
+  // Fetch forecast + history client-side so the page renders instantly
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/spots/${spot.id}/weather`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        if (data.forecast) setForecast(data.forecast);
+        if (data.history) setHistory(data.history);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [spot.id]);
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
@@ -599,7 +611,7 @@ export function SpotPageClient({
           </h2>
           <NearbyStationsPanel
             stations={nearbyStations}
-            loading={false}
+            loading={loadingStations}
             useKnots={useKnots}
           />
         </div>
