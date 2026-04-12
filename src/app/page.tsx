@@ -28,10 +28,7 @@ export default async function HomePage() {
     }));
 
     if (stationsCache) {
-      const age = Date.now() - stationsCache.updatedAt.getTime();
-      if (age < 15 * 60 * 1000) {
-        initialStations = JSON.parse(stationsCache.value);
-      }
+      initialStations = JSON.parse(stationsCache.value);
     }
   } catch (err) {
     console.error(

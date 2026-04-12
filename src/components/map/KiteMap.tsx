@@ -601,9 +601,11 @@ export function KiteMap({
     });
 
     mapRef.current = map;
+    // Copy ref value inside the effect so the cleanup reads the correct frame ID
+    const pulseRef = pulseFrameRef;
     return () => {
       mounted = false;
-      const pulseFrame = pulseFrameRef.current;
+      const pulseFrame = pulseRef.current;
       if (pulseFrame !== null) cancelAnimationFrame(pulseFrame);
       map.remove();
       mapRef.current = null;
