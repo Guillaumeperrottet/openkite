@@ -2,6 +2,7 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getWindData } from "@/lib/utils";
+import { fetchCurrentWind } from "@/lib/windFetch";
 import type { WindData } from "@/types";
 import { SpotPageClient } from "./SpotPageClient";
 
@@ -92,7 +93,17 @@ export default async function SpotPage({ params }: Props) {
         };
       }
     } catch {
-      /* DB error — wind stays null, client will fetch */
+      /* DB error — wind stays null, fallback below */
+    }
+  }
+
+  // Fallback: fetch current wind from Open-Meteo if no station data
+  if (!wind) {
+    try {
+      wind = await fetchCurrentWind(spot.latitude, spot.longitude);
+      windSource = { name: "Grille", network: "Open-Meteo" };
+    } catch {
+      /* Open-Meteo unavailable — client will retry */
     }
   }
 

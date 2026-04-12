@@ -91,12 +91,35 @@ interface Props {
   windSource: { name: string; network: string } | null;
 }
 
-export function SpotPageClient({ spot, wind, windSource }: Props) {
+export function SpotPageClient({
+  spot,
+  wind: initialWind,
+  windSource: initialWindSource,
+}: Props) {
+  const [wind, setWind] = useState(initialWind);
+  const [windSource, setWindSource] = useState(initialWindSource);
   const [useKnots, setUseKnots] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [forecast, setForecast] = useState<FullForecast | null>(null);
   const [history, setHistory] = useState<HistoryPoint[] | null>(null);
+
+  // Client-side fallback: if server didn't provide wind, fetch from Open-Meteo
+  useEffect(() => {
+    if (wind) return;
+    let cancelled = false;
+    fetch(`/api/wind?lat=${spot.latitude}&lng=${spot.longitude}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data || data.error) return;
+        setWind(data);
+        setWindSource({ name: "Grille", network: "Open-Meteo" });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [wind, spot.latitude, spot.longitude]);
   const router = useRouter();
   const { favoriteIds, toggleFavorite } = useFavContext();
   const isFav = favoriteIds.has(spot.id);
