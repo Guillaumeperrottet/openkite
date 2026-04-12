@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -21,15 +21,25 @@ import {
   Star,
   Radio,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { WindCompass } from "@/components/spot/WindCompass";
 import { WindDirectionRose } from "@/components/spot/WindDirectionRose";
 import { WindChart } from "@/components/spot/WindChart";
 import { WindHistoryChart } from "@/components/spot/WindHistoryChart";
-import { ForecastTable } from "@/components/spot/ForecastTable";
-import { WindArchives } from "@/components/spot/WindArchives";
 import { NearbyStationsPanel } from "@/components/spot/NearbyStationsPanel";
-import { useNearbyStations } from "@/components/spot/useNearbyStations";
+import type { StationWithDist } from "@/components/spot/useNearbyStations";
 import { SpotLightbox } from "@/components/spot/SpotLightbox";
+
+// Lazy-load heavy below-fold components — keeps initial bundle small
+const ForecastTable = dynamic(
+  () => import("@/components/spot/ForecastTable").then((m) => m.ForecastTable),
+  { ssr: false },
+);
+const WindArchives = dynamic(
+  () => import("@/components/spot/WindArchives").then((m) => m.WindArchives),
+  { ssr: false },
+);
+const SpotMiniMap = dynamic(() => import("./SpotMiniMap"), { ssr: false });
 import { windConditionLabel, windDirectionLabel, MONTHS } from "@/lib/utils";
 import { roundKnots } from "@/lib/forecast";
 import { useFavContext } from "@/lib/FavContext";
@@ -81,6 +91,7 @@ interface Props {
   windSource: { name: string; network: string } | null;
   forecast: FullForecast | null;
   history: HistoryPoint[] | null;
+  nearbyStations: StationWithDist[];
 }
 
 export function SpotPageClient({
@@ -89,6 +100,7 @@ export function SpotPageClient({
   windSource,
   forecast,
   history,
+  nearbyStations,
 }: Props) {
   const [useKnots, setUseKnots] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
@@ -96,10 +108,6 @@ export function SpotPageClient({
   const router = useRouter();
   const { favoriteIds, toggleFavorite } = useFavContext();
   const isFav = favoriteIds.has(spot.id);
-  const { nearbyStations, loadingStations } = useNearbyStations(
-    spot.latitude,
-    spot.longitude,
-  );
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
@@ -591,7 +599,7 @@ export function SpotPageClient({
           </h2>
           <NearbyStationsPanel
             stations={nearbyStations}
-            loading={loadingStations}
+            loading={false}
             useKnots={useKnots}
           />
         </div>
@@ -636,90 +644,6 @@ export function SpotPageClient({
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// ── Mini Map for Spot location ────────────────────────────────────────────────
-
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
-
-function SpotMiniMap({
-  lat,
-  lng,
-  name,
-  bestDirections,
-}: {
-  lat: number;
-  lng: number;
-  name: string;
-  bestDirections: string[];
-}) {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const roseRef = useRef<HTMLDivElement>(null);
-
-  const initMap = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (!node || mapRef.current) return;
-      mapContainer.current = node;
-
-      const map = new maplibregl.Map({
-        container: node,
-        style:
-          process.env.NEXT_PUBLIC_MAP_STYLE ||
-          "https://tiles.openfreemap.org/styles/liberty",
-        center: [lng, lat],
-        zoom: 10,
-        interactive: true,
-        attributionControl: false,
-      });
-
-      map.addControl(
-        new maplibregl.NavigationControl({ showCompass: false }),
-        "top-right",
-      );
-
-      const positionRose = () => {
-        if (!roseRef.current) return;
-        const px = map.project([lng, lat]);
-        roseRef.current.style.left = `${px.x}px`;
-        roseRef.current.style.top = `${px.y}px`;
-      };
-
-      map.on("load", () => {
-        new maplibregl.Marker({ color: "#0ea5e9" })
-          .setLngLat([lng, lat])
-          .setPopup(
-            new maplibregl.Popup({ offset: 25, closeButton: false }).setText(
-              name,
-            ),
-          )
-          .addTo(map);
-        positionRose();
-      });
-
-      map.on("move", positionRose);
-      map.on("zoom", positionRose);
-      map.on("resize", positionRose);
-
-      mapRef.current = map;
-    },
-    [lat, lng, name],
-  );
-
-  return (
-    <div ref={initMap} className="w-full h-full relative">
-      {bestDirections.length > 0 && (
-        <div
-          ref={roseRef}
-          className="absolute z-10 pointer-events-none -translate-x-1/2 -translate-y-1/2"
-          style={{ left: "50%", top: "50%" }}
-        >
-          <WindDirectionRose bestDirections={bestDirections} size={180} />
-        </div>
-      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
   fetchWindHistoryStation,
 } from "@/lib/wind";
 import { fetchFullForecast } from "@/lib/forecast";
-import { getWindData } from "@/lib/utils";
+import { getWindData, haversineKm } from "@/lib/utils";
 import type { WindStation } from "@/lib/stations";
 import type { WindData } from "@/types";
 import { SpotPageClient } from "./SpotPageClient";
@@ -178,6 +178,14 @@ export default async function SpotPage({ params }: Props) {
         history={
           historyResult.status === "fulfilled" ? historyResult.value : null
         }
+        nearbyStations={allStations
+          .map((s) => ({
+            ...s,
+            dist: haversineKm(spot.latitude, spot.longitude, s.lat, s.lng),
+          }))
+          .filter((s) => s.dist <= 10)
+          .sort((a, b) => a.dist - b.dist)
+          .slice(0, 5)}
       />
     </>
   );

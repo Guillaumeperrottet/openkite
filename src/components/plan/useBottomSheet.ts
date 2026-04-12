@@ -76,9 +76,12 @@ export function useBottomSheet(initialFrac: number) {
       if (!isDragging) return;
       setIsDragging(false);
       const deltaY = dragStartY.current - clientY;
-      const velocity = deltaY / viewportH.current;
-      const biasedFrac = sheetFracRef.current + velocity * 0.3;
-      setFrac(closestSnap(biasedFrac));
+      // Swipe up → FULL, swipe down → PEEK (skip intermediate HALF)
+      if (Math.abs(deltaY) > 15) {
+        setFrac(deltaY > 0 ? SNAP_FULL : SNAP_PEEK);
+      } else {
+        setFrac(closestSnap(sheetFracRef.current));
+      }
     },
     [isDragging, setFrac],
   );
@@ -151,10 +154,12 @@ export function useBottomSheet(initialFrac: number) {
       setIsDragging(false);
       const clientY = e.changedTouches[0].clientY;
       const deltaY = dragStartY.current - clientY;
-      const velocity = deltaY / viewportH.current;
-      const currentFrac = dragStartFrac.current + deltaY / viewportH.current;
-      const biasedFrac = currentFrac + velocity * 0.3;
-      setFrac(closestSnap(biasedFrac));
+      // Swipe up → FULL, swipe down → PEEK (skip intermediate HALF)
+      if (Math.abs(deltaY) > 15) {
+        setFrac(deltaY > 0 ? SNAP_FULL : SNAP_PEEK);
+      } else {
+        setFrac(closestSnap(sheetFracRef.current));
+      }
     },
     [setFrac],
   );
