@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
       data: parsed.data,
       include: { images: true },
     });
+    revalidatePath("/");
     return NextResponse.json(spot, { status: 201 });
   } catch (err: unknown) {
     const code = (err as { code?: string }).code;

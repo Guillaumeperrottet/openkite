@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -72,6 +73,7 @@ export async function PATCH(
     data: parsed.data,
     include: { images: true },
   });
+  revalidatePath("/");
   return NextResponse.json(spot);
 }
 
@@ -86,5 +88,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Spot introuvable" }, { status: 404 });
 
   await prisma.spot.delete({ where: { id } });
+  revalidatePath("/");
   return NextResponse.json({ ok: true });
 }
