@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         time: new Date(s.updatedAt),
         windSpeedKmh: s.windSpeedKmh,
         windDirection: s.windDirection,
-        gustsKmh: null as number | null,
+        gustsKmh: s.gustsKmh ?? null,
         temperatureC: null as number | null,
         source: s.source,
       }))

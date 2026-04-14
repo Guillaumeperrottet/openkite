@@ -85,8 +85,8 @@ export default async function StationPage({ params }: Props) {
     combinedHistory = [...rawHistory, ...futurePoints];
   }
 
-  // Estimate gusts from station wind speed (~1.3× mean, standard approximation)
-  const gustsKmh = Math.round(station.windSpeedKmh * 1.3);
+  // Use real gusts from station data, fallback to ×1.3 estimate if unavailable
+  const gustsKmh = station.gustsKmh ?? Math.round(station.windSpeedKmh * 1.3);
 
   return (
     <StationPageClient

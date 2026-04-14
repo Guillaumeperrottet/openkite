@@ -12,6 +12,9 @@ const METEOSWISS_BASE =
 
 const METEOSWISS_URL = `${METEOSWISS_BASE}/ch.meteoschweiz.messwerte-windgeschwindigkeit-kmh-10min_de.json`;
 
+const METEOSWISS_GUST_URL =
+  "https://data.geo.admin.ch/ch.meteoschweiz.messwerte-wind-boeenspitze-kmh-10min/ch.meteoschweiz.messwerte-wind-boeenspitze-kmh-10min_de.json";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface WindStation {
@@ -26,6 +29,8 @@ export interface WindStation {
   altitudeM: number;
   /** Mean wind speed over last 10 minutes (km/h) */
   windSpeedKmh: number;
+  /** Peak gust speed (km/h). Null if source doesn't provide gusts. */
+  gustsKmh: number | null;
   /** Meteorological direction: where wind comes FROM (0–360°) */
   windDirection: number;
   /** ISO 8601 datetime of the measurement, e.g. "2026-04-01T18:20:00Z" */
@@ -77,15 +82,39 @@ function lv95ToWgs84(e: number, n: number): { lat: number; lng: number } {
 
 /**
  * Fetch live wind measurements from all 154 MeteoSwiss SwissMetNet stations.
+ * Also fetches the separate gusts GeoJSON (Böenspitze) and merges by station ID.
  * Results are cached by Next.js for 10 minutes (revalidate: 600).
  */
 export async function fetchMeteoSwissStations(): Promise<WindStation[]> {
-  const res = await fetch(METEOSWISS_URL, {
-    next: { revalidate: 600 },
-    signal: AbortSignal.timeout(8000),
-  } as RequestInit);
+  const [res, gustRes] = await Promise.all([
+    fetch(METEOSWISS_URL, {
+      next: { revalidate: 600 },
+      signal: AbortSignal.timeout(8000),
+    } as RequestInit),
+    fetch(METEOSWISS_GUST_URL, {
+      next: { revalidate: 600 },
+      signal: AbortSignal.timeout(8000),
+    } as RequestInit).catch(() => null),
+  ]);
+
   if (!res.ok) {
     throw new Error(`MeteoSwiss fetch failed: HTTP ${res.status}`);
+  }
+
+  // Build gust lookup: station ID → gust value (km/h)
+  const gustMap = new Map<string, number>();
+  if (gustRes && gustRes.ok) {
+    try {
+      const gustData = await gustRes.json();
+      for (const feature of gustData.features ?? []) {
+        const p = feature.properties ?? {};
+        if (p.value != null && p.value < 9999) {
+          gustMap.set(feature.id as string, p.value as number);
+        }
+      }
+    } catch {
+      /* gust data unavailable — gustsKmh will be null */
+    }
   }
 
   const data = await res.json();
@@ -110,6 +139,7 @@ export async function fetchMeteoSwissStations(): Promise<WindStation[]> {
       lng,
       altitudeM: parseFloat(p.altitude ?? "0") || 0,
       windSpeedKmh: p.value as number,
+      gustsKmh: gustMap.get(feature.id as string) ?? null,
       windDirection: p.wind_direction as number,
       updatedAt: p.reference_ts as string,
       source: "meteoswiss",

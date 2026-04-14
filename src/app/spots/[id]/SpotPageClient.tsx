@@ -103,6 +103,11 @@ export function SpotPageClient({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [forecast, setForecast] = useState<FullForecast | null>(null);
   const [history, setHistory] = useState<HistoryPoint[] | null>(null);
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(
+    spot.nearestStationId,
+  );
+  const [historySource, setHistorySource] = useState<string | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Client-side fallback: if server didn't provide wind, fetch from Open-Meteo
   useEffect(() => {
@@ -137,12 +142,41 @@ export function SpotPageClient({
         if (cancelled || !data) return;
         if (data.forecast) setForecast(data.forecast);
         if (data.history) setHistory(data.history);
+        if (data.stationId) setHistorySource(data.stationId);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [spot.id]);
+
+  // Re-fetch history when user selects a different nearby station
+  useEffect(() => {
+    if (!selectedStationId) return;
+    // Skip initial load — already fetched above
+    if (selectedStationId === spot.nearestStationId && historySource === null)
+      return;
+    // Skip if already showing this station's history
+    if (selectedStationId === historySource) return;
+
+    let cancelled = false;
+    setHistoryLoading(true);
+    const stationParam = encodeURIComponent(selectedStationId);
+    fetch(`/api/spots/${spot.id}/weather?stationId=${stationParam}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        if (data.history) setHistory(data.history);
+        if (data.stationId) setHistorySource(data.stationId);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedStationId, spot.id, spot.nearestStationId, historySource]);
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
@@ -541,7 +575,16 @@ export function SpotPageClient({
                 <TrendingUp className="h-4 w-4 text-gray-500" />
                 Historique · 48h
               </h2>
-              {windSource ? (
+              {historySource ? (
+                <span className="text-[10px] text-gray-500">
+                  {historySource}
+                  {nearbyStations.find((s) => s.id === historySource)
+                    ? ` · ${nearbyStations.find((s) => s.id === historySource)?.source === "meteoswiss" ? "MeteoSwiss" : nearbyStations.find((s) => s.id === historySource)?.source === "pioupiou" ? "Pioupiou" : nearbyStations.find((s) => s.id === historySource)?.source === "netatmo" ? "Netatmo" : nearbyStations.find((s) => s.id === historySource)?.source === "meteofrance" ? "Météo-France" : nearbyStations.find((s) => s.id === historySource)?.source === "windball" ? "Windball" : ""}`
+                    : windSource
+                      ? ` · ${windSource.network}`
+                      : ""}
+                </span>
+              ) : windSource ? (
                 <span className="text-[10px] text-gray-500">
                   {windSource.name} · {windSource.network}
                 </span>
@@ -558,7 +601,27 @@ export function SpotPageClient({
               )}
             </div>
             <div className="px-3 py-2">
-              {history && history.length > 0 ? (
+              {historyLoading ? (
+                <div className="flex items-center justify-center h-28 text-sm text-gray-400 gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  Chargement…
+                </div>
+              ) : history && history.length > 0 ? (
                 <WindHistoryChart
                   history={history}
                   forecast={forecast?.hourly}
@@ -632,10 +695,15 @@ export function SpotPageClient({
             <Radio className="h-4 w-4 text-gray-500" />
             Balises à proximité
           </h2>
+          <p className="text-xs text-gray-400 mb-3">
+            Sélectionnez une balise pour afficher son historique 48h ci-dessus.
+          </p>
           <NearbyStationsPanel
             stations={nearbyStations}
             loading={loadingStations}
             useKnots={useKnots}
+            selectedId={selectedStationId}
+            onSelect={(s) => setSelectedStationId(s.id)}
           />
         </div>
 

@@ -112,6 +112,7 @@ export async function fetchMeteoFranceStations(): Promise<WindStation[]> {
       lng: obs.lon,
       altitudeM: 0, // SYNOP response doesn't include altitude
       windSpeedKmh: Math.round(obs.ff * 3.6),
+      gustsKmh: obs.raf10 != null ? Math.round(obs.raf10 * 3.6) : null,
       windDirection: obs.dd,
       updatedAt: obs.validity_time ?? new Date().toISOString(),
       source: "meteofrance",

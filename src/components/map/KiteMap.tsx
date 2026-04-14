@@ -171,8 +171,7 @@ export function KiteMap({
       }
 
       if (best) {
-        // Estimate gusts as ~1.3× mean (standard approximation)
-        const gustsKmh = Math.round(best.windSpeedKmh * 1.3);
+        const gustsKmh = best.gustsKmh ?? Math.round(best.windSpeedKmh * 1.3);
         setSelectedWind(
           getWindData(best.windSpeedKmh, best.windDirection, gustsKmh),
         );

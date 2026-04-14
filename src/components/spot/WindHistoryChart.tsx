@@ -2,6 +2,24 @@
 
 import { useRef, useEffect, useState } from "react";
 import { windCellStyle, roundKnots } from "@/lib/forecast";
+
+/**
+ * Vibrant / neon color pair for history bars.
+ * Returns [solid, light] — solid for the bar fill, light for the luminous top fade.
+ */
+function barColors(kmh: number): [string, string] {
+  const kn = kmh / 1.852;
+  if (kn < 2) return ["#c0cdda", "#e0e8ef"];
+  if (kn < 5) return ["#90e86a", "#c8f4b0"];
+  if (kn < 8) return ["#6de840", "#b0f590"];
+  if (kn < 12) return ["#50d818", "#8eed60"];
+  if (kn < 16) return ["#e6d620", "#f2ec78"];
+  if (kn < 20) return ["#f0a818", "#f8cc60"];
+  if (kn < 25) return ["#fc762d", "#fda56a"];
+  if (kn < 30) return ["#e04010", "#f48050"];
+  if (kn < 35) return ["#8f0905", "#c83830"];
+  return ["#6a0020", "#a83050"];
+}
 import { HistoryTooltip } from "./HistoryTooltip";
 import type { HistoryPoint } from "@/types";
 import type { HourlyPoint } from "@/lib/forecast";
@@ -308,6 +326,7 @@ export function WindHistoryChart({
         onTouchStart={handleSvgTouch}
         onTouchMove={handleSvgTouch}
       >
+        <defs />
         {/* Grid lines + Y-axis labels */}
         {yTicks.map((tick) => {
           if (tick === 0) return null;
@@ -416,64 +435,124 @@ export function WindHistoryChart({
           fill="rgba(14,165,233,0.04)"
         />
 
-        {/* Hover column highlight */}
+        {/* Hover column highlight — subtle */}
         {hovPt && (
-          <rect
-            x={hovPt.x - BAR_W}
-            y={DAY_H + TIME_H}
-            width={BAR_W * 2}
-            height={CHART_H}
-            fill={
-              isHoverForecast ? "rgba(14,165,233,0.08)" : "rgba(0,0,0,0.06)"
+          <line
+            x1={hovPt.x}
+            y1={DAY_H + TIME_H}
+            x2={hovPt.x}
+            y2={DAY_H + TIME_H + CHART_H}
+            stroke={
+              isHoverForecast ? "rgba(14,165,233,0.2)" : "rgba(0,0,0,0.1)"
             }
-            rx="1"
+            strokeWidth="1"
             style={{ pointerEvents: "none" }}
           />
         )}
 
-        {/* Wind + gust bars — history past */}
+        {/* Wind + gust bars — history past (vibrant neon style) */}
         {filteredHistory.map((p, i) => {
-          const style = windCellStyle(p.windSpeedKmh);
-          const color = style.background;
-          const gustColor = windCellStyle(p.gustsKmh).background;
+          const [solid, light] = barColors(p.windSpeedKmh);
+          const [gustSolid, gustLight] = barColors(p.gustsKmh);
           const x = histX(i);
           const windH_ = bH(p.windSpeedKmh);
           const gustH_ = bH(p.gustsKmh);
           const baseY = DAY_H + TIME_H + CHART_H;
           const isFuture = toTZ(p.time) > nowInTZ;
+          const isHovered = hovPt && !hovPt.isForecast && hovPt.histIdx === i;
+          const gradId = `wg-${i}`;
+          const gustGradId = `gg-${i}`;
           return (
             <g key={`b-${i}`} opacity={isFuture ? 0.5 : 1}>
+              <defs>
+                <linearGradient id={gradId} x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stopColor={isFuture ? "#60a5fa" : solid} />
+                  <stop
+                    offset="70%"
+                    stopColor={isFuture ? "#60a5fa" : solid}
+                    stopOpacity="0.9"
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor={isFuture ? "#93c5fd" : light}
+                    stopOpacity={isHovered ? "0.95" : "0.6"}
+                  />
+                </linearGradient>
+                {p.gustsKmh > p.windSpeedKmh && (
+                  <linearGradient id={gustGradId} x1="0" y1="1" x2="0" y2="0">
+                    <stop
+                      offset="0%"
+                      stopColor={isFuture ? "#93c5fd" : gustLight}
+                      stopOpacity="0.5"
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={isFuture ? "#bfdbfe" : gustLight}
+                      stopOpacity={isHovered ? "0.4" : "0.15"}
+                    />
+                  </linearGradient>
+                )}
+              </defs>
+              {/* Gust extension — lighter gradient above main bar */}
               {p.gustsKmh > p.windSpeedKmh && (
                 <rect
                   x={x - BAR_W / 2}
                   y={baseY - gustH_}
                   width={BAR_W}
                   height={gustH_ - windH_}
-                  fill={isFuture ? "#93c5fd" : gustColor}
-                  opacity={0.35}
+                  fill={`url(#${gustGradId})`}
                   rx="0.5"
+                  style={{ transition: "opacity 0.15s" }}
                 />
               )}
+              {/* Main wind bar — vivid gradient */}
               <rect
                 x={x - BAR_W / 2}
                 y={baseY - windH_}
                 width={BAR_W}
                 height={windH_}
-                fill={isFuture ? "#60a5fa" : color}
+                fill={`url(#${gradId})`}
+                opacity={isHovered ? 1 : 0.92}
                 rx="0.5"
+                style={{ transition: "opacity 0.12s" }}
               />
+              {/* Hover bright cap — small bright rectangle on top of bar */}
+              {isHovered && !isFuture && (
+                <rect
+                  x={x - BAR_W / 2}
+                  y={baseY - windH_ - 2}
+                  width={BAR_W}
+                  height={4}
+                  fill={light}
+                  opacity="0.9"
+                  rx="0.5"
+                />
+              )}
             </g>
           );
         })}
 
-        {/* Forecast bars (blue, semi-transparent) */}
+        {/* Forecast bars (blue gradient, semi-transparent) */}
         {futureForecast.map((p, i) => {
           const x = fcstX(i);
           const windH_ = bH(p.windSpeedKmh);
           const gustH_ = bH(p.gustsKmh);
           const baseY = DAY_H + TIME_H + CHART_H;
+          const isHovered = hovPt?.isForecast && hovPt.fcstIdx === i;
+          const fgId = `fg-${i}`;
           return (
             <g key={`fb-${i}`} opacity={0.5}>
+              <defs>
+                <linearGradient id={fgId} x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="70%" stopColor="#60a5fa" stopOpacity="0.9" />
+                  <stop
+                    offset="100%"
+                    stopColor="#93c5fd"
+                    stopOpacity={isHovered ? "0.9" : "0.5"}
+                  />
+                </linearGradient>
+              </defs>
               {p.gustsKmh > p.windSpeedKmh && (
                 <rect
                   x={x - BAR_W / 2}
@@ -481,8 +560,9 @@ export function WindHistoryChart({
                   width={BAR_W}
                   height={gustH_ - windH_}
                   fill="#93c5fd"
-                  opacity={0.35}
+                  opacity={isHovered ? 0.5 : 0.25}
                   rx="0.5"
+                  style={{ transition: "opacity 0.15s" }}
                 />
               )}
               <rect
@@ -490,8 +570,10 @@ export function WindHistoryChart({
                 y={baseY - windH_}
                 width={BAR_W}
                 height={windH_}
-                fill="#60a5fa"
+                fill={`url(#${fgId})`}
+                opacity={isHovered ? 1 : 0.9}
                 rx="0.5"
+                style={{ transition: "opacity 0.12s" }}
               />
             </g>
           );

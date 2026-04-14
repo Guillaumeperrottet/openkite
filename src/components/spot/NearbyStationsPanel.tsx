@@ -29,9 +29,19 @@ interface Props {
   stations: StationWithDist[];
   loading: boolean;
   useKnots: boolean;
+  /** Currently selected station ID (highlighted) */
+  selectedId?: string | null;
+  /** Called when user clicks a station card */
+  onSelect?: (station: StationWithDist) => void;
 }
 
-export function NearbyStationsPanel({ stations, loading, useKnots }: Props) {
+export function NearbyStationsPanel({
+  stations,
+  loading,
+  useKnots,
+  selectedId,
+  onSelect,
+}: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-10 text-sm text-gray-400 gap-2">
@@ -48,12 +58,13 @@ export function NearbyStationsPanel({ stations, loading, useKnots }: Props) {
       {stations.map((s) => {
         const kts = roundKnots(s.windSpeedKmh);
         const dir = windDirectionLabel(s.windDirection);
-        return (
-          <Link
-            key={s.id}
-            href={`/stations/${s.id}`}
-            className="group bg-white rounded-xl border border-gray-200 shadow-sm p-3.5 hover:border-gray-300 hover:shadow transition-all"
-          >
+        const isSelected = selectedId === s.id;
+        const cls = `group text-left bg-white rounded-xl border shadow-sm p-3.5 hover:border-gray-300 hover:shadow transition-all ${
+          isSelected ? "border-sky-400 ring-2 ring-sky-100" : "border-gray-200"
+        }`;
+
+        const content = (
+          <>
             {/* Header: name + distance */}
             <div className="flex items-center justify-between gap-2 mb-2.5">
               <div className="flex items-center gap-1.5 min-w-0">
@@ -144,6 +155,21 @@ export function NearbyStationsPanel({ stations, loading, useKnots }: Props) {
                 <ExternalLink className="h-2.5 w-2.5 text-gray-300 group-hover:text-sky-500 transition-colors" />
               </div>
             </div>
+          </>
+        );
+
+        return onSelect ? (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => onSelect(s)}
+            className={cls}
+          >
+            {content}
+          </button>
+        ) : (
+          <Link key={s.id} href={`/stations/${s.id}`} className={cls}>
+            {content}
           </Link>
         );
       })}

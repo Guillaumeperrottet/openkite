@@ -87,6 +87,7 @@ export async function fetchPioupiouStations(): Promise<WindStation[]> {
       lng: s.location.longitude,
       altitudeM: 0, // Pioupiou API doesn't provide altitude
       windSpeedKmh: s.measurements.wind_speed_avg,
+      gustsKmh: s.measurements.wind_speed_max ?? null,
       windDirection: s.measurements.wind_heading,
       updatedAt: s.measurements.date,
       source: "pioupiou",

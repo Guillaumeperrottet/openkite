@@ -201,12 +201,14 @@ export async function fetchNetatmoStations(): Promise<WindStation[]> {
         // Find wind module in measures
         let windSpeed: number | null = null;
         let windDirection: number | null = null;
+        let gustStrength: number | null = null;
         let windTime: number | null = null;
 
         for (const mod of Object.values(s.measures)) {
           if (mod.wind_strength != null && mod.wind_angle != null) {
             windSpeed = mod.wind_strength;
             windDirection = mod.wind_angle;
+            gustStrength = mod.gust_strength ?? null;
             windTime = mod.wind_timeutc ?? null;
             break;
           }
@@ -232,6 +234,7 @@ export async function fetchNetatmoStations(): Promise<WindStation[]> {
           lng,
           altitudeM: s.place.altitude ?? 0,
           windSpeedKmh: windSpeed,
+          gustsKmh: gustStrength,
           windDirection: windDirection,
           updatedAt,
           source: "netatmo",
