@@ -241,7 +241,6 @@ export function PlanFilters({
           <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm h-10">
             {(
               [
-                ["ALL", "Tous"],
                 ["KITE", "Kite"],
                 ["PARAGLIDE", "Para"],
               ] as const
@@ -251,7 +250,9 @@ export function PlanFilters({
                 onClick={() => onSportChange(key)}
                 className={`px-3 py-2 font-medium transition-colors ${
                   sport === key
-                    ? "bg-gray-900 text-white"
+                    ? key === "KITE"
+                      ? "bg-green-500 text-white"
+                      : "bg-orange-500 text-white"
                     : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                 } ${i > 0 ? "border-l border-gray-200" : ""}`}
               >
