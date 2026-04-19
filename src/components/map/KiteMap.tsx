@@ -481,35 +481,27 @@ export function KiteMap({
         map.getCanvas().style.cursor = "";
       });
 
-      // Helper to extract station data from a feature
-      const stationFromFeature = (f: maplibregl.MapGeoJSONFeature) => {
-        const p = f.properties as Record<string, unknown>;
-        const coords = (f.geometry as GeoJSON.Point).coordinates;
-        return {
-          data: {
-            id: String(p.id ?? ""),
-            name: String(p.name ?? ""),
-            description: String(p.description ?? "") || undefined,
-            windSpeedKmh: Number(p.windSpeedKmh ?? 0),
-            windDirection: Number(p.windDirection ?? 0),
-            altitudeM: Math.round(Number(p.altitudeM ?? 0)),
-            updatedAt: String(p.updatedAt ?? ""),
-            colorHex: String(p.colorHex ?? "#6a9cbd"),
-            dirLabel: String(p.dirLabel ?? ""),
-            source: String(p.source ?? "meteoswiss"),
-            lat: coords[1],
-            lng: coords[0],
-          },
-          coords: coords as [number, number],
-        };
-      };
-
-      // Popup on station click — open StationPopup + pan map
+      // Popup on station click — open React-based StationPopup
       map.on("click", "stations-circle", (e) => {
         if (!e.features?.length) return;
-        const { data, coords } = stationFromFeature(e.features[0]);
-        setSelectedStation(data);
-        const stPx = map.project(coords);
+        const p = e.features[0].properties as Record<string, unknown>;
+        const coords = (e.features[0].geometry as GeoJSON.Point).coordinates;
+        setSelectedStation({
+          id: String(p.id ?? ""),
+          name: String(p.name ?? ""),
+          description: String(p.description ?? "") || undefined,
+          windSpeedKmh: Number(p.windSpeedKmh ?? 0),
+          windDirection: Number(p.windDirection ?? 0),
+          altitudeM: Math.round(Number(p.altitudeM ?? 0)),
+          updatedAt: String(p.updatedAt ?? ""),
+          colorHex: String(p.colorHex ?? "#6a9cbd"),
+          dirLabel: String(p.dirLabel ?? ""),
+          source: String(p.source ?? "meteoswiss"),
+          lat: coords[1],
+          lng: coords[0],
+        });
+        // Use map.project() for initial position, converted to viewport coords
+        const stPx = map.project([coords[0], coords[1]]);
         const stRect = map.getCanvas().getBoundingClientRect();
         setStationPopupPos({
           x: stRect.left + stPx.x,
@@ -521,24 +513,13 @@ export function KiteMap({
         if (stPx.y < stTargetY - 40) {
           map.panBy([0, stPx.y - stTargetY], { duration: 300 });
         }
+        // Close any open spot popup
         setSelectedSpot(null);
         setPopupPos(null);
       });
 
-      // Hover on station — open popup without panning (desktop)
-      map.on("mouseenter", "stations-circle", (e) => {
+      map.on("mouseenter", "stations-circle", () => {
         map.getCanvas().style.cursor = "pointer";
-        if (!e.features?.length) return;
-        const { data, coords } = stationFromFeature(e.features[0]);
-        setSelectedStation(data);
-        const stPx = map.project(coords);
-        const stRect = map.getCanvas().getBoundingClientRect();
-        setStationPopupPos({
-          x: stRect.left + stPx.x,
-          y: stRect.top + stPx.y,
-        });
-        setSelectedSpot(null);
-        setPopupPos(null);
       });
       map.on("mouseleave", "stations-circle", () => {
         map.getCanvas().style.cursor = "";
