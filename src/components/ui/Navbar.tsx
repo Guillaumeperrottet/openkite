@@ -14,6 +14,7 @@ import {
   Search,
   X,
   MessagesSquare,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavContext } from "@/lib/FavContext";
@@ -172,6 +173,15 @@ export function Navbar() {
                       Déconnexion
                     </button>
                   </div>
+                  <div className="border-t border-gray-100 px-3 py-2">
+                    <a
+                      href="mailto:hello@openwind.ch"
+                      className="flex items-center gap-2 text-xs text-gray-400 hover:text-sky-500 transition-colors"
+                    >
+                      <Mail className="h-3 w-3" />
+                      hello@openwind.ch
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
@@ -214,6 +224,15 @@ export function Navbar() {
                       <Plus className="h-3.5 w-3.5" />
                       Ajouter un spot
                     </Link>
+                  </div>
+                  <div className="border-t border-gray-100 px-3 py-2">
+                    <a
+                      href="mailto:hello@openwind.ch"
+                      className="flex items-center gap-2 text-xs text-gray-400 hover:text-sky-500 transition-colors"
+                    >
+                      <Mail className="h-3 w-3" />
+                      hello@openwind.ch
+                    </a>
                   </div>
                 </div>
               )}
