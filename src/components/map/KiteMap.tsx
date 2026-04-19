@@ -898,59 +898,17 @@ export function KiteMap({
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Live stations toggle + wind overlay toggle — hidden in pickMode (trip planner) */}
+      {/* Sport filter toggle — hidden in pickMode (trip planner) */}
       <div
         className={`absolute top-4 left-4 z-10 flex flex-col gap-1.5 ${pickMode ? "hidden" : ""}`}
       >
-        {/* Balises live */}
-        <button
-          onClick={() => setShowStations((v) => !v)}
-          className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold shadow-lg border transition-all ${
-            showStations
-              ? "bg-sky-600 border-sky-400 text-white"
-              : "bg-white/95 border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300"
-          }`}
-        >
-          <span className="relative flex h-2 w-2">
-            {showStations && (
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75" />
-            )}
-            <span
-              className={`relative inline-flex rounded-full h-2 w-2 ${showStations ? "bg-sky-300" : "bg-gray-400"}`}
-            />
-          </span>
-          Balises live
-          {loadingStations && (
-            <svg
-              className="animate-spin h-3 w-3 ml-0.5 text-sky-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
-              />
-            </svg>
-          )}
-        </button>
-
         {/* Sport filter toggle */}
         <div className="flex items-center rounded-full bg-white/95 shadow-lg border border-gray-200 p-0.5 text-[11px] font-semibold">
           {(["ALL", "KITE", "PARAGLIDE"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setSportFilter(v)}
-              className={`px-2.5 py-1 rounded-full transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all ${
                 sportFilter === v
                   ? v === "KITE"
                     ? "bg-green-500 text-white"
@@ -960,7 +918,23 @@ export function KiteMap({
                   : "text-gray-500 hover:text-gray-800"
               }`}
             >
-              {v === "ALL" ? "Tous" : v === "KITE" ? "Kite" : "Para"}
+              {v === "ALL" ? (
+                "Tous"
+              ) : v === "KITE" ? (
+                <>
+                  <span
+                    className={`inline-block h-1.5 w-1.5 rounded-full ${sportFilter === v ? "bg-white" : "bg-green-500"}`}
+                  />
+                  Kite
+                </>
+              ) : (
+                <>
+                  <span
+                    className={`inline-block h-1.5 w-1.5 rounded-full ${sportFilter === v ? "bg-white" : "bg-orange-500"}`}
+                  />
+                  Para
+                </>
+              )}
             </button>
           ))}
         </div>

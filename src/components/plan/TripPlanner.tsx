@@ -82,7 +82,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
     searchParams?.radius ? Number(searchParams.radius) : 150,
   );
   const [sport, setSport] = useState<SportType | "ALL">(
-    (searchParams?.sport as SportType) || "ALL",
+    (searchParams?.sport as SportType) || "KITE",
   );
   const [sortBy, setSortBy] = useState<SortKey>("score");
   const [results, setResults] = useState<SpotWithForecast[]>([]);
@@ -543,7 +543,6 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
             <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
               {(
                 [
-                  ["ALL", "Tous"],
                   ["KITE", "Kite"],
                   ["PARAGLIDE", "Para"],
                 ] as const
@@ -553,7 +552,9 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
                   onClick={() => setSport(key)}
                   className={`px-3 py-2 font-medium transition-colors ${
                     sport === key
-                      ? "bg-gray-900 text-white"
+                      ? key === "KITE"
+                        ? "bg-green-500 text-white"
+                        : "bg-orange-500 text-white"
                       : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                   } ${i > 0 ? "border-l border-gray-200" : ""}`}
                 >
@@ -577,7 +578,6 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
                 onClick={handleSearchNearMe}
                 disabled={loading || geoLoading}
                 className="h-9.5 flex-1 sm:flex-none"
-                variant="secondary"
               >
                 {geoLoading ? (
                   "Localisation…"
@@ -594,6 +594,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
                 onClick={handleSearch}
                 disabled={loading}
                 className="h-9.5 flex-1 sm:flex-none"
+                variant="secondary"
               >
                 {loading ? (
                   "Recherche…"
@@ -846,7 +847,6 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
                           onClick={handleSearchNearMe}
                           disabled={loading || geoLoading}
                           className="h-10 flex-1"
-                          variant="secondary"
                         >
                           {geoLoading ? (
                             "Localisation…"
@@ -861,6 +861,7 @@ export function TripPlanner({ searchParams }: TripPlannerProps) {
                           onClick={handleSearch}
                           disabled={loading}
                           className="h-10 flex-1"
+                          variant="secondary"
                         >
                           <Globe className="h-3.5 w-3.5 mr-1" />
                           Meilleurs spots
