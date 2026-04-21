@@ -66,6 +66,8 @@ export function KiteMap({
   /** GeoJSON features refs for the combined clustered source */
   const stationFeaturesRef = useRef<GeoJSON.Feature[]>([]);
   const spotFeaturesRef = useRef<GeoJSON.Feature[]>([]);
+  /** Keep sportFilter in a ref so loadStations callback can read current value */
+  const sportFilterRef = useRef<"ALL" | "KITE" | "PARAGLIDE">("ALL");
 
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
   const [selectedWind, setSelectedWind] = useState<WindData | null>(null);
@@ -102,6 +104,7 @@ export function KiteMap({
   );
   const setSportFilter = useCallback((v: "ALL" | "KITE" | "PARAGLIDE") => {
     _setSportFilter(v);
+    sportFilterRef.current = v;
     // Persist to server (fire-and-forget)
     fetch("/api/preferences", {
       method: "PATCH",
@@ -130,6 +133,7 @@ export function KiteMap({
     description?: string;
     windSpeedKmh: number;
     windDirection: number;
+    gustsKmh: number;
     altitudeM: number;
     updatedAt: string;
     colorHex: string;
@@ -239,6 +243,7 @@ export function KiteMap({
           colorHex: windColor(s.windSpeedKmh),
           dirLabel: windDirectionLabel(s.windDirection),
           source: s.source,
+          gustsKmh: s.gustsKmh ?? Math.round(s.windSpeedKmh * 1.3),
         },
       }));
       updateCombinedSource();
@@ -301,13 +306,38 @@ export function KiteMap({
             minute: "2-digit",
           }),
         );
+        // Update spot wind speeds for pulse coloring
+        const filter = sportFilterRef.current;
+        const allSpots = spotsRef.current;
+        const filtered =
+          filter === "ALL"
+            ? allSpots
+            : allSpots.filter((s) => s.sportType === filter);
+        const windMap = new Map<string, number>();
+        for (const spot of filtered) {
+          let best =
+            stations.find((s) => s.id === spot.nearestStationId) ?? null;
+          if (!best) {
+            let bestDist = Infinity;
+            for (const s of stations) {
+              const d =
+                (s.lat - spot.latitude) ** 2 + (s.lng - spot.longitude) ** 2;
+              if (d < bestDist) {
+                bestDist = d;
+                best = s;
+              }
+            }
+          }
+          if (best) windMap.set(spot.id, best.windSpeedKmh);
+        }
+        renderSpots(filtered, windMap);
       }
     } catch {
       // silently ignore — MeteoSwiss might be temporarily down
     } finally {
       setLoadingStations(false);
     }
-  }, [renderStations]);
+  }, [renderStations, renderSpots]);
 
   // Keep ref in sync so GL event handlers always read the current unit preference
   useEffect(() => {
@@ -483,6 +513,7 @@ export function KiteMap({
           description: String(p.description ?? "") || undefined,
           windSpeedKmh: Number(p.windSpeedKmh ?? 0),
           windDirection: Number(p.windDirection ?? 0),
+          gustsKmh: Number(p.gustsKmh ?? 0),
           altitudeM: Math.round(Number(p.altitudeM ?? 0)),
           updatedAt: String(p.updatedAt ?? ""),
           colorHex: String(p.colorHex ?? "#6a9cbd"),
@@ -852,14 +883,36 @@ export function KiteMap({
   // GPU-accelerated wind particle overlay (MapLibre custom layer)
   useWindOverlay(mapRef, showWindOverlay, mapLoaded);
 
-  // Push spots to GeoJSON layer (no wind fetch — wind is loaded on click)
+  // Push spots to GeoJSON layer — build windMap from nearest stations for pulse coloring
   useEffect(() => {
     if (!mapLoaded) return;
     const filtered =
       sportFilter === "ALL"
         ? spots
         : spots.filter((s) => s.sportType === sportFilter);
-    renderSpots(filtered);
+
+    const stations = stationsRef.current;
+    if (stations.length > 0) {
+      const windMap = new Map<string, number>();
+      for (const spot of filtered) {
+        let best = stations.find((s) => s.id === spot.nearestStationId) ?? null;
+        if (!best) {
+          let bestDist = Infinity;
+          for (const s of stations) {
+            const d =
+              (s.lat - spot.latitude) ** 2 + (s.lng - spot.longitude) ** 2;
+            if (d < bestDist) {
+              bestDist = d;
+              best = s;
+            }
+          }
+        }
+        if (best) windMap.set(spot.id, best.windSpeedKmh);
+      }
+      renderSpots(filtered, windMap);
+    } else {
+      renderSpots(filtered);
+    }
   }, [spots, mapLoaded, renderSpots, sportFilter]);
 
   // Highlight a spot on hover from external panel (e.g. TripPlanner results)

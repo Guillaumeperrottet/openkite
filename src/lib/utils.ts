@@ -6,6 +6,24 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Wind bar color pair — same palette as the 48h history chart.
+ * Returns [solid, light] — solid for text/stroke, light for background fills.
+ */
+export function barColors(kmh: number): [string, string] {
+  const kn = kmh / 1.852;
+  if (kn < 2) return ["#c0cdda", "#e0e8ef"];
+  if (kn < 5) return ["#90e86a", "#c8f4b0"];
+  if (kn < 8) return ["#6de840", "#b0f590"];
+  if (kn < 12) return ["#50d818", "#8eed60"];
+  if (kn < 16) return ["#e6d620", "#f2ec78"];
+  if (kn < 20) return ["#f0a818", "#f8cc60"];
+  if (kn < 25) return ["#fc762d", "#fda56a"];
+  if (kn < 30) return ["#e04010", "#f48050"];
+  if (kn < 35) return ["#8f0905", "#c83830"];
+  return ["#6a0020", "#a83050"];
+}
+
 /** Haversine distance between two lat/lng points, returns km */
 export function haversineKm(
   lat1: number,

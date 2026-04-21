@@ -486,12 +486,6 @@ export function SpotPageClient({
                         {useKnots ? "kts" : "km/h"}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-500 mt-1.5">
-                      /{" "}
-                      {useKnots
-                        ? `${Math.round(speedKmh)} km/h`
-                        : `${speedKts} kts`}
-                    </div>
                   </>
                 ) : (
                   <div className="text-4xl sm:text-5xl font-bold text-gray-400">
@@ -515,12 +509,6 @@ export function SpotPageClient({
                       <span className="text-base text-gray-500 font-medium">
                         {useKnots ? "kts" : "km/h"}
                       </span>
-                    </div>
-                    <div className="text-sm text-gray-500 mt-1.5">
-                      /{" "}
-                      {useKnots
-                        ? `${Math.round(gustsKmh)} km/h`
-                        : `${gustsKts} kts`}
                     </div>
                   </>
                 ) : (

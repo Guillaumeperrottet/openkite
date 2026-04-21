@@ -302,13 +302,25 @@ export function addMapLayers(map: maplibregl.Map, pickMode: boolean) {
         "circle-color": [
           "step",
           ["get", "windSpeedKmh"],
-          "#6a9cbd",
+          "#c0cdda",
+          4,
+          "#90e86a",
+          9,
+          "#6de840",
+          15,
+          "#50d818",
+          22,
+          "#e6d620",
           30,
-          "#3a7fa8",
-          38,
-          "#e07720",
-          50,
-          "#cc3333",
+          "#f0a818",
+          37,
+          "#fc762d",
+          46,
+          "#e04010",
+          56,
+          "#8f0905",
+          65,
+          "#6a0020",
         ],
         "circle-opacity": 0.45,
         "circle-stroke-width": 0,
@@ -316,6 +328,39 @@ export function addMapLayers(map: maplibregl.Map, pickMode: boolean) {
     },
     "stations-tail",
   );
+
+  // Kite only: pulse starts at 10 kts (19 km/h), no pulse for para
+  const SPOT_PULSE_COLOR: maplibregl.ExpressionSpecification = [
+    "step",
+    ["get", "windSpeedKmh"],
+    "#50d818", // 19–46 km/h (10–25 kts) → green
+    46,
+    "#e6d620", // 46–56 km/h (25–30 kts) → yellow
+    56,
+    "#f0a818", // 56–65 km/h (30–35 kts) → orange
+    65,
+    "#e04010", // > 65 km/h (>35 kts)    → red
+  ];
+
+  // Pulse ring added BEFORE spots-circle so it expands outward from behind
+  map.addLayer({
+    id: "spots-pulse",
+    type: "circle",
+    source: "combined-source",
+    filter: [
+      "all",
+      ["!", ["has", "point_count"]],
+      ["==", ["get", "featureType"], "spot"],
+      ["==", ["get", "sportType"], "KITE"],
+      [">=", ["get", "windSpeedKmh"], 19],
+    ],
+    paint: {
+      "circle-radius": 8,
+      "circle-color": SPOT_PULSE_COLOR,
+      "circle-opacity": 0.5,
+      "circle-stroke-width": 0,
+    },
+  });
 
   // ── Spot layers ──
   map.addLayer({
@@ -338,40 +383,11 @@ export function addMapLayers(map: maplibregl.Map, pickMode: boolean) {
         "#f97316",
         "#22c55e",
       ],
-      "circle-stroke-color": "rgba(255,255,255,0.7)",
+      "circle-stroke-color": "rgba(255,255,255,0.8)",
       "circle-stroke-width": 1.5,
       "circle-opacity": 0.95,
     },
   });
-
-  map.addLayer(
-    {
-      id: "spots-pulse",
-      type: "circle",
-      source: "combined-source",
-      filter: [
-        "all",
-        ["!", ["has", "point_count"]],
-        ["==", ["get", "featureType"], "spot"],
-        [">=", ["get", "windSpeedKmh"], 22],
-      ],
-      paint: {
-        "circle-radius": 8,
-        "circle-color": [
-          "match",
-          ["get", "sportType"],
-          "KITE",
-          "#22c55e",
-          "PARAGLIDE",
-          "#f97316",
-          "#22c55e",
-        ],
-        "circle-opacity": 0.4,
-        "circle-stroke-width": 0,
-      },
-    },
-    "spots-circle",
-  );
 
   map.addLayer({
     id: "spots-highlight",
@@ -420,11 +436,11 @@ export function startPulseAnimation(
       );
     }
     if (map.getLayer("spots-pulse")) {
-      map.setPaintProperty("spots-pulse", "circle-radius", 8 + wave * 8);
+      map.setPaintProperty("spots-pulse", "circle-radius", 8 + wave * 14);
       map.setPaintProperty(
         "spots-pulse",
         "circle-opacity",
-        0.4 * (1 - wave * 0.9),
+        1.0 * (1 - wave * 0.88),
       );
     }
     timerRef.current = window.setTimeout(tick, 50);

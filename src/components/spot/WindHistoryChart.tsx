@@ -2,24 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { roundKnots } from "@/lib/forecast";
-
-/**
- * Vibrant / neon color pair for history bars.
- * Returns [solid, light] — solid for the bar fill, light for the luminous top fade.
- */
-function barColors(kmh: number): [string, string] {
-  const kn = kmh / 1.852;
-  if (kn < 2) return ["#c0cdda", "#e0e8ef"];
-  if (kn < 5) return ["#90e86a", "#c8f4b0"];
-  if (kn < 8) return ["#6de840", "#b0f590"];
-  if (kn < 12) return ["#50d818", "#8eed60"];
-  if (kn < 16) return ["#e6d620", "#f2ec78"];
-  if (kn < 20) return ["#f0a818", "#f8cc60"];
-  if (kn < 25) return ["#fc762d", "#fda56a"];
-  if (kn < 30) return ["#e04010", "#f48050"];
-  if (kn < 35) return ["#8f0905", "#c83830"];
-  return ["#6a0020", "#a83050"];
-}
+import { barColors } from "@/lib/utils";
 import { HistoryTooltip } from "./HistoryTooltip";
 import type { HistoryPoint } from "@/types";
 import type { HourlyPoint } from "@/lib/forecast";

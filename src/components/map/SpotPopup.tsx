@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { X, Wind, Waves, ExternalLink, Star } from "lucide-react";
 import type { Spot, WindData } from "@/types";
-import { windArrow, windDirectionLabel } from "@/lib/utils";
+import { windArrow, windDirectionLabel, barColors } from "@/lib/utils";
 import { useFavContext } from "@/lib/FavContext";
 import {
   Badge,
@@ -174,29 +174,16 @@ export function SpotPopup({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="font-bold text-xl text-gray-900">
+                  <span
+                    className="font-bold text-xl tabular-nums"
+                    style={{ color: barColors(wind.windSpeedKmh)[0] }}
+                  >
                     {fmt(wind.windSpeedKmh)}
-                  </span>
-                  <span className="text-gray-400 text-[10px]">
-                    {useKnots
-                      ? `${Math.round(wind.windSpeedKmh)} km/h`
-                      : `${Math.round(wind.windSpeedKmh / 1.852)} kts`}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500 mt-0.5">
                   {windDirectionLabel(wind.windDirection)} · rafales{" "}
                   {fmt(wind.gustsKmh)}
-                </div>
-                <div
-                  className="inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                  style={{
-                    background: wind.isKitable
-                      ? "rgba(22,163,74,0.15)"
-                      : "rgba(113,113,122,0.1)",
-                    color: wind.isKitable ? "#4ade80" : "#71717a",
-                  }}
-                >
-                  {wind.isKitable ? "✓ Kitable" : "✗ " + wind.conditionLabel}
                 </div>
               </div>
             </div>

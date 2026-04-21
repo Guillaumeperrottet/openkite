@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { X, ExternalLink } from "lucide-react";
-import { windConditionLabel } from "@/lib/utils";
+import { windConditionLabel, barColors } from "@/lib/utils";
 import { WindHistoryChart } from "@/components/spot/WindHistoryChart";
 import type { HistoryPoint } from "@/types";
 
@@ -12,6 +12,7 @@ interface StationInfo {
   description?: string;
   windSpeedKmh: number;
   windDirection: number;
+  gustsKmh: number;
   altitudeM: number;
   updatedAt: string;
   colorHex: string;
@@ -94,12 +95,14 @@ export function StationPopup({
 
   const speedKmh = Math.round(station.windSpeedKmh);
   const speedKts = Math.round(speedKmh / 1.852);
+  const gustsKmh = Math.round(station.gustsKmh);
+  const gustsKts = Math.round(gustsKmh / 1.852);
   const color = station.colorHex;
   const dir = station.windDirection;
   const arrowRot = (dir + 180) % 360;
   const dirLabel = station.dirLabel;
   const primary = useKnots ? `${speedKts} kts` : `${speedKmh} km/h`;
-  const secondary = useKnots ? `${speedKmh} km/h` : `${speedKts} kts`;
+  const gusts = useKnots ? `${gustsKts} kts` : `${gustsKmh} km/h`;
   const condLabel = windConditionLabel(speedKmh);
   const time = new Date(station.updatedAt).toLocaleTimeString("fr", {
     hour: "2-digit",
@@ -217,13 +220,16 @@ export function StationPopup({
         </svg>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold tabular-nums text-gray-900">
+            <span
+              className="text-2xl font-bold tabular-nums"
+              style={{ color: barColors(speedKmh)[0] }}
+            >
               {primary}
             </span>
-            <span className="text-xs text-gray-400">{secondary}</span>
           </div>
           <div className="text-xs text-gray-500 mt-0.5">
             {dirLabel} · {dir}°
+            {station.gustsKmh > 0 ? ` · rafales ${gusts}` : ""}
           </div>
         </div>
         <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 shrink-0">

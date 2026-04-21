@@ -112,7 +112,7 @@ export async function fetchWindballStations(): Promise<WindStation[]> {
             lng: device.longitude,
             altitudeM: device.altitude || 0,
             windSpeedKmh: latest.windSpeed ?? 0,
-            gustsKmh: latest.windBurst ?? null,
+            gustsKmh: latest.windBurst || null, // 0 means no gust data
             windDirection: latest.windDir ?? 0,
             updatedAt: latest.updatedAt,
             source: "windball" as const,

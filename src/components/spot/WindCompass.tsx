@@ -217,23 +217,7 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
         <div
           className={`text-xs mt-0.5 ${light ? "text-gray-400" : "text-zinc-400"}`}
         >
-          {Math.round(wind.windSpeedKmh)}&thinsp;/&thinsp;
-          {Math.round(wind.gustsKmh)} km/h &nbsp;·&nbsp;{dirLabel}
-        </div>
-
-        {/* Kite status badge */}
-        <div
-          className="inline-block mt-2 rounded-full px-3 py-0.5 text-xs font-medium"
-          style={{
-            background: wind.isKitable
-              ? "rgba(22,163,74,0.15)"
-              : light
-                ? "rgba(0,0,0,0.06)"
-                : "rgba(113,113,122,0.2)",
-            color: wind.isKitable ? "#4ade80" : light ? "#6b7280" : "#71717a",
-          }}
-        >
-          {wind.isKitable ? "✓ Kitable" : wind.conditionLabel}
+          {dirLabel}
         </div>
 
         {/* Source + update time */}
