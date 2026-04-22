@@ -41,7 +41,12 @@ const WindArchives = dynamic(
   { ssr: false },
 );
 const SpotMiniMap = dynamic(() => import("./SpotMiniMap"), { ssr: false });
-import { windConditionLabel, windDirectionLabel, MONTHS } from "@/lib/utils";
+import {
+  windConditionLabel,
+  windDirectionLabel,
+  MONTHS,
+  getWindData,
+} from "@/lib/utils";
 import { roundKnots } from "@/lib/forecast";
 import { useFavContext } from "@/lib/FavContext";
 import {
@@ -51,8 +56,37 @@ import {
   WATER_LABELS,
 } from "@/components/ui/Badge";
 import type { WindData } from "@/types";
+import type { WindStation } from "@/lib/stations";
 import type { HistoryPoint } from "@/types";
 import type { FullForecast } from "@/lib/forecast";
+
+/** Extract wind from the last real (non-future) point of a history array. */
+function windFromHistory(
+  history: HistoryPoint[],
+  stationId: string,
+): { wind: WindData; windSource: { name: string; network: string } } | null {
+  const nowUtc = new Date().toISOString().slice(0, 16);
+  // Walk backwards to find the last past point
+  for (let i = history.length - 1; i >= 0; i--) {
+    const p = history[i];
+    if (p.time <= nowUtc) {
+      const network = stationId.startsWith("piou-")
+        ? "Pioupiou"
+        : stationId.startsWith("ntm-")
+          ? "Netatmo"
+          : stationId.startsWith("mf-")
+            ? "Météo-France"
+            : stationId.startsWith("windball-")
+              ? "Windball"
+              : "MeteoSwiss";
+      return {
+        wind: getWindData(p.windSpeedKmh, p.windDirection, p.gustsKmh),
+        windSource: { name: stationId, network },
+      };
+    }
+  }
+  return null;
+}
 
 // Serialised spot from Prisma (dates are strings after JSON)
 interface SpotData {
@@ -110,7 +144,71 @@ export function SpotPageClient({
   const [historySource, setHistorySource] = useState<string | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  // Client-side fallback: if server didn't provide wind, fetch from Open-Meteo
+  // Fetch live station data — same source as map popup (overrides SSR wind)
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/stations")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((stations: WindStation[] | null) => {
+        if (cancelled || !stations || stations.length === 0) return;
+        // Find nearest station — prefer nearestStationId, then closest by distance
+        let best = spot.nearestStationId
+          ? (stations.find((s) => s.id === spot.nearestStationId) ?? null)
+          : null;
+        if (!best) {
+          let bestDist = Infinity;
+          for (const s of stations) {
+            const d =
+              (s.lat - spot.latitude) ** 2 + (s.lng - spot.longitude) ** 2;
+            if (d < bestDist) {
+              bestDist = d;
+              best = s;
+            }
+          }
+        }
+        if (!best) return;
+        const network =
+          best.source === "pioupiou"
+            ? "Pioupiou"
+            : best.source === "netatmo"
+              ? "Netatmo"
+              : best.source === "meteofrance"
+                ? "Météo-France"
+                : best.source === "windball"
+                  ? "Windball"
+                  : "MeteoSwiss";
+        setWind(
+          getWindData(
+            best.windSpeedKmh,
+            best.windDirection,
+            best.gustsKmh ?? Math.round(best.windSpeedKmh * 1.3),
+          ),
+        );
+        setWindSource({ name: best.id, network });
+
+        // Inject live point into history if it's newer than the last DB point
+        const liveTime = new Date(best.updatedAt).toISOString().slice(0, 16);
+        setHistory((prev) => {
+          if (!prev || prev.length === 0) return prev;
+          const lastTime = prev[prev.length - 1].time;
+          if (liveTime <= lastTime) return prev; // already up to date
+          const livePoint = {
+            time: liveTime,
+            windSpeedKmh: best.windSpeedKmh,
+            windDirection: best.windDirection,
+            gustsKmh: best.gustsKmh ?? Math.round(best.windSpeedKmh * 1.3),
+            temperatureC: 0,
+          };
+          return [...prev, livePoint];
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [spot.latitude, spot.longitude, spot.nearestStationId]);
+
+  // Fallback: if no station resolved wind, try Open-Meteo grid
   useEffect(() => {
     if (wind) return;
     let cancelled = false;
@@ -134,7 +232,7 @@ export function SpotPageClient({
     spot.longitude,
   );
 
-  // Fetch forecast + history client-side so the page renders instantly
+  // Fetch forecast + history client-side — update wind from last real station point
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/spots/${spot.id}/weather`)
@@ -142,7 +240,17 @@ export function SpotPageClient({
       .then((data) => {
         if (cancelled || !data) return;
         if (data.forecast) setForecast(data.forecast);
-        if (data.history) setHistory(data.history);
+        if (data.history) {
+          setHistory(data.history);
+          // Derive wind from last real measurement — same source as the graph
+          if (data.stationId) {
+            const derived = windFromHistory(data.history, data.stationId);
+            if (derived) {
+              setWind(derived.wind);
+              setWindSource(derived.windSource);
+            }
+          }
+        }
         if (data.stationId) setHistorySource(data.stationId);
       })
       .catch(() => {});
@@ -170,7 +278,17 @@ export function SpotPageClient({
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled || !data) return;
-        if (data.history) setHistory(data.history);
+        if (data.history) {
+          setHistory(data.history);
+          // Update wind to match the newly selected station
+          if (data.stationId) {
+            const derived = windFromHistory(data.history, data.stationId);
+            if (derived) {
+              setWind(derived.wind);
+              setWindSource(derived.windSource);
+            }
+          }
+        }
         if (data.stationId) setHistorySource(data.stationId);
       })
       .catch(() => {})
