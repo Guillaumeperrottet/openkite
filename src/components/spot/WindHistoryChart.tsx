@@ -261,6 +261,7 @@ export function WindHistoryChart({
     handlePointer(e.currentTarget, e.clientX, e.clientY);
 
   const handleSvgTouch = (e: React.TouchEvent<SVGSVGElement>) => {
+    e.preventDefault();
     const touch = e.touches[0];
     if (touch) handlePointer(e.currentTarget, touch.clientX, touch.clientY);
   };
@@ -281,10 +282,12 @@ export function WindHistoryChart({
   return (
     <div
       ref={containerRef}
-      className="relative overflow-hidden"
+      className="relative overflow-hidden select-none"
+      style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
       onMouseLeave={() => setHoveredIdx(null)}
       onTouchEnd={() => setHoveredIdx(null)}
       onTouchCancel={() => setHoveredIdx(null)}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* ── Hover tooltip ───────────────────────────────────────────────── */}
       {(hovPoint ?? hovFcstPoint) && (
@@ -304,7 +307,13 @@ export function WindHistoryChart({
         height={totalH}
         viewBox={`0 0 ${totalW} ${totalH}`}
         preserveAspectRatio="none"
-        style={{ display: "block", cursor: "crosshair" }}
+        style={{
+          display: "block",
+          cursor: "crosshair",
+          WebkitUserSelect: "none",
+          WebkitTouchCallout: "none",
+          touchAction: "none",
+        }}
         onMouseMove={handleMouseMove}
         onTouchStart={handleSvgTouch}
         onTouchMove={handleSvgTouch}
