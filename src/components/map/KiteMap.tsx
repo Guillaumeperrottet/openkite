@@ -176,6 +176,39 @@ export function KiteMap({
       }
 
       if (best) {
+        const ageMs = Date.now() - new Date(best.updatedAt).getTime();
+        // If the ref is older than 2 min, trigger a background refresh so
+        // subsequent clicks see the latest trame. Still show current value
+        // instantly — no spinner, no flash.
+        if (ageMs > 2 * 60 * 1000) {
+          fetch("/api/stations")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data: WindStation[] | null) => {
+              if (Array.isArray(data) && data.length > 0) {
+                stationsRef.current = data;
+                const refreshed = data.find((s) => s.id === best!.id) ?? null;
+                if (refreshed) {
+                  const newAge =
+                    Date.now() - new Date(refreshed.updatedAt).getTime();
+                  // Only update the popup if the fetched value is actually
+                  // fresher than what we just showed.
+                  if (newAge < ageMs) {
+                    setSelectedWind(
+                      getWindData(
+                        refreshed.windSpeedKmh,
+                        refreshed.windDirection,
+                        refreshed.gustsKmh ??
+                          Math.round(refreshed.windSpeedKmh * 1.3),
+                        refreshed.updatedAt,
+                      ),
+                    );
+                  }
+                }
+              }
+            })
+            .catch(() => {});
+        }
+
         const gustsKmh = best.gustsKmh ?? Math.round(best.windSpeedKmh * 1.3);
         setSelectedWind(
           getWindData(
@@ -814,8 +847,10 @@ export function KiteMap({
       loadStations();
     }
 
-    // Refresh every 10 minutes
-    stationIntervalRef.current = setInterval(loadStations, 10 * 60 * 1000);
+    // Refresh every 60 seconds — /api/stations is cached 60s at the edge
+    // so this is essentially free and keeps popup wind within ~1 min of
+    // whatever the balise just pushed.
+    stationIntervalRef.current = setInterval(loadStations, 60 * 1000);
 
     return () => {
       if (stationIntervalRef.current) {

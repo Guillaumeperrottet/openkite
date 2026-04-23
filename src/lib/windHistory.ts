@@ -50,6 +50,39 @@ export async function fetchWindHistoryStation(
   const isPioupiou = stationId.startsWith("piou-");
   const isWindball = stationId.startsWith("windball-");
 
+  // For networks with a rich public API (Windball, Pioupiou), we bypass the
+  // database entirely and trust ONLY what the balise returns. This ensures
+  // that the chart's last bar and the popup/card header always read the
+  // exact same measurement (same endpoint, same trame, same value).
+  if (isPioupiou) {
+    const piouId = parseInt(stationId.replace("piou-", ""), 10);
+    const points = await fetchPioupiouHistory(piouId).catch(
+      () => [] as HistoryPoint[],
+    );
+    const cutoffStr = cutoff.toISOString().slice(0, 16);
+    return points
+      .filter((p) => p.time >= cutoffStr)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }
+  if (isWindball) {
+    const measures = await fetchWindballHistory(stationId).catch(() => []);
+    const cutoffStr = cutoff.toISOString().slice(0, 16);
+    return measures
+      .map((m) => ({
+        time: new Date(m.updatedAt).toISOString().slice(0, 16),
+        windSpeedKmh: m.windSpeed ?? 0,
+        windDirection: m.windDir ?? 0,
+        gustsKmh: m.windBurst ?? m.windSpeed ?? 0,
+        temperatureC: m.temperature ?? 0,
+      }))
+      .filter((p) => p.time >= cutoffStr)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }
+
+  // Other networks (MeteoSwiss, Netatmo, Météo-France) don't expose a rich
+  // public history API — we fall back to DB (populated by cron) + CSV
+  // archive to fill the 48h window.
+
   // ── 1. Database (real-time, no delay) ──────────────────────────────────
   let dbPoints: HistoryPoint[] = [];
   try {
@@ -74,21 +107,7 @@ export async function fetchWindHistoryStation(
   // ── 2. Archive source (fills gaps before cron started) ────────────────
   let archivePoints: HistoryPoint[] = [];
   try {
-    if (isPioupiou) {
-      const piouId = parseInt(stationId.replace("piou-", ""), 10);
-      archivePoints = await fetchPioupiouHistory(piouId);
-    } else if (isWindball) {
-      const measures = await fetchWindballHistory(stationId);
-      archivePoints = measures.map((m) => ({
-        time: new Date(m.updatedAt).toISOString().slice(0, 16),
-        windSpeedKmh: m.windSpeed ?? 0,
-        windDirection: m.windDir ?? 0,
-        gustsKmh: m.windBurst ?? m.windSpeed ?? 0,
-        temperatureC: m.temperature ?? 0,
-      }));
-    } else {
-      archivePoints = await fetchWindHistoryStationCsv(stationId);
-    }
+    archivePoints = await fetchWindHistoryStationCsv(stationId);
   } catch {
     /* Archive unavailable — use DB only */
   }
