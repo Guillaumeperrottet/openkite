@@ -96,7 +96,10 @@ export default async function SpotPage({ params }: Props) {
         where: { stationId: spot.nearestStationId },
         orderBy: { time: "desc" },
       });
-      if (latest) {
+      // Only use the DB row if it's fresh (≤ 5 min old). Otherwise leave
+      // `wind = null` so the client side fetches /api/stations and we
+      // avoid showing a stale value that would contradict the live popup.
+      if (latest && Date.now() - latest.time.getTime() < 5 * 60 * 1000) {
         wind = getWindData(
           latest.windSpeedKmh,
           latest.windDirection,

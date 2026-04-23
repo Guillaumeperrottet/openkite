@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/Badge";
 import type { WindData } from "@/types";
 import type { HistoryPoint } from "@/types";
+import type { WindStation } from "@/lib/stations";
 import type { FullForecast } from "@/lib/forecast";
 
 const NETWORK_LABELS: Record<string, string> = {
@@ -125,6 +126,9 @@ export function SpotPageClient({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [forecast, setForecast] = useState<FullForecast | null>(null);
   const [history, setHistory] = useState<HistoryPoint[] | null>(null);
+  // Live current wind from /api/stations — same endpoint as the map popup,
+  // so the card and the popup ALWAYS show the exact same value.
+  const [liveStation, setLiveStation] = useState<WindStation | null>(null);
   const [selectedStationId, setSelectedStationId] = useState<string | null>(
     spot.nearestStationId,
   );
@@ -139,7 +143,32 @@ export function SpotPageClient({
     spot.longitude,
   );
 
-  // Fetch forecast + history client-side
+  // ── SOURCE UNIQUE pour le vent courant : /api/stations ──────────────
+  // Le popup carte lit ce même endpoint → même valeur garantie.
+  // Repolling toutes les 60s (CDN cache 60s, gratuit).
+  useEffect(() => {
+    const stationId = selectedStationId ?? spot.nearestStationId;
+    if (!stationId) return;
+    let cancelled = false;
+    const load = () => {
+      fetch("/api/stations")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((stations: WindStation[] | null) => {
+          if (cancelled || !Array.isArray(stations)) return;
+          const found = stations.find((s) => s.id === stationId) ?? null;
+          if (found) setLiveStation(found);
+        })
+        .catch(() => {});
+    };
+    load();
+    const id = setInterval(load, 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [selectedStationId, spot.nearestStationId]);
+
+  // Fetch forecast + history client-side (chart only)
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/spots/${spot.id}/weather`)
@@ -187,41 +216,64 @@ export function SpotPageClient({
     };
   }, [selectedStationId, spot.id, spot.nearestStationId, historySource]);
 
-  // SINGLE SOURCE OF TRUTH for the "Vent moyen / Rafales / Direction" cards:
-  // the last *measured* point of the 48h history chart.
-  //
-  // Derived (not stored as state) so there's no race between the SSR
-  // value and an async setState — the cards always reflect what the chart
-  // shows. Falls back to the SSR `initialWind` while history is loading.
+  // Cards = the live /api/stations value (same trame as map popup).
+  // Falls back to SSR `initialWind` while the live fetch is loading.
   const wind = useMemo<WindData | null>(() => {
-    if (!history || history.length === 0) return initialWind;
-    const nowIso = new Date().toISOString().slice(0, 16);
-    let last: HistoryPoint | null = null;
-    for (let i = history.length - 1; i >= 0; i--) {
-      if (history[i].time <= nowIso) {
-        last = history[i];
-        break;
-      }
-    }
-    if (!last) return initialWind;
+    if (!liveStation) return initialWind;
     return getWindData(
-      last.windSpeedKmh,
-      last.windDirection,
-      last.gustsKmh,
-      // history `time` is "YYYY-MM-DDTHH:mm" UTC — append Z for correct parsing
-      last.time.length === 16 ? `${last.time}:00Z` : last.time,
+      liveStation.windSpeedKmh,
+      liveStation.windDirection,
+      liveStation.gustsKmh ?? Math.round(liveStation.windSpeedKmh * 1.3),
+      liveStation.updatedAt,
     );
-  }, [history, initialWind]);
+  }, [liveStation, initialWind]);
 
   const windSource = useMemo(() => {
-    if (historySource) {
+    const id = liveStation?.id ?? historySource;
+    if (id) {
       return {
-        name: historySource,
-        network: networkLabelFromStationId(historySource),
+        name: id,
+        network: networkLabelFromStationId(id),
       };
     }
     return initialWindSource;
-  }, [historySource, initialWindSource]);
+  }, [liveStation, historySource, initialWindSource]);
+
+  // Inject the live trame at the end of `history` so the chart's last bar
+  // matches the card. Without this, the chart can lag the card by up to
+  // one Windball trame interval (~10 min).
+  const chartHistory = useMemo<HistoryPoint[] | null>(() => {
+    if (!history) return history;
+    if (!liveStation) return history;
+    if (historySource && liveStation.id !== historySource) return history;
+    const liveTime = new Date(liveStation.updatedAt).toISOString().slice(0, 16);
+    const livePoint: HistoryPoint = {
+      time: liveTime,
+      windSpeedKmh: liveStation.windSpeedKmh,
+      windDirection: liveStation.windDirection,
+      gustsKmh:
+        liveStation.gustsKmh ?? Math.round(liveStation.windSpeedKmh * 1.3),
+      temperatureC: 0,
+    };
+    // Find the last *measured* point (skip future forecast points).
+    const nowIso = new Date().toISOString().slice(0, 16);
+    let lastMeasuredIdx = -1;
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].time <= nowIso) {
+        lastMeasuredIdx = i;
+        break;
+      }
+    }
+    if (lastMeasuredIdx === -1) return [livePoint, ...history];
+    const last = history[lastMeasuredIdx];
+    if (liveTime <= last.time) return history; // chart is already up-to-date
+    // Insert the live point right after the last measured point, before forecast tail.
+    return [
+      ...history.slice(0, lastMeasuredIdx + 1),
+      livePoint,
+      ...history.slice(lastMeasuredIdx + 1),
+    ];
+  }, [history, liveStation, historySource]);
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
@@ -667,9 +719,9 @@ export function SpotPageClient({
                   </svg>
                   Chargement…
                 </div>
-              ) : history && history.length > 0 ? (
+              ) : chartHistory && chartHistory.length > 0 ? (
                 <WindHistoryChart
-                  history={history}
+                  history={chartHistory}
                   forecast={forecast?.hourly}
                   useKnots={useKnots}
                   timezone={forecast?.timezone ?? "UTC"}
