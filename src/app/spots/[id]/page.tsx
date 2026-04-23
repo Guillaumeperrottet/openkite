@@ -2,7 +2,6 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getWindData } from "@/lib/utils";
-import { fetchCurrentWind } from "@/lib/windFetch";
 import {
   buildSpotDescription,
   buildArticleSchema,
@@ -102,6 +101,7 @@ export default async function SpotPage({ params }: Props) {
           latest.windSpeedKmh,
           latest.windDirection,
           latest.gustsKmh ?? Math.round(latest.windSpeedKmh * 1.3),
+          latest.time.toISOString(),
         );
         windSource = {
           name: spot.nearestStationId,
@@ -109,19 +109,13 @@ export default async function SpotPage({ params }: Props) {
         };
       }
     } catch {
-      /* DB error — wind stays null, fallback below */
+      /* DB error — wind stays null, the page shows "données indisponibles" */
     }
   }
 
-  // Fallback: fetch current wind from Open-Meteo if no station data
-  if (!wind) {
-    try {
-      wind = await fetchCurrentWind(spot.latitude, spot.longitude);
-      windSource = { name: "Grille", network: "Open-Meteo" };
-    } catch {
-      /* Open-Meteo unavailable — client will retry */
-    }
-  }
+  // No fallback to Open-Meteo grid: if the spot's station has no recent
+  // measurement, we'd rather show "Données vent indisponibles" than a
+  // forecast value that disagrees with the 48h history chart.
 
   return (
     <>

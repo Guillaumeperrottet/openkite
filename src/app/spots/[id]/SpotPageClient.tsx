@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -57,29 +57,24 @@ import {
   WATER_LABELS,
 } from "@/components/ui/Badge";
 import type { WindData } from "@/types";
-import type { WindStation } from "@/lib/stations";
 import type { HistoryPoint } from "@/types";
 import type { FullForecast } from "@/lib/forecast";
 
-interface LiveStationSample {
-  stationId: string;
-  point: HistoryPoint;
-}
+const NETWORK_LABELS: Record<string, string> = {
+  pioupiou: "Pioupiou",
+  windball: "Windball",
+  meteofrance: "Météo-France",
+  netatmo: "Netatmo",
+  meteoswiss: "MeteoSwiss",
+};
 
-function mergeLiveSample(
-  history: HistoryPoint[],
-  stationId: string | null,
-  live: LiveStationSample | null,
-): HistoryPoint[] {
-  if (!stationId || !live || live.stationId !== stationId) return history;
-  if (history.length === 0) return [live.point];
-
-  const last = history[history.length - 1];
-  if (live.point.time > last.time) return [...history, live.point];
-  if (live.point.time === last.time) {
-    return [...history.slice(0, -1), live.point];
-  }
-  return history;
+/** Infer the network label from a station id prefix. */
+function networkLabelFromStationId(id: string): string {
+  if (id.startsWith("piou-")) return NETWORK_LABELS.pioupiou;
+  if (id.startsWith("windball-")) return NETWORK_LABELS.windball;
+  if (id.startsWith("mf-")) return NETWORK_LABELS.meteofrance;
+  if (id.startsWith("netatmo-")) return NETWORK_LABELS.netatmo;
+  return NETWORK_LABELS.meteoswiss;
 }
 
 // Serialised spot from Prisma (dates are strings after JSON)
@@ -125,8 +120,6 @@ export function SpotPageClient({
   wind: initialWind,
   windSource: initialWindSource,
 }: Props) {
-  const [wind, setWind] = useState(initialWind);
-  const [windSource, setWindSource] = useState(initialWindSource);
   const [useKnots, setUseKnots] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -137,88 +130,7 @@ export function SpotPageClient({
   );
   const [historySource, setHistorySource] = useState<string | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const liveSampleRef = useRef<LiveStationSample | null>(null);
 
-  // Fetch live station data — same source as map popup (overrides SSR wind)
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/stations")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((stations: WindStation[] | null) => {
-        if (cancelled || !stations || stations.length === 0) return;
-        // Find nearest station — prefer nearestStationId, then closest by distance
-        let best = spot.nearestStationId
-          ? (stations.find((s) => s.id === spot.nearestStationId) ?? null)
-          : null;
-        if (!best) {
-          let bestDist = Infinity;
-          for (const s of stations) {
-            const d =
-              (s.lat - spot.latitude) ** 2 + (s.lng - spot.longitude) ** 2;
-            if (d < bestDist) {
-              bestDist = d;
-              best = s;
-            }
-          }
-        }
-        if (!best) return;
-        const network =
-          best.source === "pioupiou"
-            ? "Pioupiou"
-            : best.source === "netatmo"
-              ? "Netatmo"
-              : best.source === "meteofrance"
-                ? "Météo-France"
-                : best.source === "windball"
-                  ? "Windball"
-                  : "MeteoSwiss";
-        setWind(
-          getWindData(
-            best.windSpeedKmh,
-            best.windDirection,
-            best.gustsKmh ?? Math.round(best.windSpeedKmh * 1.3),
-          ),
-        );
-        setWindSource({ name: best.id, network });
-
-        // Keep latest live sample so history fetches can merge it deterministically.
-        const livePoint = {
-          time: new Date(best.updatedAt).toISOString().slice(0, 16),
-          windSpeedKmh: best.windSpeedKmh,
-          windDirection: best.windDirection,
-          gustsKmh: best.gustsKmh ?? Math.round(best.windSpeedKmh * 1.3),
-          temperatureC: 0,
-        };
-        liveSampleRef.current = { stationId: best.id, point: livePoint };
-
-        // Inject live point into history if it's newer than the current tail.
-        setHistory((prev) => {
-          if (!prev || prev.length === 0) return prev;
-          return mergeLiveSample(prev, best.id, liveSampleRef.current);
-        });
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [spot.latitude, spot.longitude, spot.nearestStationId]);
-
-  // Fallback: if no station resolved wind, try Open-Meteo grid
-  useEffect(() => {
-    if (wind) return;
-    let cancelled = false;
-    fetch(`/api/wind?lat=${spot.latitude}&lng=${spot.longitude}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (cancelled || !data || data.error) return;
-        setWind(data);
-        setWindSource({ name: "Grille", network: "Open-Meteo" });
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [wind, spot.latitude, spot.longitude]);
   const router = useRouter();
   const { favoriteIds, toggleFavorite } = useFavContext();
   const isFav = favoriteIds.has(spot.id);
@@ -227,7 +139,7 @@ export function SpotPageClient({
     spot.longitude,
   );
 
-  // Fetch forecast + history client-side — update wind from last real station point
+  // Fetch forecast + history client-side
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/spots/${spot.id}/weather`)
@@ -235,15 +147,7 @@ export function SpotPageClient({
       .then((data) => {
         if (cancelled || !data) return;
         if (data.forecast) setForecast(data.forecast);
-        if (data.history) {
-          setHistory(
-            mergeLiveSample(
-              data.history,
-              data.stationId,
-              liveSampleRef.current,
-            ),
-          );
-        }
+        if (data.history) setHistory(data.history);
         if (data.stationId) setHistorySource(data.stationId);
       })
       .catch(() => {});
@@ -271,15 +175,7 @@ export function SpotPageClient({
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled || !data) return;
-        if (data.history) {
-          setHistory(
-            mergeLiveSample(
-              data.history,
-              data.stationId,
-              liveSampleRef.current,
-            ),
-          );
-        }
+        if (data.history) setHistory(data.history);
         if (data.stationId) setHistorySource(data.stationId);
       })
       .catch(() => {})
@@ -291,14 +187,14 @@ export function SpotPageClient({
     };
   }, [selectedStationId, spot.id, spot.nearestStationId, historySource]);
 
-  // Single source of truth: the wind cards always reflect the LAST point of
-  // the history chart, so what the user reads in the cards matches exactly
-  // the last bar of the 48h graph (no more 11/12 kts confusion).
-  useEffect(() => {
-    if (!history || history.length === 0) return;
-    // history may contain 15-min forecast points appended after the last
-    // real station measurement — skip them and keep the latest *measured*
-    // point (otherwise the card shows a 2-hour-ahead forecast).
+  // SINGLE SOURCE OF TRUTH for the "Vent moyen / Rafales / Direction" cards:
+  // the last *measured* point of the 48h history chart.
+  //
+  // Derived (not stored as state) so there's no race between the SSR
+  // value and an async setState — the cards always reflect what the chart
+  // shows. Falls back to the SSR `initialWind` while history is loading.
+  const wind = useMemo<WindData | null>(() => {
+    if (!history || history.length === 0) return initialWind;
     const nowIso = new Date().toISOString().slice(0, 16);
     let last: HistoryPoint | null = null;
     for (let i = history.length - 1; i >= 0; i--) {
@@ -307,17 +203,25 @@ export function SpotPageClient({
         break;
       }
     }
-    if (!last) last = history[history.length - 1];
-    setWind(
-      getWindData(
-        last.windSpeedKmh,
-        last.windDirection,
-        last.gustsKmh,
-        // history `time` is "YYYY-MM-DDTHH:mm" UTC — append Z for correct parsing
-        last.time.length === 16 ? `${last.time}:00Z` : last.time,
-      ),
+    if (!last) return initialWind;
+    return getWindData(
+      last.windSpeedKmh,
+      last.windDirection,
+      last.gustsKmh,
+      // history `time` is "YYYY-MM-DDTHH:mm" UTC — append Z for correct parsing
+      last.time.length === 16 ? `${last.time}:00Z` : last.time,
     );
-  }, [history]);
+  }, [history, initialWind]);
+
+  const windSource = useMemo(() => {
+    if (historySource) {
+      return {
+        name: historySource,
+        network: networkLabelFromStationId(historySource),
+      };
+    }
+    return initialWindSource;
+  }, [historySource, initialWindSource]);
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
