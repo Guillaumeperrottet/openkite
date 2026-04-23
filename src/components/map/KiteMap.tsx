@@ -178,7 +178,12 @@ export function KiteMap({
       if (best) {
         const gustsKmh = best.gustsKmh ?? Math.round(best.windSpeedKmh * 1.3);
         setSelectedWind(
-          getWindData(best.windSpeedKmh, best.windDirection, gustsKmh),
+          getWindData(
+            best.windSpeedKmh,
+            best.windDirection,
+            gustsKmh,
+            best.updatedAt,
+          ),
         );
         setLoadingWind(false);
         return;

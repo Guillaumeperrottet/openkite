@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { X, Wind, Waves, ExternalLink, Star } from "lucide-react";
 import type { Spot, WindData } from "@/types";
-import { windArrow, windDirectionLabel, barColors } from "@/lib/utils";
+import {
+  windArrow,
+  windDirectionLabel,
+  barColors,
+  relativeTime,
+} from "@/lib/utils";
 import { useFavContext } from "@/lib/FavContext";
 import {
   Badge,
@@ -185,6 +190,11 @@ export function SpotPopup({
                   {windDirectionLabel(wind.windDirection)} · rafales{" "}
                   {fmt(wind.gustsKmh)}
                 </div>
+                {wind.updatedAt && (
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {relativeTime(wind.updatedAt)}
+                  </div>
+                )}
               </div>
             </div>
           ) : (

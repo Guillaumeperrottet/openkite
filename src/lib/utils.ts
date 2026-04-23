@@ -82,11 +82,13 @@ export function getWindData(
   windSpeedKmh: number,
   windDirection: number,
   gustsKmh: number,
+  updatedAt?: string,
 ): WindData {
   return {
     windSpeedKmh,
     windDirection,
     gustsKmh,
+    updatedAt,
     isKitable: windSpeedKmh >= 15 && windSpeedKmh <= 45,
     conditionLabel: windConditionLabel(windSpeedKmh),
     color: windColor(windSpeedKmh),
@@ -113,3 +115,21 @@ export const MONTHS = [
   "Novembre",
   "Décembre",
 ];
+
+/**
+ * Format an ISO timestamp as a short relative time in French.
+ * Examples: "à l'instant" · "il y a 4 min" · "il y a 2 h" · "il y a 3 j"
+ */
+export function relativeTime(iso: string | undefined | null): string {
+  if (!iso) return "";
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return "";
+  const diffSec = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (diffSec < 60) return "à l'instant";
+  const min = Math.round(diffSec / 60);
+  if (min < 60) return `il y a ${min} min`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `il y a ${hr} h`;
+  const day = Math.round(hr / 24);
+  return `il y a ${day} j`;
+}

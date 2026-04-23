@@ -46,6 +46,7 @@ import {
   windDirectionLabel,
   MONTHS,
   getWindData,
+  relativeTime,
 } from "@/lib/utils";
 import { roundKnots } from "@/lib/forecast";
 import { useFavContext } from "@/lib/FavContext";
@@ -289,6 +290,23 @@ export function SpotPageClient({
       cancelled = true;
     };
   }, [selectedStationId, spot.id, spot.nearestStationId, historySource]);
+
+  // Single source of truth: the wind cards always reflect the LAST point of
+  // the history chart, so what the user reads in the cards matches exactly
+  // the last bar of the 48h graph (no more 11/12 kts confusion).
+  useEffect(() => {
+    if (!history || history.length === 0) return;
+    const last = history[history.length - 1];
+    setWind(
+      getWindData(
+        last.windSpeedKmh,
+        last.windDirection,
+        last.gustsKmh,
+        // history `time` is "YYYY-MM-DDTHH:mm" UTC — append Z for correct parsing
+        last.time.length === 16 ? `${last.time}:00Z` : last.time,
+      ),
+    );
+  }, [history]);
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
@@ -594,6 +612,11 @@ export function SpotPageClient({
                         {useKnots ? "kts" : "km/h"}
                       </span>
                     </div>
+                    {wind.updatedAt && (
+                      <div className="text-[10px] text-gray-400 mt-2">
+                        {relativeTime(wind.updatedAt)}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="text-4xl sm:text-5xl font-bold text-gray-400">

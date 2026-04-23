@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fetchMeteoSwissStations } from "@/lib/stations";
+import type { WindStation } from "@/lib/stations";
 import { fetchPioupiouStations } from "@/lib/pioupiou";
 import { fetchNetatmoStations } from "@/lib/netatmo";
 import { fetchMeteoFranceStations } from "@/lib/meteofrance";
@@ -9,13 +10,75 @@ import { fetchWindballStations } from "@/lib/windball";
 export const dynamic = "force-dynamic";
 
 /**
+ * Overlay the latest `StationMeasurement` rows on top of a stations array.
+ *
+ * The snapshot cache (`stations_cache`) is rewritten by the cron every
+ * ~10 min and may lag the live measurements by a few minutes. The
+ * `StationMeasurement` table is updated by the same cron but is also the
+ * source of truth used by the 48h history chart and by the spot page's
+ * "Vent moyen / Rafales" cards.
+ *
+ * Overlaying the latest DB rows here guarantees that the popup on the
+ * map and the cards on the spot page show *exactly* the same value
+ * (no more "12 kts in popup, 11 kts on page" confusion).
+ */
+async function overlayLatestMeasurements(
+  stations: WindStation[],
+): Promise<WindStation[]> {
+  if (stations.length === 0) return stations;
+  try {
+    const ids = stations.map((s) => s.id);
+    // Look only at the last 30 min — anything older is staler than the
+    // snapshot itself and shouldn't override it.
+    const since = new Date(Date.now() - 30 * 60 * 1000);
+    const rows = await prisma.stationMeasurement.findMany({
+      where: { stationId: { in: ids }, time: { gte: since } },
+      orderBy: { time: "desc" },
+      select: {
+        stationId: true,
+        time: true,
+        windSpeedKmh: true,
+        windDirection: true,
+        gustsKmh: true,
+      },
+    });
+
+    // Keep the most recent row per stationId (rows are already DESC).
+    const latest = new Map<string, (typeof rows)[number]>();
+    for (const r of rows) {
+      if (!latest.has(r.stationId)) latest.set(r.stationId, r);
+    }
+
+    return stations.map((s) => {
+      const fresh = latest.get(s.id);
+      if (!fresh) return s;
+      // Only override if the DB row is strictly newer than the snapshot.
+      const snapshotTime = new Date(s.updatedAt).getTime();
+      const dbTime = fresh.time.getTime();
+      if (dbTime <= snapshotTime) return s;
+      return {
+        ...s,
+        windSpeedKmh: fresh.windSpeedKmh,
+        windDirection: fresh.windDirection,
+        gustsKmh: fresh.gustsKmh ?? s.gustsKmh,
+        updatedAt: fresh.time.toISOString(),
+      };
+    });
+  } catch {
+    // DB unavailable — return snapshot as-is rather than failing the request.
+    return stations;
+  }
+}
+
+/**
  * GET /api/stations
  *
  * Returns live wind measurements from all available station networks.
  *
  * **Fast path** (< 100ms): reads the cached JSON written by the cron job
- * every 10 minutes into `SystemConfig.stations_cache`. If the cache is
- * fresh (< 15 min old), it is served immediately.
+ * every 10 minutes into `SystemConfig.stations_cache`, then overlays the
+ * latest `StationMeasurement` rows so the response always matches the
+ * 48h history chart on the spot pages.
  *
  * **Slow fallback**: if the cache is stale or missing, fetches live data
  * from all 5 networks (MeteoSwiss, Pioupiou, Netatmo, Météo-France,
@@ -32,10 +95,13 @@ export async function GET() {
       const age = Date.now() - cached.updatedAt.getTime();
       // Cache is fresh (< 15 min) — serve it instantly
       if (age < 15 * 60 * 1000) {
-        const stations = JSON.parse(cached.value);
+        const snapshot = JSON.parse(cached.value) as WindStation[];
+        const stations = await overlayLatestMeasurements(snapshot);
         return NextResponse.json(stations, {
           headers: {
-            "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+            // Drop CDN caching to 60 s so the StationMeasurement overlay
+            // can refresh between cron runs (was 300 s before).
+            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=600",
           },
         });
       }
@@ -109,9 +175,12 @@ export async function GET() {
     // Non-critical — the data is still returned to the user
   }
 
-  return NextResponse.json(stations, {
+  // Overlay latest StationMeasurement rows for consistency with history chart
+  const merged = await overlayLatestMeasurements(stations);
+
+  return NextResponse.json(merged, {
     headers: {
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=600",
     },
   });
 }
