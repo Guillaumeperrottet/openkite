@@ -21,12 +21,46 @@ interface Props {
  *   windDirection = 270° (FROM west) → arrow points east (→)
  *   Rotation formula: arrowRotation = (windDirection + 180) % 360
  */
-export function WindCompass({ wind, size = 200, light = false }: Props) {
+function instrumentColor(speedKnots: number): string {
+  if (speedKnots >= 35) return "#7c3aed";
+  if (speedKnots >= 28) return "#dc2626";
+  if (speedKnots >= 20) return "#f97316";
+  if (speedKnots >= 12) return "#22c55e";
+  if (speedKnots >= 6) return "#22d3ee";
+  return "#94a3b8";
+}
+
+function svgNum(value: number): number {
+  return Number(value.toFixed(3));
+}
+
+export function WindCompass({
+  wind,
+  size = 200,
+  light = false,
+  sourceLabel,
+}: Props) {
   const speedKnots = roundKnots(wind.windSpeedKmh);
   const gustsKnots = roundKnots(wind.gustsKmh);
   const arrowRotation = (wind.windDirection + 180) % 360;
-  const color = wind.color; // use pre-computed color from server to avoid hydration mismatch
+  const color = instrumentColor(speedKnots) || wind.color;
   const dirLabel = windDirectionLabel(wind.windDirection);
+  const speedRatio = Math.min(speedKnots / 45, 1);
+  const gustRatio = Math.min(gustsKnots / 55, 1);
+  const speedCirc = 2 * Math.PI * 91;
+  const gustCirc = 2 * Math.PI * 80;
+  const arrowColor = light ? "#475569" : color;
+  const surfaceFill = light ? "#f8fafc" : "#0f172a";
+  const centerFill = light ? "#ffffff" : "#111827";
+  const baseStroke = light ? "#d9e2ea" : "rgba(255,255,255,0.14)";
+  const gridStroke = light ? "#dbe4ea" : "rgba(255,255,255,0.1)";
+  const tickStroke = light ? "#64748b" : "rgba(255,255,255,0.72)";
+  const primaryLabel = light
+    ? "rgba(15,23,42,0.82)"
+    : "rgba(255,255,255,0.86)";
+  const secondaryLabel = light
+    ? "rgba(100,116,139,0.62)"
+    : "rgba(255,255,255,0.4)";
 
   // Build cardinal + intercardinal labels
   const cardinals = [
@@ -43,7 +77,10 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
   // Convert a compass angle (0=N clockwise) to SVG x,y at radius r from center
   const toXY = (angleDeg: number, r: number) => {
     const rad = (angleDeg - 90) * (Math.PI / 180);
-    return { x: 100 + r * Math.cos(rad), y: 100 + r * Math.sin(rad) };
+    return {
+      x: svgNum(100 + r * Math.cos(rad)),
+      y: svgNum(100 + r * Math.sin(rad)),
+    };
   };
 
   return (
@@ -53,38 +90,73 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
         viewBox="0 0 200 200"
         width={size}
         height={size}
-        aria-label={`Vent : ${speedKnots} nœuds direction ${dirLabel}`}
+        aria-label={`Vent : ${speedKnots} nœuds, rafales ${gustsKnots} nœuds, direction ${dirLabel}${sourceLabel ? `, source ${sourceLabel}` : ""}`}
         style={{ display: "block", overflow: "visible" }}
       >
-        {/* Background circle */}
-        <circle cx="100" cy="100" r="96" fill="#0f1117" />
-
-        {/* Outer intensity ring — color reflects wind strength */}
+        {/* Open, data-first compass surface */}
+        <circle cx="100" cy="100" r="96" fill={surfaceFill} />
         <circle
           cx="100"
           cy="100"
-          r="96"
+          r="95"
+          fill="none"
+          stroke={baseStroke}
+          strokeWidth="2"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="91"
+          fill="none"
+          stroke={gridStroke}
+          strokeWidth="4"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="91"
           fill="none"
           stroke={color}
-          strokeWidth="3"
-          opacity="0.35"
+          strokeWidth="4"
+          strokeOpacity="0.72"
+          strokeLinecap="round"
+          strokeDasharray={`${speedCirc * speedRatio} ${speedCirc}`}
+          transform="rotate(-90 100 100)"
         />
-
-        {/* Intermediate circles */}
         <circle
           cx="100"
           cy="100"
-          r="79"
+          r="80"
           fill="none"
-          stroke="rgba(255,255,255,0.07)"
+          stroke={gridStroke}
+          strokeWidth="2"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="80"
+          fill="none"
+          stroke={light ? "#64748b" : "#ffffff"}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeOpacity={light ? 0.24 : 0.42}
+          strokeDasharray={`${gustCirc * gustRatio} ${gustCirc}`}
+          transform="rotate(-90 100 100)"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="64"
+          fill="none"
+          stroke={gridStroke}
           strokeWidth="1"
         />
         <circle
           cx="100"
           cy="100"
-          r="57"
+          r="42"
           fill="none"
-          stroke="rgba(255,255,255,0.05)"
+          stroke={gridStroke}
           strokeWidth="1"
         />
 
@@ -101,9 +173,8 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
               y1={outer.y}
               x2={inner.x}
               y2={inner.y}
-              stroke={
-                isMajor ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.12)"
-              }
+              stroke={tickStroke}
+              opacity={isMajor ? (light ? 0.55 : 0.48) : light ? 0.22 : 0.16}
               strokeWidth={isMajor ? 1.5 : 1}
             />
           );
@@ -120,9 +191,7 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
               y={pos.y}
               textAnchor="middle"
               dominantBaseline="central"
-              fill={
-                isMain ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.35)"
-              }
+              fill={isMain ? primaryLabel : secondaryLabel}
               fontSize={isMain ? 12 : 8}
               fontWeight={isMain ? "600" : "400"}
               fontFamily="system-ui, -apple-system, sans-serif"
@@ -134,38 +203,21 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
 
         {/* Wind arrow — rotated so it points where the wind goes */}
         <g transform={`rotate(${arrowRotation}, 100, 100)`}>
-          {/* Arrow shaft */}
           <line
             x1="100"
-            y1="108"
+            y1="110"
             x2="100"
-            y2="42"
-            stroke={color}
-            strokeWidth="3"
+            y2="54"
+            stroke={arrowColor}
+            strokeOpacity={light ? 0.74 : 0.88}
+            strokeWidth="2.6"
             strokeLinecap="round"
           />
-          {/* Arrow head */}
-          <polygon points="100,28 91,50 109,50" fill={color} />
-          {/* Tail notches for depth */}
-          <line
-            x1="93"
-            y1="108"
-            x2="100"
-            y2="97"
-            stroke={color}
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.65"
-          />
-          <line
-            x1="107"
-            y1="108"
-            x2="100"
-            y2="97"
-            stroke={color}
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.65"
+          <path
+            d="M100 42 L106 56 L100 52 L94 56 Z"
+            fill={arrowColor}
+            fillOpacity={light ? 0.8 : 0.92}
+            strokeLinejoin="round"
           />
         </g>
 
@@ -173,10 +225,16 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
         <circle
           cx="100"
           cy="100"
-          r="24"
-          fill={light ? "white" : "#0f1117"}
-          stroke={light ? "#e5e7eb" : "none"}
-          strokeWidth="1"
+          r="30"
+          fill={surfaceFill}
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="27"
+          fill={centerFill}
+          stroke={baseStroke}
+          strokeWidth="2"
         />
 
         {/* Speed (knots) — centered in the cap */}
@@ -185,11 +243,10 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
           y="97"
           textAnchor="middle"
           dominantBaseline="auto"
-          fill={light ? "#111827" : "white"}
+          fill="#0f172a"
           fontSize={speedKnots >= 100 ? 16 : 20}
-          fontWeight="700"
+          fontWeight="800"
           fontFamily="system-ui, -apple-system, sans-serif"
-          letterSpacing="-0.5"
         >
           {speedKnots}
         </text>
@@ -198,8 +255,9 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
           y="113"
           textAnchor="middle"
           dominantBaseline="auto"
-          fill={light ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.4)"}
+          fill="#64748b"
           fontSize="8"
+          fontWeight="700"
           fontFamily="system-ui, -apple-system, sans-serif"
         >
           kts
@@ -210,20 +268,15 @@ export function WindCompass({ wind, size = 200, light = false }: Props) {
       <div className="text-center leading-snug w-full">
         {/* Speed + direction */}
         <div
-          className={`text-base font-semibold ${light ? "text-gray-900" : "text-white"}`}
+          className={`text-base font-semibold tabular-nums ${light ? "text-gray-900" : "text-white"}`}
         >
           {speedKnots}&thinsp;/&thinsp;{gustsKnots} kts
         </div>
         <div
-          className={`text-xs mt-0.5 ${light ? "text-gray-400" : "text-zinc-400"}`}
+          className={`text-xs mt-0.5 font-medium ${light ? "text-gray-500" : "text-zinc-400"}`}
         >
-          {dirLabel}
+          {dirLabel} · {Math.round(wind.windDirection)}°
         </div>
-
-        {/* Source + update time */}
-        <div
-          className={`mt-2 text-[10px] ${light ? "text-gray-300" : "text-zinc-600"}`}
-        ></div>
       </div>
     </div>
   );

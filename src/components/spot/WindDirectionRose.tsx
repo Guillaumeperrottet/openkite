@@ -3,7 +3,7 @@
 /**
  * WindDirectionRose
  *
- * Professional compass-style wind rose with tick marks, cross-hairs,
+ * Open-source-style wind rose with tick marks, cross-hairs,
  * and highlighted sectors for best wind directions.
  */
 
@@ -28,38 +28,52 @@ const DIRS = [
 
 export type CompassDir = (typeof DIRS)[number];
 
-/** Wedge path from center outward for a 22.5° segment */
-function wedgePath(
+function svgNum(value: number): number {
+  return Number(value.toFixed(3));
+}
+
+function compassPoint(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = (angleDeg - 90) * (Math.PI / 180);
+  return {
+    x: svgNum(cx + r * Math.cos(rad)),
+    y: svgNum(cy + r * Math.sin(rad)),
+  };
+}
+
+function sectorPath(
   index: number,
   cx: number,
   cy: number,
+  ri: number,
   ro: number,
-  gapDeg = 0.8,
+  gapDeg = 1.2,
 ): string {
-  const step = (2 * Math.PI) / 16;
-  const gapRad = (gapDeg * Math.PI) / 180;
-  const base = index * step - Math.PI / 2;
-  const a1 = base + gapRad;
-  const a2 = base + step - gapRad;
-  const x1 = cx;
-  const y1 = cy;
-  const x2 = cx + ro * Math.cos(a1);
-  const y2 = cy + ro * Math.sin(a1);
-  const x3 = cx + ro * Math.cos(a2);
-  const y3 = cy + ro * Math.sin(a2);
-  return `M ${x1} ${y1} L ${x2.toFixed(2)} ${y2.toFixed(2)} A ${ro} ${ro} 0 0 1 ${x3.toFixed(2)} ${y3.toFixed(2)} Z`;
+  const centerDeg = index * 22.5;
+  const startDeg = centerDeg - 11.25 + gapDeg;
+  const endDeg = centerDeg + 11.25 - gapDeg;
+  const o1 = compassPoint(cx, cy, ro, startDeg);
+  const o2 = compassPoint(cx, cy, ro, endDeg);
+  const i2 = compassPoint(cx, cy, ri, endDeg);
+  const i1 = compassPoint(cx, cy, ri, startDeg);
+
+  return [
+    `M ${o1.x.toFixed(2)} ${o1.y.toFixed(2)}`,
+    `A ${ro} ${ro} 0 0 1 ${o2.x.toFixed(2)} ${o2.y.toFixed(2)}`,
+    `L ${i2.x.toFixed(2)} ${i2.y.toFixed(2)}`,
+    `A ${ri} ${ri} 0 0 0 ${i1.x.toFixed(2)} ${i1.y.toFixed(2)}`,
+    "Z",
+  ].join(" ");
 }
 
 interface Props {
   bestDirections: string[];
-  currentDirection?: number | null;
   size?: number;
   interactive?: boolean;
   onChange?: (dirs: string[]) => void;
   showLabels?: boolean;
   /**
-   * Visual style. `minimal` is a clean, modern dial: thin ring,
-   * green arcs on the active directions with their labels outside.
+   * Visual style. `minimal` is a compact dial with a thin ring,
+   * blue arcs on the active directions with their labels outside.
    * Use it where space is tight and you only want to convey the
    * favorable direction(s) at a glance. `full` is the original
    * compass (ticks, wedges, cross-hairs).
@@ -69,7 +83,6 @@ interface Props {
 
 export function WindDirectionRose({
   bestDirections,
-  currentDirection,
   size = 80,
   interactive = false,
   onChange,
@@ -80,7 +93,6 @@ export function WindDirectionRose({
     return (
       <MinimalRose
         bestDirections={bestDirections}
-        currentDirection={currentDirection}
         size={size}
         showLabels={showLabels}
       />
@@ -89,7 +101,6 @@ export function WindDirectionRose({
   return (
     <FullRose
       bestDirections={bestDirections}
-      currentDirection={currentDirection}
       size={size}
       interactive={interactive}
       onChange={onChange}
@@ -100,7 +111,6 @@ export function WindDirectionRose({
 
 function FullRose({
   bestDirections,
-  currentDirection,
   size = 80,
   interactive = false,
   onChange,
@@ -108,7 +118,7 @@ function FullRose({
 }: Omit<Props, "variant">) {
   const cx = size / 2;
   const cy = size / 2;
-  const R = size * 0.44; // main circle radius
+  const R = size * 0.43;
   const best = new Set(bestDirections.map((d) => d.toUpperCase()));
 
   const toggle = (dir: string) => {
@@ -119,22 +129,22 @@ function FullRose({
     onChange(next);
   };
 
-  const labelR = size * 0.5;
-  const tickOuter = R;
-  const tickMajor = R * 0.88;
-  const tickMinor = R * 0.92;
+  const labelR = size * 0.47;
+  const tickOuter = R * 0.98;
+  const tickMajor = R * 0.85;
+  const tickMinor = R * 0.91;
   const sw = Math.max(1, size * 0.008);
 
   // 8 compass labels (cardinal + intercardinal)
   const labels = [
-    { label: "N", angle: -90 },
-    { label: "NE", angle: -45 },
-    { label: "E", angle: 0 },
-    { label: "SE", angle: 45 },
-    { label: "S", angle: 90 },
-    { label: "SW", angle: 135 },
-    { label: "W", angle: 180 },
-    { label: "NW", angle: -135 },
+    { label: "N", angle: 0 },
+    { label: "NE", angle: 45 },
+    { label: "E", angle: 90 },
+    { label: "SE", angle: 135 },
+    { label: "S", angle: 180 },
+    { label: "SW", angle: 225 },
+    { label: "W", angle: 270 },
+    { label: "NW", angle: 315 },
   ];
 
   const fontSize = size * 0.09;
@@ -147,16 +157,36 @@ function FullRose({
       viewBox={`0 0 ${size} ${size}`}
       aria-label="Rose des vents"
     >
-      {/* Best direction wedges — filled sectors from center */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R * 1.04}
+        fill="#f8fafc"
+        stroke="#d9e2ea"
+        strokeWidth={sw * 1.3}
+      />
+
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R * 0.92}
+        fill="none"
+        stroke="#dbe4ea"
+        strokeWidth={sw}
+      />
+
+      {/* Best direction sectors */}
       {DIRS.map((dir, i) => {
         const active = best.has(dir);
         if (!active && !interactive) return null;
         return (
           <path
             key={`w-${dir}`}
-            d={wedgePath(i, cx, cy, R * 0.82)}
-            fill={active ? "#0d9488" : "transparent"}
-            opacity={active ? 0.55 : 0}
+            d={sectorPath(i, cx, cy, R * 0.2, R * 0.82)}
+            fill={active ? "#0ea5e9" : "#f8fafc"}
+            stroke={active ? "#0284c7" : "transparent"}
+            strokeWidth={sw}
+            opacity={active ? 0.18 : 0.28}
             style={interactive ? { cursor: "pointer" } : undefined}
             onClick={() => toggle(dir)}
           >
@@ -165,74 +195,57 @@ function FullRose({
         );
       })}
 
-      {/* Main circle */}
+      {/* Main rings */}
       <circle
         cx={cx}
         cy={cy}
         r={R}
         fill="none"
-        stroke="#374151"
-        strokeWidth={sw * 1.5}
+        stroke="#94a3b8"
+        strokeOpacity="0.45"
+        strokeWidth={sw * 1.25}
       />
 
-      {/* Cross-hairs (N–S, E–W) */}
-      {[0, 90].map((deg) => {
-        const rad = ((deg - 90) * Math.PI) / 180;
-        const x1 = cx + R * Math.cos(rad);
-        const y1 = cy + R * Math.sin(rad);
-        const x2 = cx - R * Math.cos(rad);
-        const y2 = cy - R * Math.sin(rad);
-        return (
-          <line
-            key={`cross-${deg}`}
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-            stroke="#374151"
-            strokeWidth={sw}
-            opacity={0.4}
-          />
-        );
-      })}
-
-      {/* Tick marks — 16 ticks, major every 2 (=45°) */}
-      {Array.from({ length: 16 }, (_, i) => {
-        const angleDeg = i * 22.5 - 90;
-        const rad = (angleDeg * Math.PI) / 180;
-        const isMajor = i % 2 === 0;
+      {/* Tick marks */}
+      {Array.from({ length: 32 }, (_, i) => {
+        const angleDeg = i * 11.25;
+        const isMajor = i % 4 === 0;
+        const isMedium = i % 2 === 0;
         const inner = isMajor ? tickMajor : tickMinor;
+        const outer = compassPoint(cx, cy, tickOuter, angleDeg);
+        const innerPoint = compassPoint(
+          cx,
+          cy,
+          isMedium ? inner : R * 0.94,
+          angleDeg,
+        );
         return (
           <line
             key={`tick-${i}`}
-            x1={cx + inner * Math.cos(rad)}
-            y1={cy + inner * Math.sin(rad)}
-            x2={cx + tickOuter * Math.cos(rad)}
-            y2={cy + tickOuter * Math.sin(rad)}
-            stroke="#374151"
-            strokeWidth={isMajor ? sw * 2 : sw}
+            x1={innerPoint.x}
+            y1={innerPoint.y}
+            x2={outer.x}
+            y2={outer.y}
+            stroke="#475569"
+            strokeOpacity={isMajor ? 0.46 : isMedium ? 0.24 : 0.12}
+            strokeWidth={isMajor ? sw * 1.8 : sw}
           />
         );
       })}
 
-      {/* Outer ring markers for best directions */}
+      {/* Small exterior beacons for best directions */}
       {DIRS.map((dir, i) => {
         if (!best.has(dir)) return null;
-        const angleDeg = i * 22.5 - 90;
-        const rad = (angleDeg * Math.PI) / 180;
-        const mr = R * 0.96;
-        const mw = size * 0.04;
-        const mh = size * 0.025;
+        const p = compassPoint(cx, cy, R * 0.98, i * 22.5);
         return (
-          <rect
+          <circle
             key={`mark-${dir}`}
-            x={cx + mr * Math.cos(rad) - mw / 2}
-            y={cy + mr * Math.sin(rad) - mh / 2}
-            width={mw}
-            height={mh}
-            rx={mh / 2}
-            fill="#16a34a"
-            transform={`rotate(${angleDeg + 90}, ${cx + mr * Math.cos(rad)}, ${cy + mr * Math.sin(rad)})`}
+            cx={p.x}
+            cy={p.y}
+            r={Math.max(1.5, size * 0.018)}
+            fill="#0ea5e9"
+            stroke="#ffffff"
+            strokeWidth={sw}
           />
         );
       })}
@@ -242,7 +255,7 @@ function FullRose({
         DIRS.map((dir, i) => (
           <path
             key={`hit-${dir}`}
-            d={wedgePath(i, cx, cy, R)}
+            d={sectorPath(i, cx, cy, R * 0.08, R, 0.2)}
             fill="transparent"
             style={{ cursor: "pointer" }}
             onClick={() => toggle(dir)}
@@ -251,53 +264,21 @@ function FullRose({
           </path>
         ))}
 
-      {/* Center dot */}
-      <circle cx={cx} cy={cy} r={size * 0.02} fill="#374151" />
-
-      {/* Current wind arrow */}
-      {currentDirection != null &&
-        (() => {
-          const angleDeg = currentDirection - 90;
-          const rad = (angleDeg * Math.PI) / 180;
-          const tipR = R * 0.78;
-          const baseR = size * 0.06;
-          const halfW = size * 0.035;
-          const perpRad = rad + Math.PI / 2;
-          // Arrow tip
-          const tx = cx + tipR * Math.cos(rad);
-          const ty = cy + tipR * Math.sin(rad);
-          // Arrow base wings
-          const bx1 = cx + baseR * Math.cos(rad) + halfW * Math.cos(perpRad);
-          const by1 = cy + baseR * Math.sin(rad) + halfW * Math.sin(perpRad);
-          const bx2 = cx + baseR * Math.cos(rad) - halfW * Math.cos(perpRad);
-          const by2 = cy + baseR * Math.sin(rad) - halfW * Math.sin(perpRad);
-          return (
-            <polygon
-              points={`${tx},${ty} ${bx1},${by1} ${bx2},${by2}`}
-              fill="#0ea5e9"
-              opacity={0.7}
-              style={{ pointerEvents: "none" }}
-            />
-          );
-        })()}
-
       {/* Compass labels */}
       {showLabels &&
         labels.map(({ label, angle }) => {
-          const rad = (angle * Math.PI) / 180;
-          const x = cx + labelR * Math.cos(rad);
-          const y = cy + labelR * Math.sin(rad);
+          const p = compassPoint(cx, cy, labelR, angle);
           const isCardinal = label.length === 1;
           return (
             <text
               key={label}
-              x={x}
-              y={y}
+              x={p.x}
+              y={p.y}
               textAnchor="middle"
               dominantBaseline="central"
               fontSize={isCardinal ? fontSizeCardinal : fontSize}
-              fontWeight={isCardinal ? "700" : "600"}
-              fill="#374151"
+              fontWeight={label === "N" ? "800" : isCardinal ? "700" : "600"}
+              fill={label === "N" ? "#dc2626" : "#475569"}
               style={{ userSelect: "none", pointerEvents: "none" }}
             >
               {label}
@@ -361,58 +342,32 @@ export function WindDirectionPicker({
 /**
  * MinimalRose
  *
- * Nautical-style compass: thin ring, 4 cardinal labels (N in red),
- * tiny dots on intercardinals, and inward-pointing blue trapezoids
- * for each favorable wind direction.
+ * Compact compass: thin ring, 4 cardinal labels, ticks,
+ * and simple blue arcs for each favorable wind direction.
  */
 function MinimalRose({
   bestDirections,
-  currentDirection,
   size,
   showLabels,
 }: {
   bestDirections: string[];
-  currentDirection?: number | null;
   size: number;
   showLabels: boolean;
 }) {
   const cx = size / 2;
   const cy = size / 2;
-  // Padding inside the viewBox so cardinal labels never get clipped.
-  const pad = size * 0.18;
-  const R = (size - pad * 2) / 2;
-  const ringStroke = Math.max(1, size * 0.018);
+  const R = size * 0.34;
+  const ringStroke = Math.max(1, size * 0.014);
   const best = new Set(bestDirections.map((d) => d.toUpperCase()));
-
-  const labelR = R + pad * 0.55;
+  const labelR = size * 0.43;
   const cardinalFont = Math.max(9, size * 0.13);
 
-  // Inward trapezoid: wide near the ring, narrow toward the center.
-  const trapezoid = (index: number): string => {
-    const step = (2 * Math.PI) / 16;
-    const angle = index * step - Math.PI / 2; // 0 = North
-    const halfOuter = step * 0.32;
-    const halfInner = step * 0.18;
-    const rOuter = R * 0.86;
-    const rInner = R * 0.42;
-    const a1 = angle - halfOuter;
-    const a2 = angle + halfOuter;
-    const a3 = angle + halfInner;
-    const a4 = angle - halfInner;
-    const p = (r: number, a: number) =>
-      `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`;
-    return `${p(rOuter, a1)} ${p(rOuter, a2)} ${p(rInner, a3)} ${p(rInner, a4)}`;
-  };
-
   const cardinals = [
-    { label: "N", angle: -90, color: "#dc2626" },
-    { label: "E", angle: 0, color: "#1f2937" },
-    { label: "S", angle: 90, color: "#1f2937" },
-    { label: "W", angle: 180, color: "#1f2937" },
+    { label: "N", angle: 0, color: "#dc2626" },
+    { label: "E", angle: 90, color: "#475569" },
+    { label: "S", angle: 180, color: "#475569" },
+    { label: "W", angle: 270, color: "#475569" },
   ];
-
-  // Intercardinal dots (NE, SE, SW, NW)
-  const intercardinals = [-45, 45, 135, -135];
 
   return (
     <svg
@@ -421,42 +376,38 @@ function MinimalRose({
       viewBox={`0 0 ${size} ${size}`}
       aria-label={`Vent favorable depuis : ${bestDirections.join(", ") || "aucune direction"}`}
     >
-      {/* Thin outer ring */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R * 1.08}
+        fill="#f8fafc"
+        stroke="#d9e2ea"
+        strokeWidth={ringStroke * 1.2}
+      />
       <circle
         cx={cx}
         cy={cy}
         r={R}
         fill="none"
-        stroke="#1f2937"
-        strokeWidth={ringStroke * 1.4}
+        stroke="#cbd5e1"
+        strokeWidth={ringStroke * 1.5}
       />
 
-      {/* Faint cross-hairs */}
-      {[0, 90].map((deg) => {
-        const rad = ((deg - 90) * Math.PI) / 180;
+      {Array.from({ length: 16 }, (_, i) => {
+        const deg = i * 22.5;
+        const isMajor = i % 2 === 0;
+        const outer = compassPoint(cx, cy, R * 0.96, deg);
+        const inner = compassPoint(cx, cy, isMajor ? R * 0.84 : R * 0.89, deg);
         return (
           <line
-            key={`cross-${deg}`}
-            x1={cx + R * 0.92 * Math.cos(rad)}
-            y1={cy + R * 0.92 * Math.sin(rad)}
-            x2={cx - R * 0.92 * Math.cos(rad)}
-            y2={cy - R * 0.92 * Math.sin(rad)}
-            stroke="#cbd5e1"
-            strokeWidth={ringStroke}
-          />
-        );
-      })}
-
-      {/* Intercardinal dots */}
-      {intercardinals.map((deg) => {
-        const rad = (deg * Math.PI) / 180;
-        return (
-          <circle
-            key={`dot-${deg}`}
-            cx={cx + R * 0.78 * Math.cos(rad)}
-            cy={cy + R * 0.78 * Math.sin(rad)}
-            r={Math.max(1, size * 0.018)}
-            fill="#cbd5e1"
+            key={`mini-tick-${i}`}
+            x1={inner.x}
+            y1={inner.y}
+            x2={outer.x}
+            y2={outer.y}
+            stroke="#475569"
+            strokeOpacity={isMajor ? 0.42 : 0.2}
+            strokeWidth={isMajor ? ringStroke * 1.35 : ringStroke}
           />
         );
       })}
@@ -464,48 +415,31 @@ function MinimalRose({
       {/* Favorable direction trapezoids */}
       {DIRS.map((dir, i) =>
         best.has(dir) ? (
-          <polygon
-            key={`tz-${dir}`}
-            points={trapezoid(i)}
-            fill="#7ea4c4"
-            stroke="#1f2937"
+          <path
+            key={`mini-sector-${dir}`}
+            d={sectorPath(i, cx, cy, R * 0.25, R * 0.75, 1.6)}
+            fill="#0ea5e9"
+            fillOpacity="0.18"
+            stroke="#0284c7"
+            strokeOpacity="0.34"
             strokeWidth={ringStroke}
-            strokeLinejoin="round"
           />
         ) : null,
       )}
 
-      {/* Current wind direction needle */}
-      {currentDirection != null &&
-        (() => {
-          const angleDeg = currentDirection - 90;
-          const rad = (angleDeg * Math.PI) / 180;
-          return (
-            <line
-              x1={cx + R * 0.85 * Math.cos(rad)}
-              y1={cy + R * 0.85 * Math.sin(rad)}
-              x2={cx + R * 0.3 * Math.cos(rad)}
-              y2={cy + R * 0.3 * Math.sin(rad)}
-              stroke="#0ea5e9"
-              strokeWidth={Math.max(1.5, size * 0.025)}
-              strokeLinecap="round"
-            />
-          );
-        })()}
-
       {/* Cardinal labels */}
       {showLabels &&
         cardinals.map(({ label, angle, color }) => {
-          const rad = (angle * Math.PI) / 180;
+          const p = compassPoint(cx, cy, labelR, angle);
           return (
             <text
               key={label}
-              x={cx + labelR * Math.cos(rad)}
-              y={cy + labelR * Math.sin(rad)}
+              x={p.x}
+              y={p.y}
               textAnchor="middle"
               dominantBaseline="central"
               fontSize={cardinalFont}
-              fontWeight={700}
+              fontWeight={label === "N" ? 800 : 700}
               fill={color}
               style={{ userSelect: "none" }}
             >
