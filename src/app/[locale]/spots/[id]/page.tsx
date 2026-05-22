@@ -1,8 +1,7 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getWindData } from "@/lib/utils";
-import { getSpotLive, NETWORK_LABELS } from "@/lib/stationData";
+import { getSpotLive } from "@/lib/stationData";
 import {
   buildSpotDescription,
   buildArticleSchema,
@@ -10,7 +9,7 @@ import {
   buildBreadcrumbSchema,
   combineSchemas,
 } from "@/lib/seo";
-import type { WindData } from "@/types";
+import type { WindLive } from "@/types";
 import { SpotPageClient } from "./SpotPageClient";
 
 // Deduplicated Prisma query: shared across generateMetadata() and SpotPage()
@@ -86,26 +85,13 @@ export default async function SpotPage({ params }: Props) {
   if (!spot) notFound();
 
   // ── Current wind via unified server entry point ─────────────────────────
-  // getSpotLive: station fraîche (seuils par réseau) → DB obs. Sinon → Open-Meteo.
-  // Remplace le bloc Prisma direct + table FRESHNESS_MS (9 lignes → 1 appel).
-  let wind: WindData | null = null;
-  let windSource: { name: string; network: string } | null = null;
+  // getSpotLive: station fraîche (seuils par réseau) → vraie obs station.
+  // Sinon → Open-Meteo.
+  let live: WindLive | null = null;
   try {
-    const live = await getSpotLive(spot.id);
-    wind = getWindData(
-      live.windSpeedKmh,
-      live.windDirection,
-      live.gustsKmh,
-      live.updatedAt,
-    );
-    if (live.source === "station" && live.stationId) {
-      windSource = {
-        name: live.stationId,
-        network: NETWORK_LABELS[live.network ?? "meteoswiss"],
-      };
-    }
+    live = await getSpotLive(spot.id);
   } catch {
-    /* wind stays null — page shows "données indisponibles" */
+    /* live stays null — page shows "données indisponibles" */
   }
 
   // No fallback to Open-Meteo grid: getSpotLive already handles that internally.
@@ -132,8 +118,7 @@ export default async function SpotPage({ params }: Props) {
       />
       <SpotPageClient
         spot={JSON.parse(JSON.stringify(spot))}
-        wind={wind}
-        windSource={windSource}
+        live={live}
       />
     </>
   );

@@ -72,8 +72,7 @@ import {
   WATER_LABELS,
   useBadgeLabels,
 } from "@/components/ui/Badge";
-import type { WindData } from "@/types";
-import type { HistoryPoint } from "@/types";
+import type { HistoryPoint, WindData, WindLive } from "@/types";
 import type { FullForecast } from "@/lib/forecast";
 
 /**
@@ -187,14 +186,25 @@ interface SpotData {
 
 interface Props {
   spot: SpotData;
-  wind: WindData | null;
-  windSource: { name: string; network: string } | null;
+  live: WindLive | null;
+}
+
+function pickNewestLive(
+  a: WindLive | null,
+  b: WindLive | null,
+): WindLive | null {
+  if (!a) return b;
+  if (!b) return a;
+  const aTime = new Date(a.updatedAt).getTime();
+  const bTime = new Date(b.updatedAt).getTime();
+  if (isNaN(aTime)) return b;
+  if (isNaN(bTime)) return a;
+  return bTime > aTime ? b : a;
 }
 
 export function SpotPageClient({
   spot,
-  wind: initialWind,
-  windSource: initialWindSource,
+  live: initialLive,
 }: Props) {
   const [useKnots, setUseKnots] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
@@ -306,50 +316,63 @@ export function SpotPageClient({
     };
   }, [selectedStationId, spot.id, spot.nearestStationId, historySource]);
 
-  // Cards derive from the single SWR source. Falls back to SSR initialWind
-  // while the first fetch is in-flight (keepPreviousData keeps old value on
-  // subsequent revalidations, so there's no flash).
+  // Cards derive from the freshest unified WindLive. The SSR value can be
+  // newer than the first SWR response when the HTTP endpoint is served from
+  // a 60s/stale-while-revalidate cache, so never let the client go backward.
+  const baselineLive = overrideStation ? null : initialLive;
+  const resolvedLive = pickNewestLive(baselineLive, spotLive);
   const wind = useMemo<WindData | null>(() => {
-    if (spotLive) {
+    if (resolvedLive) {
       return getWindData(
-        spotLive.windSpeedKmh,
-        spotLive.windDirection,
-        spotLive.gustsKmh,
-        spotLive.updatedAt,
-        spotLive.source,
+        resolvedLive.windSpeedKmh,
+        resolvedLive.windDirection,
+        resolvedLive.gustsKmh,
+        resolvedLive.updatedAt,
+        resolvedLive.source,
       );
     }
-    return initialWind;
-  }, [spotLive, initialWind]);
+    return null;
+  }, [resolvedLive]);
 
   const windSource = useMemo(() => {
-    if (!spotLive || !spotLive.isFresh || spotLive.source !== "station") {
+    if (
+      !resolvedLive ||
+      !resolvedLive.isFresh ||
+      resolvedLive.source !== "station"
+    ) {
       return null;
     }
-    const stationId = spotLive.stationId ?? historySource;
+    const stationId = resolvedLive.stationId ?? historySource;
     if (stationId) {
       const networkLabel =
-        STATION_NETWORK_LABELS[spotLive.network ?? "meteoswiss"];
+        STATION_NETWORK_LABELS[resolvedLive.network ?? "meteoswiss"];
       return { name: stationId, network: networkLabel };
     }
-    return initialWindSource;
-  }, [spotLive, historySource, initialWindSource]);
+    return null;
+  }, [resolvedLive, historySource]);
 
   // Inject the live trame at the end of `history` so the chart's last bar
   // matches the card. Only when source=station and isFresh — otherwise we'd
   // plant a stale or NWP value at current time, contradicting the cards.
   const chartHistory = useMemo<HistoryPoint[] | null>(() => {
     if (!history) return history;
-    if (!spotLive || spotLive.source !== "station" || !spotLive.isFresh)
+    if (
+      !resolvedLive ||
+      resolvedLive.source !== "station" ||
+      !resolvedLive.isFresh
+    )
       return history;
-    if (historySource && spotLive.stationId !== historySource) return history;
-    const liveTime = new Date(spotLive.updatedAt).toISOString().slice(0, 16);
+    if (historySource && resolvedLive.stationId !== historySource)
+      return history;
+    const liveTime = new Date(resolvedLive.updatedAt)
+      .toISOString()
+      .slice(0, 16);
     const livePoint: HistoryPoint = {
       time: liveTime,
-      windSpeedKmh: spotLive.windSpeedKmh,
-      windDirection: spotLive.windDirection,
-      gustsKmh: spotLive.gustsKmh,
-      temperatureC: spotLive.temperatureC ?? 0,
+      windSpeedKmh: resolvedLive.windSpeedKmh,
+      windDirection: resolvedLive.windDirection,
+      gustsKmh: resolvedLive.gustsKmh,
+      temperatureC: resolvedLive.temperatureC ?? 0,
     };
     // Find the last *measured* point (skip future forecast points).
     const nowIso = new Date().toISOString().slice(0, 16);
@@ -369,7 +392,7 @@ export function SpotPageClient({
       livePoint,
       ...history.slice(lastMeasuredIdx + 1),
     ];
-  }, [history, spotLive, historySource]);
+  }, [history, resolvedLive, historySource]);
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling every 10 min in background tabs, saving ~3 API calls per cycle.
