@@ -85,13 +85,11 @@ export default async function StationPage({ params }: Props) {
   const history = bundle ? [...bundle.observations, ...bundle.forecast] : null;
 
   const live = liveResult.status === "fulfilled" ? liveResult.value : null;
-  const gustsKmh = live?.gustsKmh ?? null;
 
   return (
     <StationPageClient
       station={station}
-      gustsKmh={gustsKmh}
-      openMeteoUpdatedAt={live?.updatedAt ?? null}
+      live={live}
       forecast={
         forecastResult.status === "fulfilled" ? forecastResult.value : null
       }

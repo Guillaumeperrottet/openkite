@@ -32,9 +32,82 @@ import {
   fetchWindHistoryStation,
   fetchWindForecast15min,
 } from "@/lib/windHistory";
+import { fetchPioupiouStations } from "@/lib/pioupiou";
+import { fetchWindballHistory } from "@/lib/windball";
 import type { WindStation } from "@/lib/stations";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+type StationLiveCandidate = {
+  windSpeedKmh: number;
+  windDirection: number;
+  gustsKmh: number | null;
+  temperatureC: number | null;
+  time: Date;
+};
+
+function isUsableMeasurement(candidate: StationLiveCandidate | null): boolean {
+  return (
+    candidate !== null &&
+    !isNaN(candidate.time.getTime()) &&
+    Number.isFinite(candidate.windSpeedKmh) &&
+    Number.isFinite(candidate.windDirection) &&
+    candidate.windSpeedKmh >= 0 &&
+    candidate.windSpeedKmh < 500 &&
+    candidate.windDirection >= 0 &&
+    candidate.windDirection <= 360
+  );
+}
+
+function pickNewestCandidate(
+  a: StationLiveCandidate | null,
+  b: StationLiveCandidate | null,
+): StationLiveCandidate | null {
+  const usableA = isUsableMeasurement(a) ? a : null;
+  const usableB = isUsableMeasurement(b) ? b : null;
+  if (!usableA) return usableB;
+  if (!usableB) return usableA;
+  return usableB.time.getTime() > usableA.time.getTime() ? usableB : usableA;
+}
+
+function stationToCandidate(station: WindStation): StationLiveCandidate | null {
+  const time = new Date(station.updatedAt);
+  const candidate = {
+    windSpeedKmh: station.windSpeedKmh,
+    windDirection: station.windDirection,
+    gustsKmh: station.gustsKmh,
+    temperatureC: null,
+    time,
+  };
+  return isUsableMeasurement(candidate) ? candidate : null;
+}
+
+async function getLiveNetworkCandidate(
+  stationId: string,
+  network: NetworkId,
+): Promise<StationLiveCandidate | null> {
+  if (network === "pioupiou") {
+    const stations = await fetchPioupiouStations();
+    const station = stations.find((s) => s.id === stationId);
+    return station ? stationToCandidate(station) : null;
+  }
+
+  if (network === "windball") {
+    const measures = await fetchWindballHistory(stationId);
+    const latest = measures.at(-1);
+    if (!latest) return null;
+    const candidate = {
+      windSpeedKmh: latest.windSpeed ?? 0,
+      windDirection: latest.windDir ?? 0,
+      gustsKmh: latest.windBurst ?? latest.windSpeed ?? null,
+      temperatureC: latest.temperature ?? null,
+      time: new Date(latest.updatedAt),
+    };
+    return isUsableMeasurement(candidate) ? candidate : null;
+  }
+
+  return null;
+}
 
 /**
  * Look up station lat/lng from the 10-min snapshot stored in SystemConfig.
@@ -104,16 +177,10 @@ export async function getStationLive(
   const allowFallback = opts?.allowOpenMeteoFallback ?? true;
 
   // ── 1. Latest DB measurement ─────────────────────────────────────────────
-  let measurement: {
-    windSpeedKmh: number;
-    windDirection: number;
-    gustsKmh: number | null;
-    temperatureC: number | null;
-    time: Date;
-  } | null = null;
+  let measurement: StationLiveCandidate | null = null;
 
   try {
-    measurement = await prisma.stationMeasurement.findFirst({
+    const row = await prisma.stationMeasurement.findFirst({
       where: { stationId },
       orderBy: { time: "desc" },
       select: {
@@ -124,9 +191,27 @@ export async function getStationLive(
         time: true,
       },
     });
+    measurement = row
+      ? {
+          windSpeedKmh: row.windSpeedKmh,
+          windDirection: row.windDirection,
+          gustsKmh: row.gustsKmh,
+          temperatureC: row.temperatureC,
+          time: row.time,
+        }
+      : null;
   } catch {
     // DB unavailable — continue to fallback
   }
+
+  // ── 2. Live network overlay for high-frequency APIs ─────────────────────
+  // Pioupiou and Windball can publish newer trames between two cron runs.
+  // Compare timestamps and keep the freshest real station measurement.
+  const liveNetworkMeasurement = await getLiveNetworkCandidate(
+    stationId,
+    network,
+  ).catch(() => null);
+  measurement = pickNewestCandidate(measurement, liveNetworkMeasurement);
 
   if (measurement) {
     const age = Date.now() - measurement.time.getTime();
@@ -152,7 +237,7 @@ export async function getStationLive(
     }
   }
 
-  // ── 2. Open-Meteo fallback ───────────────────────────────────────────────
+  // ── 3. Open-Meteo fallback ───────────────────────────────────────────────
   const lat = opts?.lat;
   const lng = opts?.lng;
   if (allowFallback && lat != null && lng != null) {

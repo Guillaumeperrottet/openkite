@@ -13,12 +13,16 @@ const {
   mockFetchCurrentWind,
   mockFetchWindHistoryStation,
   mockFetchWindForecast15min,
+  mockFetchPioupiouStations,
+  mockFetchWindballHistory,
 } = vi.hoisted(() => ({
   mockFindFirst: vi.fn(),
   mockFindUnique: vi.fn(),
   mockFetchCurrentWind: vi.fn(),
   mockFetchWindHistoryStation: vi.fn(),
   mockFetchWindForecast15min: vi.fn(),
+  mockFetchPioupiouStations: vi.fn(),
+  mockFetchWindballHistory: vi.fn(),
 }));
 
 // ── Mock server-only (no-op in test env) ────────────────────────────────────
@@ -42,6 +46,15 @@ vi.mock("@/lib/windFetch", () => ({
 vi.mock("@/lib/windHistory", () => ({
   fetchWindHistoryStation: mockFetchWindHistoryStation,
   fetchWindForecast15min: mockFetchWindForecast15min,
+}));
+
+// ── Mock high-frequency live overlays ───────────────────────────────────────
+vi.mock("@/lib/pioupiou", () => ({
+  fetchPioupiouStations: mockFetchPioupiouStations,
+}));
+
+vi.mock("@/lib/windball", () => ({
+  fetchWindballHistory: mockFetchWindballHistory,
 }));
 
 import {
@@ -87,6 +100,8 @@ beforeEach(() => {
   mockFetchCurrentWind.mockResolvedValue(openMeteoResult);
   mockFetchWindHistoryStation.mockResolvedValue([]);
   mockFetchWindForecast15min.mockResolvedValue([]);
+  mockFetchPioupiouStations.mockResolvedValue([]);
+  mockFetchWindballHistory.mockResolvedValue([]);
 });
 
 // ─── detectNetwork ────────────────────────────────────────────────────────────
@@ -170,6 +185,123 @@ describe("getStationLive", () => {
     expect(result.windSpeedKmh).toBe(25);
     expect(result.network).toBe("meteoswiss");
     expect(result.stationId).toBe("VEV");
+  });
+
+  it("uses a newer Pioupiou live trame instead of the DB cron row", async () => {
+    mockFindFirst.mockResolvedValue(makeDbMeasurement(10 * 60 * 1000));
+    const liveUpdatedAt = new Date(Date.now() - 60 * 1000).toISOString();
+    mockFetchPioupiouStations.mockResolvedValue([
+      {
+        id: "piou-110",
+        name: "Pioupiou 110",
+        lat: 46.5,
+        lng: 6.8,
+        altitudeM: 0,
+        windSpeedKmh: 31,
+        windDirection: 225,
+        gustsKmh: 38,
+        updatedAt: liveUpdatedAt,
+        source: "pioupiou",
+      },
+    ]);
+
+    const result = await getStationLive("piou-110", {
+      lat: 46.5,
+      lng: 6.8,
+    });
+
+    expect(result.source).toBe("station");
+    expect(result.windSpeedKmh).toBe(31);
+    expect(result.windDirection).toBe(225);
+    expect(result.updatedAt).toBe(liveUpdatedAt);
+  });
+
+  it("keeps the DB row when Pioupiou live data is older", async () => {
+    const dbMeasurement = makeDbMeasurement(60 * 1000);
+    mockFindFirst.mockResolvedValue(dbMeasurement);
+    mockFetchPioupiouStations.mockResolvedValue([
+      {
+        id: "piou-110",
+        name: "Pioupiou 110",
+        lat: 46.5,
+        lng: 6.8,
+        altitudeM: 0,
+        windSpeedKmh: 31,
+        windDirection: 225,
+        gustsKmh: 38,
+        updatedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+        source: "pioupiou",
+      },
+    ]);
+
+    const result = await getStationLive("piou-110", {
+      lat: 46.5,
+      lng: 6.8,
+    });
+
+    expect(result.source).toBe("station");
+    expect(result.windSpeedKmh).toBe(25);
+    expect(result.updatedAt).toBe(dbMeasurement.time.toISOString());
+  });
+
+  it("falls back to Open-Meteo when the freshest Pioupiou trame is stale", async () => {
+    mockFindFirst.mockResolvedValue(makeDbMeasurement(40 * 60 * 1000));
+    mockFetchPioupiouStations.mockResolvedValue([
+      {
+        id: "piou-110",
+        name: "Pioupiou 110",
+        lat: 46.5,
+        lng: 6.8,
+        altitudeM: 0,
+        windSpeedKmh: 31,
+        windDirection: 225,
+        gustsKmh: 38,
+        updatedAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+        source: "pioupiou",
+      },
+    ]);
+
+    const result = await getStationLive("piou-110", {
+      lat: 46.5,
+      lng: 6.8,
+      allowOpenMeteoFallback: true,
+    });
+
+    expect(result.source).toBe("openmeteo");
+    expect(mockFetchCurrentWind).toHaveBeenCalledWith(46.5, 6.8);
+  });
+
+  it("uses a newer Windball live trame instead of the DB cron row", async () => {
+    mockFindFirst.mockResolvedValue(makeDbMeasurement(12 * 60 * 1000));
+    const liveUpdatedAt = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    mockFetchWindballHistory.mockResolvedValue([
+      {
+        windSpeed: 35,
+        windBurst: 44,
+        windDir: 210,
+        temperature: 12,
+        updatedAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+      },
+      {
+        windSpeed: 42,
+        windBurst: 51,
+        windDir: 215,
+        temperature: 13,
+        updatedAt: liveUpdatedAt,
+      },
+    ]);
+
+    const result = await getStationLive("windball-wb-05", {
+      lat: 46.5,
+      lng: 6.8,
+    });
+
+    expect(result.source).toBe("station");
+    expect(result.windSpeedKmh).toBe(42);
+    expect(result.windDirection).toBe(215);
+    expect(result.gustsKmh).toBe(51);
+    expect(result.temperatureC).toBe(13);
+    expect(result.updatedAt).toBe(liveUpdatedAt);
   });
 
   it("returns stale station data (isFresh=false) when allowOpenMeteoFallback=false", async () => {

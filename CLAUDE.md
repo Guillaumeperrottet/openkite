@@ -311,11 +311,12 @@ prisma/
 
 **Règle absolue** : la valeur affichée dans le popup carte, sur les cards "Vent moyen / Rafales / Direction" de la page spot et la **dernière barre du chart 48 h** doivent toujours être identiques (mêmes kts, même `il y a X min`).
 
-### Source unique : `/api/stations`
+### Source unique : `stationData.ts`
 
-- Le popup carte ET la page spot fetch le **même endpoint** `/api/stations` côté client (polling 60 s).
-- `SpotPageClient.tsx` : `liveStation` (state) ← `/api/stations`. Les cards dérivent `wind` via `useMemo(liveStation)`. Fallback SSR `initialWind`.
-- `chartHistory` (useMemo) : injecte le point `liveStation` à la queue de `history` quand la trame live est plus récente que la dernière trame du chart → dernière barre = cards.
+- `getStationLive()` sélectionne la vraie mesure station la plus fraîche : DB `StationMeasurement` + overlay live Pioupiou/Windball, puis compare les timestamps.
+- `getSpotLive()` réutilise `getStationLive()` pour la station assignée (`nearestStationId`) et ne bascule sur Open-Meteo que si cette mesure est stale.
+- `SpotPageClient.tsx`, `KiteMap` et `StationPopup.tsx` consomment `useSpotLive()` / `useStationLive()` côté client (polling 60 s, cache SWR partagé).
+- `chartHistory` injecte le point live quand il est plus récent que la dernière barre mesurée → dernière barre = cards/popup.
 
 ### Overlays dans `/api/stations`
 
@@ -327,8 +328,7 @@ CDN : `s-maxage=60, stale-while-revalidate=300`.
 
 ### SSR page spot
 
-- Lit `StationMeasurement` mais n'affiche que si **≤ 5 min**, sinon `wind = null` (placeholder).
-- Pas de fallback Open-Meteo (`fetchCurrentWind` n'est plus appelé côté `page.tsx`).
+- Appelle `getSpotLive()`. Station assignée fraîche → vraie mesure station. Station stale/absente → Open-Meteo aux coordonnées du spot.
 
 ### Caches calés sur 60 s
 
@@ -340,10 +340,10 @@ Tous les TTL en bord de chaîne (Windball, Pioupiou, `/api/stations`, `/api/spot
 
 ### Règles à respecter
 
-1. Ne jamais ajouter de fallback Open-Meteo sur la page spot pour le vent courant.
+1. Ne jamais réimplémenter le fallback Open-Meteo dans une UI : il appartient à `getSpotLive()`.
 2. Ne pas dériver les cards depuis `history` (ce qui re-introduirait un décalage avec le popup).
 3. Si tu touches au TTL d'un cache amont (`windball.ts`, `pioupiou.ts`, route handlers), garde 60 s pour ne pas désaligner les fenêtres CDN.
-4. Toute nouvelle UI affichant le vent courant d'une balise doit lire `/api/stations` côté client (jamais reconstruire à partir de l'historique).
+4. Toute nouvelle UI affichant le vent courant d'une balise doit lire `useStationLive()` ou `useSpotLive()` (jamais reconstruire à partir de l'historique).
 
 ---
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { X, ExternalLink } from "lucide-react";
 import { windConditionLabel, windDirectionLabel, barColors } from "@/lib/utils";
@@ -111,14 +111,25 @@ export function StationPopup({
   // Live header values: from useStationLive (polls /api/stations/${id}/live).
   // Falls back to GL-feature props while the first SWR fetch is in-flight.
   // This eliminates the VEV bug: header never reads from NWP forecast points.
-  const liveSpeed = stationLive?.windSpeedKmh ?? station.windSpeedKmh;
-  const liveDirection = stationLive?.windDirection ?? station.windDirection;
-  const liveGusts = stationLive?.gustsKmh ?? station.gustsKmh;
-  const liveUpdatedAt = stationLive?.updatedAt ?? station.updatedAt;
+  const stationLiveTime = stationLive
+    ? new Date(stationLive.updatedAt).getTime()
+    : NaN;
+  const featureTime = new Date(station.updatedAt).getTime();
+  const stationLiveIsNewest = Boolean(
+    stationLive &&
+      !isNaN(stationLiveTime) &&
+      (isNaN(featureTime) || stationLiveTime >= featureTime),
+  );
+  const liveForDisplay =
+    stationLive && stationLiveIsNewest ? stationLive : null;
+  const liveSpeed = liveForDisplay?.windSpeedKmh ?? station.windSpeedKmh;
+  const liveDirection = liveForDisplay?.windDirection ?? station.windDirection;
+  const liveGusts = liveForDisplay?.gustsKmh ?? station.gustsKmh;
+  const liveUpdatedAt = liveForDisplay?.updatedAt ?? station.updatedAt;
 
   // Push fresher values back to the map so the GL arrow color matches.
   useEffect(() => {
-    if (!onLiveUpdate || !stationLive) return;
+    if (!onLiveUpdate || !stationLive || !stationLiveIsNewest) return;
     if (
       stationLive.windSpeedKmh === station.windSpeedKmh &&
       stationLive.windDirection === station.windDirection &&
@@ -139,7 +150,43 @@ export function StationPopup({
     station.windSpeedKmh,
     station.windDirection,
     station.gustsKmh,
+    stationLiveIsNewest,
     onLiveUpdate,
+  ]);
+
+  const chartHistory = useMemo<HistoryPoint[] | null>(() => {
+    if (!history) return history;
+    const pointTime = new Date(liveUpdatedAt).toISOString().slice(0, 16);
+    const currentPoint: HistoryPoint = {
+      time: pointTime,
+      windSpeedKmh: liveSpeed,
+      windDirection: liveDirection,
+      gustsKmh: liveGusts,
+      temperatureC: liveForDisplay?.temperatureC ?? 0,
+    };
+    const nowIso = new Date().toISOString().slice(0, 16);
+    let lastMeasuredIdx = -1;
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].time <= nowIso) {
+        lastMeasuredIdx = i;
+        break;
+      }
+    }
+    if (lastMeasuredIdx === -1) return [currentPoint, ...history];
+    const last = history[lastMeasuredIdx];
+    if (pointTime <= last.time) return history;
+    return [
+      ...history.slice(0, lastMeasuredIdx + 1),
+      currentPoint,
+      ...history.slice(lastMeasuredIdx + 1),
+    ];
+  }, [
+    history,
+    liveUpdatedAt,
+    liveSpeed,
+    liveDirection,
+    liveGusts,
+    liveForDisplay,
   ]);
 
   const speedKmh = Math.round(liveSpeed);
@@ -163,6 +210,7 @@ export function StationPopup({
   const isNetatmo = station.source === "netatmo";
   const isMF = station.source === "meteofrance";
   const isWB = station.source === "windball";
+  const isFrEnergy = station.source === "fr-energy";
   const sourceLabel = isPioupiou
     ? "OpenWindMap"
     : isNetatmo
@@ -171,8 +219,16 @@ export function StationPopup({
         ? "Météo-France"
         : isWB
           ? "Windball"
-          : "MeteoSwiss";
-  const sourceFreq = isPioupiou ? "~4 min" : isMF ? "15 min" : "~10 min";
+          : isFrEnergy
+            ? "FribourgÉnergie"
+            : "MeteoSwiss";
+  const sourceFreq = isPioupiou
+    ? "~4 min"
+    : isMF
+      ? "3 h"
+      : isFrEnergy
+        ? "10 min"
+        : "~10 min";
 
   // Position: compute actual top clamped to viewport
   const vw = typeof window !== "undefined" ? window.innerWidth : 800;
@@ -302,9 +358,9 @@ export function StationPopup({
             <div className="flex items-center justify-center h-24 text-xs text-gray-400 animate-pulse">
               {tCommon("loading")}
             </div>
-          ) : history && history.length > 0 ? (
+          ) : chartHistory && chartHistory.length > 0 ? (
             <WindHistoryChart
-              history={history}
+              history={chartHistory}
               useKnots={useKnots}
               timezone="Europe/Zurich"
             />

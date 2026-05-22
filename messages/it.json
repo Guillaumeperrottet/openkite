@@ -171,6 +171,7 @@
     "dataSources": "Fonti dati aperte",
     "openMeteoDesc": "Previsione meteorologica numerica 7 giorni (NWP), senza chiave API, open source e gratuita.",
     "lastMeasurement": "Ultima misura:",
+    "staleData": "Dati vecchi",
     "autoRefresh": "aggiorn. auto · {time}",
     "webcams": "Webcam nelle vicinanze",
     "measureEvery": "misura ogni {freq}",

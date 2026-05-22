@@ -6,7 +6,7 @@ import { Wind } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { io, type Socket } from "socket.io-client";
-import type { Spot, WindData } from "@/types";
+import type { Spot } from "@/types";
 import type { WindStation } from "@/lib/stations";
 import { windColor, windDirectionLabel, getWindData } from "@/lib/utils";
 import { isNetworkFresh } from "@/lib/stationConstants";
@@ -1050,6 +1050,7 @@ export function KiteMap({
 
         // Re-render GL layers with updated data
         renderStations(stations);
+        setPollTick((n) => n + 1);
       },
     );
 

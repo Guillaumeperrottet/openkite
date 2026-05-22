@@ -27,7 +27,8 @@ spots/[id]/page.tsx
 getSpotLive("corseaux-id")          ← stationData.ts
         ↓
   1. Cherche la station assignée au spot (nearestStationId)
-  2. Lit la dernière mesure en DB (StationMeasurement)
+  2. Résout la mesure station la plus fraîche disponible
+     (StationMeasurement + overlay live Pioupiou/Windball)
   3. La mesure est fraîche ? → retourne l'obs station
      La mesure est périmée ? → appelle Open-Meteo aux coords du spot
         ↓
@@ -90,7 +91,7 @@ Si tu veux modifier un seuil, **ne change que `stationConstants.ts`** — tout l
 ```
 src/lib/stationData.ts
 ├── getSpotLive(spotId)         → pour les spots (page + carte)
-├── getStationLive(stationId)   → pour les pages station et popup station
+├── getStationLive(stationId)   → DB + overlay live Pioupiou/Windball + fallback
 └── getStationFromCache(id)     → lookup rapide métadonnées (1 query DB)
 
 src/app/api/spots/[id]/live/route.ts      → endpoint HTTP pour useSpotLive
@@ -148,4 +149,4 @@ Le bug qui a déclenché ce refactor : sur la carte, le popup de la station VEV 
 
 **Cause** : le popup recalculait la "dernière valeur" en cherchant le dernier point de l'historique 48 h antérieur à maintenant (`lastPast`). Or l'historique mélangait observations et prévisions NWP dans le même tableau. Un point NWP de 09h15 (postérieur à la dernière vraie mesure de 09h00) était sélectionné à la place de l'observation réelle.
 
-**Correction structurelle** : le popup station lit maintenant `useStationLive()`, qui appelle `/api/stations/[id]/live` → `getStationLive()` → lit **uniquement** `StationMeasurement` en DB (jamais du NWP). Il est structurellement impossible d'afficher une valeur NWP dans le header du popup station.
+**Correction structurelle** : le popup station lit maintenant `useStationLive()`, qui appelle `/api/stations/[id]/live` → `getStationLive()` → lit les vraies mesures station uniquement (DB + overlay live selon réseau, jamais du NWP sur une page station). Il est structurellement impossible d'afficher une valeur NWP dans le header du popup station.

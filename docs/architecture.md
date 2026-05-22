@@ -163,7 +163,7 @@ Toute la logique de résolution du vent courant est centralisée dans `src/lib/s
 
 | Fonction                      | Rôle                                                        |
 | ----------------------------- | ----------------------------------------------------------- |
-| `getStationLive(id, opts)`    | DB → fraîcheur par réseau → fallback Open-Meteo             |
+| `getStationLive(id, opts)`    | DB + overlay live Pioupiou/Windball → fraîcheur → fallback |
 | `getSpotLive(spotId)`         | `nearestStationId` → `getStationLive` → fallback Open-Meteo |
 | `getStationHistory(id, opts)` | Observations DB + prévisions NWP strictement séparées       |
 | `getStationFromCache(id)`     | Lecture snapshot `SystemConfig.stations_cache`              |
@@ -174,8 +174,8 @@ Les seuils de fraîcheur par réseau sont dans `src/lib/stationConstants.ts` (im
 | ------------- | -------------------- |
 | `pioupiou`    | 20 min               |
 | `meteoswiss`  | 1 h                  |
-| `netatmo`     | 1 h                  |
-| `windball`    | 1 h                  |
+| `netatmo`     | 30 min              |
+| `windball`    | 30 min              |
 | `meteofrance` | 4 h                  |
 
 ### SWR côté client
@@ -192,7 +192,7 @@ Deduplication SWR : si SpotPageClient et KiteMap ont le même spot sélectionné
 ### Flux complet (spot avec station)
 
 ```
-DB StationMeasurement
+DB StationMeasurement + overlay live Pioupiou/Windball
   └── getStationLive()           ← fraîcheur per-network (stationConstants.ts)
         ├── frais  → WindLive { source: "réseau", isFresh: true }
         └── périmé → fetchCurrentWind() → WindLive { source: "openmeteo", isFresh: true }

@@ -12,6 +12,7 @@ const SOURCE_LABELS: Record<string, string> = {
   netatmo: "Netatmo",
   meteofrance: "Météo-France",
   windball: "Windball",
+  "fr-energy": "FribourgÉnergie",
 };
 
 /** Marker color for station wind speed (same palette as map) */

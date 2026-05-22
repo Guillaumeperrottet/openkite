@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -20,16 +20,14 @@ import { ForecastTable } from "@/components/spot/ForecastTable";
 import { WindHistoryChart } from "@/components/spot/WindHistoryChart";
 import { barColors, windDirectionLabel, windConditionKey } from "@/lib/utils";
 import { roundKnots } from "@/lib/forecast";
+import { useStationLive } from "@/lib/useStationLive";
 import type { WindStation } from "@/lib/stations";
 import type { FullForecast } from "@/lib/forecast";
-import type { HistoryPoint } from "@/types";
+import type { HistoryPoint, WindLive } from "@/types";
 
 interface Props {
   station: WindStation;
-  /** Gusts (estimated or from source) */
-  gustsKmh: number | null;
-  /** ISO timestamp from Open-Meteo current data, e.g. "2026-04-02T09:15" */
-  openMeteoUpdatedAt: string | null;
+  live: WindLive | null;
   forecast: FullForecast | null;
   history: HistoryPoint[] | null;
 }
@@ -73,6 +71,13 @@ const SOURCE_META: Record<
     attribution:
       "Anémomètres LoRa communautaires en Suisse romande, données publiques.",
   },
+  "fr-energy": {
+    label: "FribourgÉnergie",
+    freq: "10 min",
+    url: "https://opendata.fr.ch",
+    attribution:
+      "Mâts de mesure du canton de Fribourg, données ouvertes publiées par lot.",
+  },
 };
 
 function getSourceMeta(source: string) {
@@ -86,11 +91,22 @@ function getSourceMeta(source: string) {
   );
 }
 
+function pickNewestLive(
+  a: WindLive | null,
+  b: WindLive | null,
+): WindLive | null {
+  if (!a) return b;
+  if (!b) return a;
+  const aTime = new Date(a.updatedAt).getTime();
+  const bTime = new Date(b.updatedAt).getTime();
+  if (isNaN(aTime)) return b;
+  if (isNaN(bTime)) return a;
+  return bTime > aTime ? b : a;
+}
+
 export function StationPageClient({
   station,
-  gustsKmh,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  openMeteoUpdatedAt,
+  live: initialLive,
   forecast,
   history,
 }: Props) {
@@ -98,36 +114,10 @@ export function StationPageClient({
   const tWind = useTranslations("WindConditions");
   const [useKnots, setUseKnots] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
-  const [liveStation, setLiveStation] = useState<WindStation | null>(null);
   const router = useRouter();
+  const { data: polledLive } = useStationLive(station.id);
 
   const srcMeta = getSourceMeta(station.source);
-
-  // Live polling — same source as the map popup (/api/stations) so the cards,
-  // compass, and last bar of the 48 h chart all reflect the freshest measurement.
-  // Polls every 60 s while the tab is visible.
-  useEffect(() => {
-    let cancelled = false;
-    const fetchLive = () => {
-      if (document.hidden) return;
-      fetch("/api/stations")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (cancelled || !Array.isArray(data)) return;
-          const found = data.find((s: WindStation) => s.id === station.id) as
-            | WindStation
-            | undefined;
-          if (found) setLiveStation(found);
-        })
-        .catch(() => {});
-    };
-    fetchLive();
-    const id = setInterval(fetchLive, 60_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [station.id]);
 
   // Auto-refresh when tab becomes visible after being hidden for 10+ min.
   // Avoids polling in background tabs, saving ~4 API calls per cycle.
@@ -159,21 +149,24 @@ export function StationPageClient({
     };
   }, [router]);
 
-  // Pick freshest values: live poll if newer, else SSR snapshot.
-  const liveIsNewer =
-    liveStation &&
-    new Date(liveStation.updatedAt).getTime() >
-      new Date(station.updatedAt).getTime();
+  // Pick freshest values: unified WindLive if newer/equal, else snapshot.
+  const live = pickNewestLive(initialLive, polledLive);
+  const stationTime = new Date(station.updatedAt).getTime();
+  const liveTime = live ? new Date(live.updatedAt).getTime() : NaN;
+  const liveIsNewer = Boolean(
+    live && !isNaN(liveTime) && (isNaN(stationTime) || liveTime >= stationTime),
+  );
   const curWindKmh = liveIsNewer
-    ? liveStation!.windSpeedKmh
+    ? live!.windSpeedKmh
     : station.windSpeedKmh;
   const curDir = liveIsNewer
-    ? liveStation!.windDirection
+    ? live!.windDirection
     : station.windDirection;
   const curGustsKmh = liveIsNewer
-    ? (liveStation!.gustsKmh ?? gustsKmh)
-    : gustsKmh;
-  const curUpdatedAt = liveIsNewer ? liveStation!.updatedAt : station.updatedAt;
+    ? live!.gustsKmh
+    : station.gustsKmh;
+  const curUpdatedAt = liveIsNewer ? live!.updatedAt : station.updatedAt;
+  const isCurrentStale = liveIsNewer ? !live!.isFresh : false;
 
   // Derived display values — use the same `barColors` palette as the chart
   // bars and the map flag so the colour is identical everywhere.
@@ -214,6 +207,43 @@ export function StationPageClient({
     updatedAt: curUpdatedAt,
   };
 
+  const chartHistory = useMemo<HistoryPoint[] | null>(() => {
+    if (!history) return history;
+    const pointTime = new Date(curUpdatedAt).toISOString().slice(0, 16);
+    const currentPoint: HistoryPoint = {
+      time: pointTime,
+      windSpeedKmh: curWindKmh,
+      windDirection: curDir,
+      gustsKmh: curGustsKmh ?? curWindKmh,
+      temperatureC: liveIsNewer ? (live!.temperatureC ?? 0) : 0,
+    };
+
+    const nowIso = new Date().toISOString().slice(0, 16);
+    let lastMeasuredIdx = -1;
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].time <= nowIso) {
+        lastMeasuredIdx = i;
+        break;
+      }
+    }
+    if (lastMeasuredIdx === -1) return [currentPoint, ...history];
+    const last = history[lastMeasuredIdx];
+    if (pointTime <= last.time) return history;
+    return [
+      ...history.slice(0, lastMeasuredIdx + 1),
+      currentPoint,
+      ...history.slice(lastMeasuredIdx + 1),
+    ];
+  }, [
+    history,
+    curUpdatedAt,
+    curWindKmh,
+    curDir,
+    curGustsKmh,
+    live,
+    liveIsNewer,
+  ]);
+
   return (
     <div className="min-h-screen bg-white pb-20">
       {/* ── Header ───────────────────────────────────────────────── */}
@@ -248,6 +278,11 @@ export function StationPageClient({
               <p className="text-xs text-gray-500">
                 {t("lastMeasurement")} {updateDate} à {updateTime}
               </p>
+              {isCurrentStale && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                  {t("staleData")}
+                </span>
+              )}
               {lastRefreshed && (
                 <span className="inline-flex items-center gap-1 text-[10px] text-gray-500">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
@@ -448,9 +483,9 @@ export function StationPageClient({
               </a>
             </div>
             <div className="px-3 py-2">
-              {history && history.length > 0 ? (
+              {chartHistory && chartHistory.length > 0 ? (
                 <WindHistoryChart
-                  history={history}
+                  history={chartHistory}
                   useKnots={useKnots}
                   timezone="Europe/Zurich"
                 />

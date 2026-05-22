@@ -84,7 +84,7 @@ Suppression d'images. Body : `{ imageIds: string[] }`.
 
 ### `GET /api/stations`
 
-Toutes les stations combinées (MeteoSwiss + Pioupiou + Netatmo + Météo-France + Windball). Cache 10 min.
+Toutes les stations combinées (MeteoSwiss + Pioupiou + Netatmo + Météo-France + Windball). Cache 60 s.
 
 **Réponse** : `WindStation[]`
 
@@ -104,7 +104,7 @@ Toutes les stations combinées (MeteoSwiss + Pioupiou + Netatmo + Météo-France
 
 ### `GET /api/stations/[id]/live`
 
-Vent courant pour une station (DB uniquement, jamais NWP). Utile pour rafraîchir l'en-tête de la popup carte sans polluer le chart.
+Vent courant pour une station (dernière vraie mesure station : DB + overlay live Pioupiou/Windball, jamais NWP). Utile pour rafraîchir l'en-tête de la popup carte sans polluer le chart.
 
 **Réponse** : `WindLive` (windSpeedKmh, windDirection, gustsKmh, updatedAt, source, isFresh, staleAt). Cache 60 s.
 
