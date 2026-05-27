@@ -77,7 +77,11 @@ export default function SpotMiniMap({
           className="absolute z-10 pointer-events-none -translate-x-1/2 -translate-y-1/2"
           style={{ left: "50%", top: "50%" }}
         >
-          <WindDirectionRose bestDirections={bestDirections} size={180} />
+          <WindDirectionRose
+            bestDirections={bestDirections}
+            size={180}
+            transparentBackground
+          />
         </div>
       )}
     </div>

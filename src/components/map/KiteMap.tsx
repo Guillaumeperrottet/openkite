@@ -22,6 +22,13 @@ import {
 } from "./mapSetup";
 import { useWindOverlay } from "./useWindOverlay";
 import { useAuth } from "@/lib/useAuth";
+import {
+  MAP_FOCUS_EVENT,
+  MAP_FOCUS_STORAGE_KEY,
+  mapFocusRequestFromStorage,
+  mapFocusRequestFromValue,
+  type MapFocusRequest,
+} from "@/lib/mapFocus";
 
 interface KiteMapProps {
   spots: Spot[];
@@ -41,6 +48,81 @@ interface KiteMapProps {
 const MAP_STYLE =
   process.env.NEXT_PUBLIC_MAP_STYLE ||
   "https://tiles.openfreemap.org/styles/liberty";
+const OPEN_METEO_SPOT_WIND_TTL_MS = 10 * 60 * 1000;
+const MAX_OPEN_METEO_SPOTS_PER_BATCH = 80;
+
+type WindGridPoint = {
+  lat: number;
+  lon: number;
+  speed: number;
+};
+
+type SelectedStation = {
+  id: string;
+  name: string;
+  description?: string;
+  windSpeedKmh: number;
+  windDirection: number;
+  gustsKmh: number;
+  altitudeM: number;
+  updatedAt: string;
+  colorHex: string;
+  dirLabel: string;
+  source: string;
+  lat: number;
+  lng: number;
+};
+
+function spotCoordKey(spot: Pick<Spot, "latitude" | "longitude">): string {
+  return `${spot.latitude.toFixed(5)},${spot.longitude.toFixed(5)}`;
+}
+
+function buildAssignedStationWindMap(
+  spotList: Spot[],
+  stations: WindStation[],
+): Map<string, number> {
+  const windMap = new Map<string, number>();
+  for (const spot of spotList) {
+    if (!spot.nearestStationId) continue;
+    const assigned =
+      stations.find((s) => s.id === spot.nearestStationId) ?? null;
+    if (assigned && isNetworkFresh(assigned.id, assigned.updatedAt)) {
+      windMap.set(spot.id, assigned.windSpeedKmh);
+    }
+  }
+  return windMap;
+}
+
+function isSpotInMapBounds(spot: Spot, map: maplibregl.Map): boolean {
+  const bounds = map.getBounds();
+  const west = bounds.getWest();
+  const east = bounds.getEast();
+  const south = bounds.getSouth();
+  const north = bounds.getNorth();
+  const inLng =
+    west <= east
+      ? spot.longitude >= west && spot.longitude <= east
+      : spot.longitude >= west || spot.longitude <= east;
+  return inLng && spot.latitude >= south && spot.latitude <= north;
+}
+
+function selectedStationFromWindStation(station: WindStation): SelectedStation {
+  return {
+    id: station.id,
+    name: station.name,
+    description: station.description,
+    windSpeedKmh: station.windSpeedKmh,
+    windDirection: station.windDirection,
+    gustsKmh: station.gustsKmh ?? Math.round(station.windSpeedKmh * 1.3),
+    altitudeM: Math.round(station.altitudeM),
+    updatedAt: station.updatedAt,
+    colorHex: windColor(station.windSpeedKmh),
+    dirLabel: windDirectionLabel(station.windDirection),
+    source: station.source,
+    lat: station.lat,
+    lng: station.lng,
+  };
+}
 
 export function KiteMap({
   spots,
@@ -73,9 +155,14 @@ export function KiteMap({
   spotsRef.current = spots;
   const initialStationsRef = useRef(initialStations);
   initialStationsRef.current = initialStations;
+  /** Search/planner requests that should center the map and optionally open a popup. */
+  const pendingFocusRequestRef = useRef<MapFocusRequest | null>(null);
 
   /** All loaded stations (MeteoSwiss + Pioupiou + Netatmo + Météo-France) for nearest-station wind lookup */
   const stationsRef = useRef<WindStation[]>([]);
+  /** Open-Meteo fallback wind for visible spots without a fresh assigned station. */
+  const openMeteoSpotWindRef = useRef<Map<string, number>>(new Map());
+  const openMeteoSpotWindFetchedAtRef = useRef<Map<string, number>>(new Map());
   /** GeoJSON features refs for the combined clustered source */
   const stationFeaturesRef = useRef<GeoJSON.Feature[]>([]);
   const spotFeaturesRef = useRef<GeoJSON.Feature[]>([]);
@@ -116,6 +203,7 @@ export function KiteMap({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loadingStations, setLoadingStations] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [focusRequestVersion, setFocusRequestVersion] = useState(0);
   /** true = display speeds in knots (kn), false = km/h */
   const [useKnots, _setUseKnots] = useState(true);
   const useKnotsRef = useRef(true);
@@ -188,25 +276,68 @@ export function KiteMap({
   }, [user]);
 
   // Station popup state (React-based with history chart)
-  const [selectedStation, setSelectedStation] = useState<{
-    id: string;
-    name: string;
-    description?: string;
-    windSpeedKmh: number;
-    windDirection: number;
-    gustsKmh: number;
-    altitudeM: number;
-    updatedAt: string;
-    colorHex: string;
-    dirLabel: string;
-    source: string;
-    lat: number;
-    lng: number;
-  } | null>(null);
+  const [selectedStation, setSelectedStation] =
+    useState<SelectedStation | null>(null);
   const [stationPopupPos, setStationPopupPos] = useState<{
     x: number;
     y: number;
   } | null>(null);
+
+  const queueFocusRequest = useCallback(
+    (request: MapFocusRequest) => {
+      pendingFocusRequestRef.current = request;
+      const map = mapRef.current;
+      if (map && !initialCenter) {
+        userMovedRef.current = true;
+        map.easeTo({
+          center: request.center,
+          zoom: request.zoom,
+          duration: 650,
+        });
+      }
+      setFocusRequestVersion((n) => n + 1);
+    },
+    [initialCenter],
+  );
+
+  const openPendingFocusPopup = useCallback(() => {
+    const request = pendingFocusRequestRef.current;
+    const map = mapRef.current;
+    if (!request || !map || !mapLoaded) return false;
+
+    if (!request.kind || !request.id) {
+      pendingFocusRequestRef.current = null;
+      return true;
+    }
+
+    if (request.kind === "spot") {
+      const spot = spotsRef.current.find((s) => s.id === request.id);
+      if (!spot) return false;
+
+      const px = map.project([spot.longitude, spot.latitude]);
+      setSelectedSpot(spot);
+      setPopupPos({ x: px.x, y: px.y });
+      setSelectedStation(null);
+      setStationPopupPos(null);
+      pendingFocusRequestRef.current = null;
+      return true;
+    }
+
+    const station = stationsRef.current.find((s) => s.id === request.id);
+    if (!station) return false;
+
+    const px = map.project([station.lng, station.lat]);
+    const rect = map.getCanvas().getBoundingClientRect();
+    setSelectedStation(selectedStationFromWindStation(station));
+    setStationPopupPos({
+      x: rect.left + px.x,
+      y: rect.top + px.y,
+    });
+    setSelectedSpot(null);
+    setPopupPos(null);
+    pendingFocusRequestRef.current = null;
+    return true;
+  }, [mapLoaded]);
 
   // fetchWind removed — replaced by useSpotLive SWR hook above.
 
@@ -267,6 +398,8 @@ export function KiteMap({
   /**
    * Push spot data to the combined clustered source.
    * windSpeedKmh defaults to 0 (gray) — updated later when wind data arrives.
+   * Station measurements take priority, then Open-Meteo fallback for visible
+   * spots without a fresh assigned station.
    */
   const renderSpots = useCallback(
     (spotList: Spot[], windMap?: Map<string, number>) => {
@@ -295,13 +428,85 @@ export function KiteMap({
           createdAt: s.createdAt,
           updatedAt: s.updatedAt,
           images: JSON.stringify(s.images),
-          windSpeedKmh: windMap?.get(s.id) ?? 0,
+          windSpeedKmh:
+            windMap?.get(s.id) ?? openMeteoSpotWindRef.current.get(s.id) ?? 0,
         },
       }));
       updateCombinedSource();
     },
     [updateCombinedSource],
   );
+
+  const refreshOpenMeteoSpotWinds = useCallback(
+    async (spotList: Spot[], assignedWindMap: Map<string, number>) => {
+      const map = mapRef.current;
+      if (!map || pickMode || map.getZoom() < 7) return;
+
+      const now = Date.now();
+      const candidates = spotList
+        .filter(
+          (spot) =>
+            spot.sportType === "KITE" &&
+            !assignedWindMap.has(spot.id) &&
+            isSpotInMapBounds(spot, map) &&
+            now -
+              (openMeteoSpotWindFetchedAtRef.current.get(spot.id) ?? 0) >
+              OPEN_METEO_SPOT_WIND_TTL_MS,
+        )
+        .slice(0, MAX_OPEN_METEO_SPOTS_PER_BATCH);
+
+      if (candidates.length === 0) return;
+
+      try {
+        const res = await fetch("/api/wind/grid", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lats: candidates.map((spot) => spot.latitude),
+            lngs: candidates.map((spot) => spot.longitude),
+          }),
+        });
+        if (!res.ok) return;
+
+        const points = (await res.json()) as WindGridPoint[];
+        const speedsByCoord = new Map(
+          points.map((p) => [
+            `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`,
+            p.speed,
+          ]),
+        );
+
+        let changed = false;
+        for (const spot of candidates) {
+          openMeteoSpotWindFetchedAtRef.current.set(spot.id, now);
+          const speed = speedsByCoord.get(spotCoordKey(spot));
+          if (typeof speed !== "number" || !Number.isFinite(speed)) continue;
+          openMeteoSpotWindRef.current.set(spot.id, speed);
+          changed = true;
+        }
+
+        if (changed) renderSpots(spotList, assignedWindMap);
+      } catch {
+        // Fallback wind is cosmetic for map pulse/coloring; keep current data.
+      }
+    },
+    [pickMode, renderSpots],
+  );
+
+  const renderCurrentSpots = useCallback(() => {
+    const filter = sportFilterRef.current;
+    const allSpots = spotsRef.current;
+    const filtered =
+      filter === "ALL"
+        ? allSpots
+        : allSpots.filter((s) => s.sportType === filter);
+    const assignedWindMap = buildAssignedStationWindMap(
+      filtered,
+      stationsRef.current,
+    );
+    renderSpots(filtered, assignedWindMap);
+    void refreshOpenMeteoSpotWinds(filtered, assignedWindMap);
+  }, [refreshOpenMeteoSpotWinds, renderSpots]);
 
   /** Fetch stations and render them */
   const loadStations = useCallback(async () => {
@@ -324,34 +529,14 @@ export function KiteMap({
             minute: "2-digit",
           }),
         );
-        // Update spot wind speeds for pulse coloring — ONLY the spot's
-        // assigned station counts, AND only if it's fresh. Same rationale as
-        // fetchWind: we never use a "nearest neighbour" because wind is too
-        // local. If the assigned station is dead, the spot stops pulsing —
-        // which is honest (we don't have a real measurement).
-        const filter = sportFilterRef.current;
-        const allSpots = spotsRef.current;
-        const filtered =
-          filter === "ALL"
-            ? allSpots
-            : allSpots.filter((s) => s.sportType === filter);
-        const windMap = new Map<string, number>();
-        for (const spot of filtered) {
-          if (!spot.nearestStationId) continue;
-          const assigned =
-            stations.find((s) => s.id === spot.nearestStationId) ?? null;
-          if (assigned && isNetworkFresh(assigned.id, assigned.updatedAt)) {
-            windMap.set(spot.id, assigned.windSpeedKmh);
-          }
-        }
-        renderSpots(filtered, windMap);
+        renderCurrentSpots();
       }
     } catch {
       // silently ignore — MeteoSwiss might be temporarily down
     } finally {
       setLoadingStations(false);
     }
-  }, [renderStations, renderSpots]);
+  }, [renderCurrentSpots, renderStations]);
 
   // Keep ref in sync so GL event handlers always read the current unit preference
   useEffect(() => {
@@ -366,23 +551,14 @@ export function KiteMap({
 
     // One-shot focus request from another page (e.g. « Ça souffle ? » planner).
     // Stored in sessionStorage so it survives navigation and is consumed once.
-    let focusRequest: { center: [number, number]; zoom: number } | null = null;
+    let focusRequest: MapFocusRequest | null = null;
     if (!initialCenter) {
       try {
-        const raw = sessionStorage.getItem("openwind-focus-map");
+        const raw = sessionStorage.getItem(MAP_FOCUS_STORAGE_KEY);
         if (raw) {
-          const parsed = JSON.parse(raw) as {
-            lat: number;
-            lng: number;
-            zoom?: number;
-          };
-          if (Number.isFinite(parsed.lat) && Number.isFinite(parsed.lng)) {
-            focusRequest = {
-              center: [parsed.lng, parsed.lat],
-              zoom: Number.isFinite(parsed.zoom) ? parsed.zoom! : 10,
-            };
-          }
-          sessionStorage.removeItem("openwind-focus-map");
+          focusRequest = mapFocusRequestFromStorage(raw);
+          if (focusRequest) pendingFocusRequestRef.current = focusRequest;
+          sessionStorage.removeItem(MAP_FOCUS_STORAGE_KEY);
         }
       } catch {
         // ignore corrupted entry
@@ -671,7 +847,7 @@ export function KiteMap({
 
       // Animate both station and spot pulse rings
       if (pulseFrameRef.current !== null) {
-        cancelAnimationFrame(pulseFrameRef.current);
+        clearTimeout(pulseFrameRef.current);
       }
       startPulseAnimation(map, pulseFrameRef);
 
@@ -780,7 +956,7 @@ export function KiteMap({
     return () => {
       mounted = false;
       const pulseFrame = pulseRef.current;
-      if (pulseFrame !== null) cancelAnimationFrame(pulseFrame);
+      if (pulseFrame !== null) clearTimeout(pulseFrame);
       // Flush any pending debounced map-view save before tearing down
       if (mapViewSaveTimerRef.current) {
         clearTimeout(mapViewSaveTimerRef.current);
@@ -811,6 +987,62 @@ export function KiteMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Search results can focus the already-mounted home map without a remount.
+  useEffect(() => {
+    if (initialCenter) return;
+
+    const handleFocusMap = (event: Event) => {
+      const request = mapFocusRequestFromValue(
+        (event as CustomEvent<unknown>).detail,
+      );
+      if (!request) return;
+
+      try {
+        sessionStorage.removeItem(MAP_FOCUS_STORAGE_KEY);
+      } catch {
+        // ignore storage issues
+      }
+      queueFocusRequest(request);
+    };
+
+    window.addEventListener(MAP_FOCUS_EVENT, handleFocusMap);
+    return () => {
+      window.removeEventListener(MAP_FOCUS_EVENT, handleFocusMap);
+    };
+  }, [initialCenter, queueFocusRequest]);
+
+  // Once the requested feature is loaded and the map has finished moving,
+  // open the matching React popup.
+  useEffect(() => {
+    if (!mapLoaded || !pendingFocusRequestRef.current) return;
+    const map = mapRef.current;
+    if (!map) return;
+
+    let frame: number | null = null;
+    const tryOpen = () => {
+      if (!pendingFocusRequestRef.current) return;
+      if (map.isMoving()) return;
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        openPendingFocusPopup();
+      });
+    };
+
+    tryOpen();
+    map.on("moveend", tryOpen);
+    return () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      map.off("moveend", tryOpen);
+    };
+  }, [
+    mapLoaded,
+    focusRequestVersion,
+    spots,
+    pollTick,
+    openPendingFocusPopup,
+  ]);
+
   // Track spot popup position on map move — close if off-screen
   useEffect(() => {
     const map = mapRef.current;
@@ -838,6 +1070,34 @@ export function KiteMap({
       map.off("move", updatePos);
     };
   }, [selectedSpot]);
+
+  // When a spot popup resolves live wind through useSpotLive(), push that
+  // value back into the GL feature. This restores wind-colored pulsing for
+  // spots whose current value comes from Open-Meteo fallback rather than a
+  // fresh assigned station.
+  useEffect(() => {
+    if (!selectedSpot || !spotLive) return;
+
+    const idx = spotFeaturesRef.current.findIndex(
+      (feature) =>
+        (feature.properties as { id?: string } | null)?.id === selectedSpot.id,
+    );
+    if (idx < 0) return;
+
+    const feature = spotFeaturesRef.current[idx];
+    spotFeaturesRef.current[idx] = {
+      ...feature,
+      properties: {
+        ...(feature.properties ?? {}),
+        windSpeedKmh: spotLive.windSpeedKmh,
+        windDirection: spotLive.windDirection,
+        gustsKmh: spotLive.gustsKmh,
+        liveSource: spotLive.source,
+        updatedAt: spotLive.updatedAt,
+      },
+    };
+    updateCombinedSource();
+  }, [selectedSpot, spotLive, updateCombinedSource]);
 
   // Track station popup position on map move — close if off-screen
   useEffect(() => {
@@ -1063,34 +1323,31 @@ export function KiteMap({
   // GPU-accelerated wind particle overlay (MapLibre custom layer)
   useWindOverlay(mapRef, showWindOverlay, mapLoaded);
 
-  // Push spots to GeoJSON layer — build windMap from nearest stations for pulse coloring
+  // Push spots to GeoJSON layer — assigned station first, Open-Meteo fallback
+  // for visible kite spots without a fresh assigned station.
   useEffect(() => {
     if (!mapLoaded) return;
-    const filtered =
-      sportFilter === "ALL"
-        ? spots
-        : spots.filter((s) => s.sportType === sportFilter);
+    renderCurrentSpots();
+  }, [spots, mapLoaded, renderCurrentSpots, sportFilter, pollTick]);
 
-    const stations = stationsRef.current;
-    if (stations.length > 0) {
-      // Same logic as loadStations(): only the *assigned* station counts,
-      // and only if it's fresh. No nearest-neighbour fallback (wind is too
-      // local). Mismatching this with loadStations() caused the pulse to
-      // flicker on every spots/filter change.
-      const windMap = new Map<string, number>();
-      for (const spot of filtered) {
-        if (!spot.nearestStationId) continue;
-        const assigned =
-          stations.find((s) => s.id === spot.nearestStationId) ?? null;
-        if (assigned && isNetworkFresh(assigned.id, assigned.updatedAt)) {
-          windMap.set(spot.id, assigned.windSpeedKmh);
-        }
-      }
-      renderSpots(filtered, windMap);
-    } else {
-      renderSpots(filtered);
-    }
-  }, [spots, mapLoaded, renderSpots, sportFilter, pollTick]);
+  // Refresh Open-Meteo fallback winds when the visible map area changes. This
+  // is what lets unassigned/stale-station spots pulse without being clicked.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || pickMode) return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onMoveEnd = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(renderCurrentSpots, 250);
+    };
+
+    map.on("moveend", onMoveEnd);
+    return () => {
+      if (timer) clearTimeout(timer);
+      map.off("moveend", onMoveEnd);
+    };
+  }, [mapLoaded, pickMode, renderCurrentSpots]);
 
   // Highlight a spot on hover from external panel (e.g. TripPlanner results)
   useEffect(() => {

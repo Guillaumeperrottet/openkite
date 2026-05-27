@@ -1,11 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Star, X, MapPin, Plus } from "lucide-react";
+import { Search, Star, X, MapPin, Plus, Wind } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Spot } from "@/types";
+import type { WindStation } from "@/lib/stations";
+import {
+  MAP_FOCUS_EVENT,
+  MAP_FOCUS_STORAGE_KEY,
+  type StoredMapFocusRequest,
+} from "@/lib/mapFocus";
 
 interface SearchBarProps {
   favoriteIds: Set<string>;
@@ -13,14 +19,30 @@ interface SearchBarProps {
   onNavigate?: () => void;
 }
 
+type SearchResultKind = "spot" | "station";
+
 interface SearchResult {
   id: string;
   name: string;
   country: string | null;
   region: string | null;
-  sportType: string;
+  kind: SearchResultKind;
+  lat: number;
+  lng: number;
+  sportType?: string;
+  source?: WindStation["source"];
+  altitudeM?: number;
   score?: number;
 }
+
+const STATION_SOURCE_LABELS: Record<WindStation["source"], string> = {
+  meteoswiss: "MeteoSwiss",
+  pioupiou: "Pioupiou",
+  netatmo: "Netatmo",
+  meteofrance: "Météo-France",
+  windball: "Windball",
+  "fr-energy": "Fribourg Énergie",
+};
 
 /** Normalize: lowercase, strip accents, collapse whitespace */
 function norm(s: string): string {
@@ -67,14 +89,20 @@ function fuzzyMatch(haystack: string, needle: string): number {
   return 0;
 }
 
-function scoreSpot(
-  spot: { name: string; country: string | null; region: string | null },
+function stationSourceLabel(source: WindStation["source"] | undefined): string {
+  return source ? STATION_SOURCE_LABELS[source] : "Station";
+}
+
+function scoreSearchResult(
+  item: SearchResult,
   query: string,
 ): number {
-  const nameScore = fuzzyMatch(spot.name, query) * 3;
-  const regionScore = spot.region ? fuzzyMatch(spot.region, query) : 0;
-  const countryScore = spot.country ? fuzzyMatch(spot.country, query) : 0;
-  return nameScore + regionScore + countryScore;
+  const nameScore = fuzzyMatch(item.name, query) * 3;
+  const regionScore = item.region ? fuzzyMatch(item.region, query) : 0;
+  const countryScore = item.country ? fuzzyMatch(item.country, query) : 0;
+  const sourceScore =
+    item.kind === "station" ? fuzzyMatch(stationSourceLabel(item.source), query) : 0;
+  return nameScore + regionScore + countryScore + sourceScore;
 }
 
 export function SearchBar({
@@ -94,6 +122,7 @@ export function SearchBar({
 
   // Load all spots once (lightweight, cached) for client-side search
   const allSpotsRef = useRef<SearchResult[]>([]);
+  const allStationsRef = useRef<SearchResult[]>([]);
   const [spotsLoaded, setSpotsLoaded] = useState(false);
 
   useEffect(() => {
@@ -105,9 +134,31 @@ export function SearchBar({
           name: s.name,
           country: s.country,
           region: s.region,
+          kind: "spot",
+          lat: s.latitude,
+          lng: s.longitude,
           sportType: s.sportType,
         }));
         setSpotsLoaded(true);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/stations")
+      .then((r) => r.json())
+      .then((data: WindStation[]) => {
+        allStationsRef.current = data.map((s) => ({
+          id: s.id,
+          name: s.name,
+          country: null,
+          region: s.description ?? stationSourceLabel(s.source),
+          kind: "station",
+          lat: s.lat,
+          lng: s.lng,
+          source: s.source,
+          altitudeM: s.altitudeM,
+        }));
       })
       .catch(() => {});
   }, []);
@@ -143,11 +194,11 @@ export function SearchBar({
       setLoading(false);
       return;
     }
-    const scored = allSpotsRef.current
-      .map((s) => ({ ...s, score: scoreSpot(s, q) }))
+    const scored = [...allSpotsRef.current, ...allStationsRef.current]
+      .map((s) => ({ ...s, score: scoreSearchResult(s, q) }))
       .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 8);
+      .slice(0, 10);
     setResults(scored);
     setLoading(false);
   }, []);
@@ -178,6 +229,37 @@ export function SearchBar({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
+
+  const navigateToMapResult = useCallback(
+    (result: SearchResult) => {
+      const target: StoredMapFocusRequest = {
+        kind: result.kind,
+        id: result.id,
+        lat: result.lat,
+        lng: result.lng,
+        zoom: result.kind === "station" ? 11 : 12,
+      };
+
+      try {
+        sessionStorage.setItem(MAP_FOCUS_STORAGE_KEY, JSON.stringify(target));
+      } catch {
+        // Storage can be disabled in private contexts; the event below still
+        // handles the current map page.
+      }
+
+      window.dispatchEvent(
+        new CustomEvent<StoredMapFocusRequest>(MAP_FOCUS_EVENT, {
+          detail: target,
+        }),
+      );
+      setOpen(false);
+      setQuery("");
+      setResults([]);
+      onNavigate?.();
+      router.push("/", { scroll: false });
+    },
+    [onNavigate, router],
+  );
 
   const showDropdown = open && (query.trim() || favorites.length > 0);
 
@@ -219,14 +301,11 @@ export function SearchBar({
                 Favoris
               </div>
               {favorites.map((s) => (
-                <SpotItem
+                <SearchItem
                   key={s.id}
-                  spot={s}
+                  result={s}
                   isFav
-                  onSelect={() => {
-                    setOpen(false);
-                    onNavigate?.();
-                  }}
+                  onSelect={() => navigateToMapResult(s)}
                 />
               ))}
             </div>
@@ -241,20 +320,17 @@ export function SearchBar({
                 </div>
               ) : results.length > 0 ? (
                 results.map((s) => (
-                  <SpotItem
-                    key={s.id}
-                    spot={s}
-                    isFav={favoriteIds.has(s.id)}
-                    onSelect={() => {
-                      setOpen(false);
-                      onNavigate?.();
-                    }}
+                  <SearchItem
+                    key={`${s.kind}-${s.id}`}
+                    result={s}
+                    isFav={s.kind === "spot" && favoriteIds.has(s.id)}
+                    onSelect={() => navigateToMapResult(s)}
                   />
                 ))
               ) : (
                 <div className="px-4 py-3">
                   <p className="text-sm text-gray-400">
-                    Aucun spot trouvé pour &laquo;&nbsp;{query.trim()}
+                    Aucun spot ou station trouvé pour &laquo;&nbsp;{query.trim()}
                     &nbsp;&raquo;
                   </p>
                   <Link
@@ -278,41 +354,56 @@ export function SearchBar({
   );
 }
 
-function SpotItem({
-  spot,
+function SearchItem({
+  result,
   isFav,
   onSelect,
 }: {
-  spot: SearchResult;
+  result: SearchResult;
   isFav: boolean;
   onSelect: () => void;
 }) {
+  const isStation = result.kind === "station";
+  const subtitle = isStation
+    ? [
+        stationSourceLabel(result.source),
+        typeof result.altitudeM === "number"
+          ? `${Math.round(result.altitudeM)} m`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : [result.region, result.country].filter(Boolean).join(", ");
+  const Icon = isStation ? Wind : MapPin;
+
   return (
-    <Link
-      href={`/spots/${spot.id}`}
+    <button
+      type="button"
       onClick={onSelect}
-      className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors"
+      className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors"
     >
       <div
         className={`flex items-center justify-center h-8 w-8 rounded-full shrink-0 ${
-          spot.sportType === "KITE"
-            ? "bg-green-50 text-green-600"
-            : "bg-orange-50 text-orange-600"
+          isStation
+            ? "bg-sky-50 text-sky-600"
+            : result.sportType === "KITE"
+              ? "bg-green-50 text-green-600"
+              : "bg-orange-50 text-orange-600"
         }`}
       >
-        <MapPin className="h-3.5 w-3.5" />
+        <Icon className="h-3.5 w-3.5" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-gray-900 truncate">
-          {spot.name}
+          {result.name}
         </div>
         <div className="text-[11px] text-gray-500 truncate">
-          {[spot.region, spot.country].filter(Boolean).join(", ")}
+          {subtitle}
         </div>
       </div>
       {isFav && (
         <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400 shrink-0" />
       )}
-    </Link>
+    </button>
   );
 }

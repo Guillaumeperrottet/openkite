@@ -294,54 +294,88 @@ export function addMapLayers(map: maplibregl.Map, pickMode: boolean) {
     },
   });
 
-  // Kite only: pulse starts at 12 kts (22 km/h), no pulse for para
+  // Kite only: pulse starts at 12 kts (22.2 km/h), no pulse for para.
+  // Colors match the solid palette used by the 48h history chart.
   const SPOT_PULSE_COLOR: maplibregl.ExpressionSpecification = [
     "step",
-    ["get", "windSpeedKmh"],
-    "#50d818", // 22–46 km/h (12–25 kts) → green
-    46,
-    "#e6d620", // 46–56 km/h (25–30 kts) → yellow
-    56,
-    "#f0a818", // 56–65 km/h (30–35 kts) → orange
-    65,
-    "#e04010", // > 65 km/h (>35 kts)    → red
+    ["coalesce", ["to-number", ["get", "windSpeedKmh"]], 0],
+    "#c0cdda", // < 2 kts
+    3.7,
+    "#90e86a", // 2–5 kts
+    9.3,
+    "#6de840", // 5–8 kts
+    14.8,
+    "#50d818", // 8–12 kts
+    22.2,
+    "#e6d620", // 12–16 kts
+    29.6,
+    "#f0a818", // 16–20 kts
+    37.0,
+    "#fc762d", // 20–25 kts
+    46.3,
+    "#e04010", // 25–30 kts
+    55.6,
+    "#8f0905", // 30–35 kts
+    64.8,
+    "#6a0020", // ≥ 35 kts
+  ];
+  const SPOT_PULSE_FILTER: maplibregl.FilterSpecification = [
+    "all",
+    ["!", ["has", "point_count"]],
+    ["==", ["get", "featureType"], "spot"],
+    ["==", ["get", "sportType"], "KITE"],
+    [">=", ["get", "windSpeedKmh"], 22.2],
   ];
 
-  // Pulse ring added BEFORE spots-circle so it expands outward from behind
+  // Sonar rings added BEFORE spots-circle so they expand outward from behind.
   map.addLayer({
-    id: "spots-pulse",
+    id: "spots-pulse-fill",
     type: "circle",
     source: "combined-source",
-    filter: [
-      "all",
-      ["!", ["has", "point_count"]],
-      ["==", ["get", "featureType"], "spot"],
-      ["==", ["get", "sportType"], "KITE"],
-      [">=", ["get", "windSpeedKmh"], 22],
-    ],
+    filter: SPOT_PULSE_FILTER,
     paint: {
-      "circle-radius": 8,
+      "circle-radius": 7,
       "circle-color": SPOT_PULSE_COLOR,
-      "circle-opacity": 0.5,
+      "circle-opacity": 0,
+      "circle-blur": 0.26,
       "circle-stroke-width": 0,
     },
   });
 
+  map.addLayer({
+    id: "spots-pulse",
+    type: "circle",
+    source: "combined-source",
+    filter: SPOT_PULSE_FILTER,
+    paint: {
+      "circle-radius": 7,
+      "circle-color": SPOT_PULSE_COLOR,
+      "circle-opacity": 0,
+      "circle-stroke-color": SPOT_PULSE_COLOR,
+      "circle-stroke-width": 2,
+      "circle-stroke-opacity": 0,
+    },
+  });
+
   // ── Spot layers ──
-  // Wind-based color for KITE spots (matches the pulse palette).
-  // < 22 km/h shows neutral grey so the icon stays readable at calm conditions.
+  // Wind-based color for KITE spots (matches the pulse/chart palette).
+  // < 12 kts shows neutral grey so the icon stays readable at calm conditions.
   const KITE_WIND_COLOR: maplibregl.ExpressionSpecification = [
     "step",
     ["coalesce", ["to-number", ["get", "windSpeedKmh"]], 0],
-    "#9ca3af", // < 22 km/h (calm)        → neutral grey
-    22,
-    "#50d818", // 22–46 km/h (12–25 kts)  → green
-    46,
-    "#e6d620", // 46–56 km/h (25–30 kts)  → yellow
-    56,
-    "#f0a818", // 56–65 km/h (30–35 kts)  → orange
-    65,
-    "#e04010", // > 65 km/h (>35 kts)      → red
+    "#9ca3af", // < 12 kts (calm/sub-kite) → neutral grey
+    22.2,
+    "#e6d620", // 12–16 kts
+    29.6,
+    "#f0a818", // 16–20 kts
+    37.0,
+    "#fc762d", // 20–25 kts
+    46.3,
+    "#e04010", // 25–30 kts
+    55.6,
+    "#8f0905", // 30–35 kts
+    64.8,
+    "#6a0020", // ≥ 35 kts
   ];
 
   map.addLayer({
@@ -438,24 +472,81 @@ export function startPulseAnimation(
   timerRef: { current: number | null },
 ) {
   const pulseStart = performance.now();
+  const loopMs = 3400;
+  const waveDurationMs = 2300;
+  const frameMs = 66;
+  const minRadius = 7;
+  const maxRadius = 26;
+  const waves = [
+    {
+      ringId: "spots-pulse",
+      fillId: "spots-pulse-fill",
+      delayMs: 0,
+      strokeOpacity: 0.42,
+      fillOpacity: 0.44,
+      strokeWidth: 1.7,
+    },
+  ] as const;
 
   const tick = () => {
-    if (!map.getLayer("spots-pulse")) return;
-    const t = ((performance.now() - pulseStart) / 1000) * Math.PI * 1.4;
-    const wave = (Math.sin(t) + 1) / 2;
-
-    if (map.getLayer("spots-pulse")) {
-      map.setPaintProperty("spots-pulse", "circle-radius", 8 + wave * 14);
-      map.setPaintProperty(
-        "spots-pulse",
-        "circle-opacity",
-        1.0 * (1 - wave * 0.88),
-      );
+    if (!waves.some((wave) => map.getLayer(wave.ringId))) {
+      timerRef.current = null;
+      return;
     }
-    timerRef.current = window.setTimeout(tick, 50);
+
+    const elapsed = performance.now() - pulseStart;
+
+    for (const wave of waves) {
+      if (!map.getLayer(wave.ringId)) continue;
+
+      const cycleElapsed =
+        elapsed < wave.delayMs ? -1 : (elapsed - wave.delayMs) % loopMs;
+      if (cycleElapsed < 0 || cycleElapsed > waveDurationMs) {
+        map.setPaintProperty(wave.ringId, "circle-radius", minRadius);
+        map.setPaintProperty(wave.ringId, "circle-stroke-opacity", 0);
+        map.setPaintProperty(wave.ringId, "circle-opacity", 0);
+        if (map.getLayer(wave.fillId)) {
+          map.setPaintProperty(wave.fillId, "circle-radius", minRadius);
+          map.setPaintProperty(wave.fillId, "circle-opacity", 0);
+        }
+        continue;
+      }
+
+      const progress = cycleElapsed / waveDurationMs;
+      const eased = 1 - Math.pow(1 - progress, 2.15);
+      const fadeIn = Math.min(progress / 0.16, 1);
+      const fadeOut = Math.pow(1 - progress, 1.35);
+      const ringEnvelope = fadeIn * fadeOut;
+      const fillEnvelope = fadeIn * Math.pow(1 - progress, 0.52);
+      const radius = minRadius + eased * (maxRadius - minRadius);
+
+      map.setPaintProperty(wave.ringId, "circle-radius", radius);
+      map.setPaintProperty(
+        wave.ringId,
+        "circle-stroke-opacity",
+        wave.strokeOpacity * ringEnvelope,
+      );
+      map.setPaintProperty(
+        wave.ringId,
+        "circle-stroke-width",
+        0.55 + wave.strokeWidth * ringEnvelope,
+      );
+      map.setPaintProperty(wave.ringId, "circle-opacity", 0);
+
+      if (map.getLayer(wave.fillId)) {
+        map.setPaintProperty(wave.fillId, "circle-radius", radius * 0.9);
+        map.setPaintProperty(
+          wave.fillId,
+          "circle-opacity",
+          wave.fillOpacity * fillEnvelope,
+        );
+      }
+    }
+
+    timerRef.current = window.setTimeout(tick, frameMs);
   };
 
-  timerRef.current = window.setTimeout(tick, 50);
+  timerRef.current = window.setTimeout(tick, frameMs);
 }
 
 /** Cancel a running pulse animation. */

@@ -33,7 +33,7 @@
     "signIn": "Anmelden"
   },
   "SearchBar": {
-    "placeholder": "Spot suchen…",
+    "placeholder": "Spot oder Station suchen…",
     "createSpot": "Diesen Spot erstellen",
     "favoriteSpots": "Favoriten-Spots",
     "allSpots": "Alle Spots",

@@ -33,7 +33,7 @@
     "signIn": "Sign in"
   },
   "SearchBar": {
-    "placeholder": "Search a spot…",
+    "placeholder": "Search a spot or station…",
     "createSpot": "Create this spot",
     "favoriteSpots": "Favorite spots",
     "allSpots": "All spots",

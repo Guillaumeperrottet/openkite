@@ -1,6 +1,6 @@
 "use client";
 
-import { windDirectionLabel } from "@/lib/utils";
+import { barColors, windDirectionLabel } from "@/lib/utils";
 import { roundKnots } from "@/lib/forecast";
 import type { WindData } from "@/types";
 
@@ -21,15 +21,6 @@ interface Props {
  *   windDirection = 270° (FROM west) → arrow points east (→)
  *   Rotation formula: arrowRotation = (windDirection + 180) % 360
  */
-function instrumentColor(speedKnots: number): string {
-  if (speedKnots >= 35) return "#7c3aed";
-  if (speedKnots >= 28) return "#dc2626";
-  if (speedKnots >= 20) return "#f97316";
-  if (speedKnots >= 12) return "#22c55e";
-  if (speedKnots >= 6) return "#22d3ee";
-  return "#94a3b8";
-}
-
 function svgNum(value: number): number {
   return Number(value.toFixed(3));
 }
@@ -43,12 +34,8 @@ export function WindCompass({
   const speedKnots = roundKnots(wind.windSpeedKmh);
   const gustsKnots = roundKnots(wind.gustsKmh);
   const arrowRotation = (wind.windDirection + 180) % 360;
-  const color = instrumentColor(speedKnots) || wind.color;
+  const color = barColors(wind.windSpeedKmh)[0] || wind.color;
   const dirLabel = windDirectionLabel(wind.windDirection);
-  const speedRatio = Math.min(speedKnots / 45, 1);
-  const gustRatio = Math.min(gustsKnots / 55, 1);
-  const speedCirc = 2 * Math.PI * 91;
-  const gustCirc = 2 * Math.PI * 80;
   const arrowColor = light ? "#475569" : color;
   const surfaceFill = light ? "#f8fafc" : "#0f172a";
   const centerFill = light ? "#ffffff" : "#111827";
@@ -114,34 +101,10 @@ export function WindCompass({
         <circle
           cx="100"
           cy="100"
-          r="91"
-          fill="none"
-          stroke={color}
-          strokeWidth="4"
-          strokeOpacity="0.72"
-          strokeLinecap="round"
-          strokeDasharray={`${speedCirc * speedRatio} ${speedCirc}`}
-          transform="rotate(-90 100 100)"
-        />
-        <circle
-          cx="100"
-          cy="100"
           r="80"
           fill="none"
           stroke={gridStroke}
           strokeWidth="2"
-        />
-        <circle
-          cx="100"
-          cy="100"
-          r="80"
-          fill="none"
-          stroke={light ? "#64748b" : "#ffffff"}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeOpacity={light ? 0.24 : 0.42}
-          strokeDasharray={`${gustCirc * gustRatio} ${gustCirc}`}
-          transform="rotate(-90 100 100)"
         />
         <circle
           cx="100"
@@ -243,7 +206,7 @@ export function WindCompass({
           y="97"
           textAnchor="middle"
           dominantBaseline="auto"
-          fill="#0f172a"
+          fill={color}
           fontSize={speedKnots >= 100 ? 16 : 20}
           fontWeight="800"
           fontFamily="system-ui, -apple-system, sans-serif"

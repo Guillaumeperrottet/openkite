@@ -79,6 +79,7 @@ interface Props {
    * compass (ticks, wedges, cross-hairs).
    */
   variant?: "full" | "minimal";
+  transparentBackground?: boolean;
 }
 
 export function WindDirectionRose({
@@ -88,6 +89,7 @@ export function WindDirectionRose({
   onChange,
   showLabels = true,
   variant = "full",
+  transparentBackground = false,
 }: Props) {
   if (variant === "minimal" && !interactive) {
     return (
@@ -105,6 +107,7 @@ export function WindDirectionRose({
       interactive={interactive}
       onChange={onChange}
       showLabels={showLabels}
+      transparentBackground={transparentBackground}
     />
   );
 }
@@ -115,6 +118,7 @@ function FullRose({
   interactive = false,
   onChange,
   showLabels = true,
+  transparentBackground = false,
 }: Omit<Props, "variant">) {
   const cx = size / 2;
   const cy = size / 2;
@@ -161,7 +165,7 @@ function FullRose({
         cx={cx}
         cy={cy}
         r={R * 1.04}
-        fill="#f8fafc"
+        fill={transparentBackground ? "none" : "#f8fafc"}
         stroke="#d9e2ea"
         strokeWidth={sw * 1.3}
       />
